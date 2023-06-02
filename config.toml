@@ -1,0 +1,6 @@
+permissionsInt = 136764345278017
+admins = ["claw#7448", "WALC#1913"]
+slashCommands = true
+imageToGifCommand = true
+videoToGifCommand = true
+speechBubbleCommand = true
