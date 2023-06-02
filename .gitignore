@@ -1,3 +1,8 @@
 token.toml
+/audio/
+/voice/
+/video/
+/image/
+/temp/
 app.log
-app.log
+/new folder/
