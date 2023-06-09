@@ -6,3 +6,5 @@ token.toml
 /temp/
 app.log
 /new folder/
+notes.json
+token.toml

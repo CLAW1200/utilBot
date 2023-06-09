@@ -20,6 +20,11 @@ COMMAND = 35
 
 remove_char = "'"
 
+keywords = {
+    "https://discord",
+    "claw",
+}
+
 # Define custom log level names
 log.addLevelName(MESSAGE, "MESSAGE")
 log.addLevelName(DIRECT_MESSAGE, "DIRECT_MESSAGE")
@@ -45,6 +50,7 @@ tokenFile = "token.toml"
 with open(tokenFile) as toml_file:
     data = toml.load(toml_file)
     TOKEN = data["token"]
+    TOP_GG_TOKEN = data["top-gg-token"]
     log.debug(f"Token read from '{tokenFile}'")
 
 #if there is no temp folder make one
@@ -84,12 +90,7 @@ def clean_up_temp_files():
             except Exception as e:
                 log.error(f"Error removing old file '{file}': {e}")
 
-async def permission_notify(ctx):
-    return
-    if ctx.guild == None:
-        return
-    if read_toml_var("permissionsInt") != ctx.guild.me.guild_permissions.value:
-        await ctx.respond(f"One or more permissions are not enabled which may cause errors, please consider using /update-permissions", ephemeral=True)
+
 
 def convert_image_to_gif(image_link):
     clean_up_temp_files()
@@ -295,11 +296,28 @@ async def get_guild_invite(bot):
 
     return guildNameResults, guildInviteResults, guildInfo
 
+
 def main():
     log.debug("Starting Main()")
-    #Permissions Integer: 57598266564160
     bot = discord.Bot(intents=discord.Intents.all())
     log.debug("Bot object created")
+
+    def check_bot_permissions(ctx):
+        binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
+        binary_required_permissions = bin(read_toml_var("permissionsInt"))
+
+        #perform binary AND operation on the two binary strings
+        check = int(binary_guild_permissions, 2) & int(binary_required_permissions, 2)
+        if check == int(binary_required_permissions, 2):
+            return True
+        else:
+            return False
+    
+    async def permission_notify(ctx):
+        if not check_bot_permissions(ctx):
+            await ctx.respond("Warning: I am missing some permissions which may cause errors. Please use /update-permissions to avoid any problems using commands", ephemeral=True)
+            return False
+        return True
 
     @bot.slash_command(name="log", description="Get the log file")
     async def send_log_command(
@@ -349,7 +367,7 @@ def main():
             os.remove(newGif)
             log.info(f"Converted image {video_link}")
         except Exception as e:
-            await ctx.edit(content = f"Sorry, but that video link is invalid!", ephemeral=True)
+            await ctx.edit(content = f"Sorry, but that video link is invalid!")
         await permission_notify(ctx)
         logging_command(ctx, video_link, fps, scale)
 
@@ -382,10 +400,8 @@ def main():
             return
         #respond with message with button that links to bot invite link
         client_id = bot.user.id
-        #get permissions in the current guild
-        permissionIntents = ctx.guild.me.guild_permissions.value
         
-        if permissionIntents == read_toml_var('permissionsInt'):
+        if check_bot_permissions(ctx):
             await ctx.respond(f"Permissions are already up to date!", ephemeral=True)
             return
         inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={read_toml_var('permissionsInt')}"
@@ -452,6 +468,7 @@ def main():
                 embed.add_field(name="Definition", value=definition, inline=False)
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
+        await permission_notify(ctx)
         logging_command(ctx, word, random_result)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
@@ -470,6 +487,7 @@ def main():
                 embed.add_field(name="Definition", value=definition, inline=False)
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
+        await permission_notify(ctx)
         logging_command(ctx, word)
 
     @bot.slash_command(name="units", description="Convert units")
@@ -493,6 +511,7 @@ def main():
 
         except Exception as e:
             await ctx.respond(f"{str(e)}")
+        await permission_notify(ctx)
         logging_command(ctx, value, unit_from, unit_to)
 
     @bot.slash_command(name="new-note", description="Write a new note")
@@ -514,6 +533,7 @@ def main():
             json.dump(notes, f, indent=4)
 
         await ctx.respond("New note added!", ephemeral=True)
+        await permission_notify(ctx)
         logging_command(ctx, note)
 
     @bot.slash_command(name="edit-note", description="Edit a note")
@@ -539,6 +559,7 @@ def main():
             await ctx.respond(f"Note {index} updated!", ephemeral=True)
         else:
             await ctx.respond("Invalid note index!", ephemeral=True)
+        await permission_notify(ctx)
         logging_command(ctx, index, note)
 
 
@@ -560,6 +581,7 @@ def main():
             await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
+        await permission_notify(ctx)
         logging_command(ctx)
 
     @bot.slash_command(name="delete-note", description="Delete a note")
@@ -591,6 +613,7 @@ def main():
                 json.dump(notes, f, indent=4)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
+        await permission_notify(ctx)
         logging_command(ctx, index)
 
 
@@ -630,7 +653,33 @@ def main():
         embed.add_field(name="my-notes", value="Read your notes", inline=False)
         embed.add_field(name="delete-note", value="Delete a note", inline=False)
         await ctx.respond(embed=embed)
+        await permission_notify(ctx)
         logging_command(ctx)
+
+
+    @bot.slash_command(name="vote", description="Vote for the bot and claim a reward")
+    async def vote(ctx):
+        topggID=1098280039486849174
+        # Check if the user has voted on top.gg
+        headers = {'Authorization': TOP_GG_TOKEN}
+        request = requests.get(f"https://top.gg/api/bots/{topggID}/check?userId={ctx.author.id}", headers=headers)
+        if request.status_code == 200:
+            data = request.json()
+            if data['voted'] == 1:
+                await ctx.respond("Thanks for voting!")
+                #give VoteReward role
+                try:
+                    if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
+                        await ctx.guild.create_role(name="Vote Reward", color=discord.Color.nitro_pink())
+                    await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name="Vote Reward"))
+                    await ctx.respond("You have been given the Vote Reward role!")
+                except discord.Forbidden:
+                    await ctx.respond("I don't have permission to give you the Vote Reward role!")
+
+            else:
+                await ctx.respond(f"You haven't voted yet!\nhttps://top.gg/bot/{topggID}/vote")
+        else:
+            await ctx.respond("Error checking vote status!")
 
 
     @bot.event
@@ -645,6 +694,17 @@ def main():
         #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
         if message.guild != None:
             logging_message(message)
+
+            #if any keyword in keywords list is in the message content
+            if any(keyword in message.content.lower() for keyword in keywords):
+                embed=discord.Embed(title="Message Link Detected", url=message.jump_url, color=discord.Color.blue())
+                embed.add_field(name="Message", value=message.content, inline=False)
+                embed.add_field(name="Channel", value=message.channel, inline=False)
+                embed.add_field(name="User", value=message.author, inline=False)
+
+                await botOwner.send(embed=embed)
+
+
         # (A DM from a user) Check if the message is not from the bot or the bot owner 
         if message.author != bot.user and message.author != botOwner and message.guild == None:
             embed = discord.Embed(title="Message From", color=discord.Color.green())
