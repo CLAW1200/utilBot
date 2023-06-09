@@ -4,3 +4,4 @@ slashCommands = true
 imageToGifCommand = true
 videoToGifCommand = true
 speechBubbleCommand = true
+maxFileSize = 8000000

@@ -57,6 +57,33 @@ with open(tokenFile) as toml_file:
 if not os.path.exists("temp"):
     os.makedirs("temp")
 
+def edit_user_data(user, field, data):
+    # Edit users.json, add data to key
+    with open("users.json", "r") as f:
+        users = json.load(f)
+    
+    user_id = str(user.id)
+    if user_id in users:
+        user_data = users[user_id]
+        user_data[field] = data
+    else:
+        user_data = {field: data}
+
+    users[user_id] = user_data
+    
+    with open("users.json", "w") as f:
+        json.dump(users, f, indent=4)
+
+def get_user_data(user, field):
+    #get data from users.json
+    try:
+        with open("users.json", "r") as f:
+            users = json.load(f)
+        return users[str(user.id)][field]
+    except KeyError:
+        return 0
+    
+
 def read_log():
     log.debug("Reading log")
     with open("app.log", "r") as f:
@@ -89,8 +116,6 @@ def clean_up_temp_files():
                 log.debug(f"Removed old file '{file}'")
             except Exception as e:
                 log.error(f"Error removing old file '{file}': {e}")
-
-
 
 def convert_image_to_gif(image_link):
     clean_up_temp_files()
@@ -133,6 +158,15 @@ def convert_video_to_gif(video_link, fps = 20, scale = None):
     os.remove(f"temp/video{video_seed}.{fileType}")
     log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
     return output_path
+
+def get_file_size(link):
+    #function to check the size of a video or image link
+    response = requests.get(link, stream=True)
+    if 'Content-Length' in response.headers:
+        file_size = int(response.headers['Content-Length']) 
+        return file_size
+    else:
+        return None
 
 def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     clean_up_temp_files()
@@ -313,7 +347,11 @@ def main():
         else:
             return False
     
-    async def permission_notify(ctx):
+    async def command_topper(ctx):
+        edit_user_data(ctx.author, "commandsUsed", get_user_data(ctx.author, "commandsUsed") + 1)
+        if get_user_data(ctx.author, "commandsUsed") <= 1:
+            await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nRemember to use **/vote** if you find me useful (This will be the only reminder)", ephemeral=True)
+
         if not check_bot_permissions(ctx):
             await ctx.respond("Warning: I am missing some permissions which may cause errors. Please use /update-permissions to avoid any problems using commands", ephemeral=True)
             return False
@@ -335,6 +373,9 @@ def main():
 
     @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
+        if get_file_size(image_link) > read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            return
         await ctx.respond(f"Converting image to gif... ") # this message will be deleted when the gif is sent
         try:
             newGif = convert_image_to_gif(image_link)
@@ -343,7 +384,7 @@ def main():
             log.info(f"Converted image {image_link}")
         except Image.UnidentifiedImageError:
             await ctx.edit(content = f"Sorry, but that image link is invalid!")
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, image_link)
 
     @bot.slash_command(name="video-to-gif", description="Take a video link and send it as a gif")
@@ -353,9 +394,15 @@ def main():
         fps: discord.Option(int, "The FPS of the gif", required=False, default=20),
         scale: discord.Option(int, "The scale of the gif", required=False, default=320),
     ):
+        #do not download videos larger than maxFileSize
+        if get_file_size(video_link) > read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            return
+        
         if fps > 25:
             await ctx.respond(f"Sorry, but the max FPS is 25!", ephemeral=True)
             return
+        
         if scale > 500:
             await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
             return
@@ -368,7 +415,7 @@ def main():
             log.info(f"Converted image {video_link}")
         except Exception as e:
             await ctx.edit(content = f"Sorry, but that video link is invalid!")
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, video_link, fps, scale)
 
     @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image")
@@ -377,6 +424,11 @@ def main():
         image_link: str,
         speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
     ):
+        #do not download videos larger than maxFileSize
+        if get_file_size(image_link) > read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            return
+        
         if speech_bubble_size > 1 or speech_bubble_size < 0:
             await ctx.respond(f"Sorry, values between 0 and 1 only!", ephemeral=True)
             return
@@ -390,7 +442,7 @@ def main():
             await ctx.edit(content = f"Sorry, but that image link is invalid!")
             print (e)
             log.error(e)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, image_link, speech_bubble_size)
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
@@ -424,7 +476,7 @@ def main():
         await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
         os.remove(newImage)
         log.info(f"Added impact font to image {image_link}")
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, image_link, top_text, bottom_text, font_size, font_color)
 
     @bot.slash_command(name="invite", description="Get the bot's invite link")
@@ -433,6 +485,7 @@ def main():
         client_id = bot.user.id
         inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
+        await command_topper(ctx)
         logging_command(ctx)
 
     @bot.slash_command(name="urban", description="Find a definition of a word on urban dictionary")
@@ -468,7 +521,7 @@ def main():
                 embed.add_field(name="Definition", value=definition, inline=False)
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, word, random_result)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
@@ -487,7 +540,7 @@ def main():
                 embed.add_field(name="Definition", value=definition, inline=False)
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, word)
 
     @bot.slash_command(name="units", description="Convert units")
@@ -511,7 +564,7 @@ def main():
 
         except Exception as e:
             await ctx.respond(f"{str(e)}")
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, value, unit_from, unit_to)
 
     @bot.slash_command(name="new-note", description="Write a new note")
@@ -533,7 +586,7 @@ def main():
             json.dump(notes, f, indent=4)
 
         await ctx.respond("New note added!", ephemeral=True)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, note)
 
     @bot.slash_command(name="edit-note", description="Edit a note")
@@ -559,7 +612,7 @@ def main():
             await ctx.respond(f"Note {index} updated!", ephemeral=True)
         else:
             await ctx.respond("Invalid note index!", ephemeral=True)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, index, note)
 
 
@@ -581,7 +634,7 @@ def main():
             await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx)
 
     @bot.slash_command(name="delete-note", description="Delete a note")
@@ -613,7 +666,7 @@ def main():
                 json.dump(notes, f, indent=4)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx, index)
 
 
@@ -646,14 +699,18 @@ def main():
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
         embed.add_field(name="impact", value="Add impact text to an image", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
-        embed.add_field(name="random-word", value="Get a random word from urban dictionary", inline=False)
+        embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)
         embed.add_field(name="units", value="Convert units", inline=False)
         embed.add_field(name="new-note", value="Create a new note", inline=False)
         embed.add_field(name="edit-note", value="Edit an existing note", inline=False)
         embed.add_field(name="my-notes", value="Read your notes", inline=False)
         embed.add_field(name="delete-note", value="Delete a note", inline=False)
+        embed.add_field(name="feedback", value="Send feedback", inline=False)
+        embed.add_field(name="help", value="Get help", inline=False)
+        embed.add_field(name="invite", value="Invite the bot", inline=False)
+        embed.add_field(name="vote", value="Vote for the bot and claim a reward", inline=False)
         await ctx.respond(embed=embed)
-        await permission_notify(ctx)
+        await command_topper(ctx)
         logging_command(ctx)
 
 
@@ -667,6 +724,7 @@ def main():
             data = request.json()
             if data['voted'] == 1:
                 await ctx.respond("Thanks for voting!")
+                edit_user_data(ctx.author, "votes", get_user_data(ctx.author, "votes") + 1)
                 #give VoteReward role
                 try:
                     if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
@@ -674,12 +732,14 @@ def main():
                     await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name="Vote Reward"))
                     await ctx.respond("You have been given the Vote Reward role!")
                 except discord.Forbidden:
-                    await ctx.respond("I don't have permission to give you the Vote Reward role!")
+                    pass
+                    # await ctx.respond("I don't have permission to give you the Vote Reward role!")
 
             else:
                 await ctx.respond(f"You haven't voted yet!\nhttps://top.gg/bot/{topggID}/vote")
         else:
             await ctx.respond("Error checking vote status!")
+        await command_topper(ctx)
 
 
     @bot.event
@@ -692,8 +752,12 @@ def main():
         botOwner = bot.get_user(512609720885051425)  # Get the bot owner
         #messageAuthor = message.author.id # Get the author of the message
         #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
-        if message.guild != None:
+        if message.guild != None: # Any message in a server
             logging_message(message)
+            #read how many messages the user has sent and add 1
+            edit_user_data(message.author, "messages", get_user_data(message.author, "messages") + 1)
+            #add their username and discriminator
+            edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
             #if any keyword in keywords list is in the message content
             if any(keyword in message.content.lower() for keyword in keywords):

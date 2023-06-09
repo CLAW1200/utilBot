@@ -1,10 +1,6 @@
 token.toml
-/audio/
-/voice/
-/video/
-/image/
 /temp/
 app.log
-/new folder/
 notes.json
 token.toml
+users.json
