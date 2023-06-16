@@ -1,7 +1,7 @@
 permissionsInt = 275146861665
-admins = ["claw#7448", "WALC#1913"]
 slashCommands = true
 imageToGifCommand = true
 videoToGifCommand = true
 speechBubbleCommand = true
 maxFileSize = 8000000
+botOwner = 512609720885051425

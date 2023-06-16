@@ -1,17 +1,21 @@
+from discord.ui import View
 import os
 import random
 import logging as log
-import time
 import discord
 import toml
-import asyncio
-from PIL import Image, ImageSequence, ImageFont, ImageDraw
+import shutil
+from PIL import Image
 import requests
-import ffmpeg
 import urllib.parse
 import aiohttp
 from pint import UnitRegistry
 import json
+import csv
+import hashlib
+import base64
+import codecs
+import utilityBot
 ureg = UnitRegistry()
 
 MESSAGE = 25
@@ -33,9 +37,36 @@ log.addLevelName(COMMAND, "COMMAND")
 # Configure the logger
 log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
 
-# Create custom log functions
 def logging_message(message):
-    log.log(MESSAGE, f"SERVER: '{str(message.guild.name).strip(remove_char)}' ({message.guild.id}) IN CHANNEL: '{str(message.channel.name).strip(remove_char)}' ({message.channel.id})\n    -> '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}' SAID: {message.content}\n        -> {message.attachments} {message.embeds}")
+    # Get the server name and channel name
+    server_name = message.guild.name
+    channel_name = message.channel.name
+    
+    # Create the directory if it doesn't exist
+    directory = f"guilds/{message.guild.id}"
+    os.makedirs(directory, exist_ok=True)
+    
+    # Create the file path
+    file_path = f"{directory}/{message.channel.id}.txt"
+    
+    # Write the server name and channel name to the file
+    with open(file_path, "a", encoding="utf-8") as file:
+        # Write the server name and channel name if the file is empty
+        if file.tell() == 0:
+            file.write(f"Server: {server_name}\n")
+            file.write(f"Channel: {channel_name}\n")
+        
+        # Format the message information
+        author_info = f"{message.author.name}#{message.author.discriminator} ({message.author.id})"
+        attachments_info = f"Attachments: {', '.join(str(attachment) for attachment in message.attachments)}"
+        embeds_info = f"Embeds: {', '.join(str(embed) for embed in message.embeds)}"
+        
+        # Write the formatted message to the file
+        file.write(f"{author_info}:\n")
+        file.write(f"Message: {message.content}\n")
+        file.write(f"{attachments_info}\n")
+        file.write(f"{embeds_info}\n")
+        file.write("--------------------------------\n")
 
 def logging_direct_message(message):
     log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
@@ -51,284 +82,13 @@ with open(tokenFile) as toml_file:
     data = toml.load(toml_file)
     TOKEN = data["token"]
     TOP_GG_TOKEN = data["top-gg-token"]
+    GIPHY_API_KEY = data["giphy-api-key"]
     log.debug(f"Token read from '{tokenFile}'")
 
 #if there is no temp folder make one
 if not os.path.exists("temp"):
     os.makedirs("temp")
 
-def edit_user_data(user, field, data):
-    # Edit users.json, add data to key
-    with open("users.json", "r") as f:
-        users = json.load(f)
-    
-    user_id = str(user.id)
-    if user_id in users:
-        user_data = users[user_id]
-        user_data[field] = data
-    else:
-        user_data = {field: data}
-
-    users[user_id] = user_data
-    
-    with open("users.json", "w") as f:
-        json.dump(users, f, indent=4)
-
-def get_user_data(user, field):
-    #get data from users.json
-    try:
-        with open("users.json", "r") as f:
-            users = json.load(f)
-        return users[str(user.id)][field]
-    except KeyError:
-        return 0
-    
-
-def read_log():
-    log.debug("Reading log")
-    with open("app.log", "r") as f:
-        return f.read()
-    
-def clear_log():
-    open("app.log", "w").close()
-    log.debug("Log cleared")
-
-def read_toml_var(var):
-    log.debug(f"Reading variable '{var}' from config")
-    configFile = "config.toml"
-    with open(configFile) as toml_file:
-        data = toml.load(toml_file)
-        log.debug(f"Variable '{var}' read from '{configFile}'")
-        return data[var]
-
-def is_admin(user):
-    log.debug(f"Checking if user '{user.name}#{user.discriminator}' is an admin")
-    if f"{user.name}#{user.discriminator}" in read_toml_var("admins"):
-        log.debug(f"User '{user.name}#{user.discriminator}' is an admin")
-        return True
-
-def clean_up_temp_files():
-    log.debug("Checking for old files")
-    for file in os.listdir("temp"):
-        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60):
-            try:
-                os.remove(f"temp/{file}")
-                log.debug(f"Removed old file '{file}'")
-            except Exception as e:
-                log.error(f"Error removing old file '{file}': {e}")
-
-def convert_image_to_gif(image_link):
-    clean_up_temp_files()
-    #this function will take a link to an image and convert it to a gif
-    #download image in temp folder
-    image_seed = random.randint(10000,99999)
-    output_path = f"temp/image{image_seed}.gif"
-    #download image
-    with open(f"temp/image{image_seed}.png", "wb") as f:
-        f.write(requests.get(image_link).content)
-    
-    # Open the PNG image
-    image = Image.open(f"temp/image{image_seed}.png")
-
-    # Convert the image to GIF
-    image.save(output_path, format="GIF", save_all=True)
-    image.close()
-    os.remove(f"temp/image{image_seed}.png")
-    log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
-    return output_path
-
-def convert_video_to_gif(video_link, fps = 20, scale = None):
-    clean_up_temp_files()
-    #this function will take a link to an image and convert it to a gif
-    #download image in temp folder
-    fileType = video_link.split(".")[-1]
-    video_seed = random.randint(10000,99999)
-    output_path = f"temp/video{video_seed}.gif"
-    #download image
-    with open(f"temp/video{video_seed}.{fileType}", "wb") as f:
-        f.write(requests.get(video_link).content)
-    
-    # Open the PNG image
-    video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
-    video = ffmpeg.filter(video, 'fps', fps=fps, round='up')
-    if scale != None:
-        video = ffmpeg.filter(video, 'scale', scale, -1)
-    video = ffmpeg.output(video, output_path)
-    ffmpeg.run(video)
-    os.remove(f"temp/video{video_seed}.{fileType}")
-    log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
-    return output_path
-
-def get_file_size(link):
-    #function to check the size of a video or image link
-    response = requests.get(link, stream=True)
-    if 'Content-Length' in response.headers:
-        file_size = int(response.headers['Content-Length']) 
-        return file_size
-    else:
-        return None
-
-def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
-    clean_up_temp_files()
-    """
-    Add a speech bubble to the top of the image or each frame of a GIF.
-    """
-    speechBubble = Image.open("assets/speechBubble.png").convert("RGBA")
-    image_seed = random.randint(10000, 99999)
-    output_path = f"temp/image{image_seed}"
-
-    # Download the image
-    with open(f"{output_path}.temp", "wb") as f:
-        f.write(requests.get(image_link).content)
-    image = Image.open(f"{output_path}.temp")
-    # Check if the image is a GIF
-    is_gif = image.format == 'GIF'
-
-    if is_gif:
-        frames = []
-        for frame in ImageSequence.Iterator(image):
-            frame = frame.convert("RGBA")
-            bubble_height = int(frame.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
-            speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
-            frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-            frames.append(frame)
-
-        output_path = f"{output_path}.gif"
-        frames[0].save(output_path, save_all=True, append_images=frames[1:], loop=0)
-
-    else:
-        image = image.convert("RGBA")
-        bubble_height = int(image.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
-        speechBubble_resized = speechBubble.resize((image.size[0], bubble_height))
-        image.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-
-        # Save the image as a PNG
-        output_path = f"{output_path}.png"
-        image.save(output_path)
-
-    image.close()
-    speechBubble.close()
-    return output_path
-
-def add_impact_font(image_link, top_text, bottom_text, font_size, font_color=(255, 255, 255), font_outline_color=(0, 0, 0)):
-    # Create a temporary directory if it doesn't exist
-    temp_dir = './temp/'
-    clean_up_temp_files()
-
-    random_seed = random.randint(10000, 99999)
-
-    font_outline_width = font_size // 25
-
-    # Download the image or GIF from the link
-    response = requests.get(image_link)
-    if response.status_code == 200:
-        temp_file_path = os.path.join(temp_dir, f'temp_image{random_seed}')
-        with open(temp_file_path, 'wb') as f:
-            f.write(response.content)
-    else:
-        print('Failed to download the image or GIF.')
-        return
-
-    # Open the image or GIF using Pillow
-    image = Image.open(temp_file_path)
-
-    # Check if the image is a GIF
-    is_gif = image.format == 'GIF'
-
-    # Load the Impact font
-    font_path = f'assets/impact.ttf'
-    font = ImageFont.truetype(font_path, font_size)
-
-    # Create a draw object
-    draw = ImageDraw.Draw(image)
-
-    # Calculate the text dimensions
-    top_text_width, top_text_height = draw.textsize(top_text, font=font)
-    bottom_text_width, bottom_text_height = draw.textsize(bottom_text, font=font)
-
-    # Calculate the position for the top and bottom text
-    image_width, image_height = image.size
-    top_text_x = (image_width - top_text_width) // 2
-    top_text_y = 0
-    bottom_text_x = (image_width - bottom_text_width) // 2
-    bottom_text_y = image_height - bottom_text_height
-
-    if is_gif:
-        # Get the original duration of the GIF
-        original_duration = image.info.get('duration', 100)
-
-        # Iterate over each frame of the GIF and add the text
-        frames = []
-        for frame in range(0, image.n_frames):
-            image.seek(frame)
-            frame_image = image.copy()
-
-            draw = ImageDraw.Draw(frame_image)
-            
-            draw.text((top_text_x, top_text_y), top_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                      stroke_fill=font_outline_color)
-            draw.text((bottom_text_x, bottom_text_y), bottom_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                      stroke_fill=font_outline_color)
-
-            frames.append(frame_image)
-
-        # Save the frames as an animated GIF with original duration
-        output_file_path = os.path.join(temp_dir, f'output{random_seed}.gif')
-        frames[0].save(output_file_path, save_all=True, append_images=frames[1:], optimize=False, duration=original_duration, loop=0)
-
-    else:
-        
-        draw.text((top_text_x, top_text_y), top_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                          stroke_fill=font_outline_color)
-        draw.text((bottom_text_x, bottom_text_y), bottom_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                          stroke_fill=font_outline_color)
-        
-        # Save the image as a PNG
-        output_file_path = os.path.join(temp_dir, f'output{random_seed}.png')
-        image.save(output_file_path, 'PNG')
-
-    # Return the output file path
-    return output_file_path
-
-async def get_guild_invite(bot):
-    # Get the bot's guild object by ID
-    #print a list of guilds the bot is in
-    guildNameResults = []
-    guildInviteResults = []
-    guildInfo = []
-    for guild in bot.guilds:
-
-        if guild is None:
-            print (f"Failed to get guild with ID {guild.id}")
-            pass
-
-        guildInfo.append(f"Guild ID: {guild.id}\nGuild Owner: {guild.owner}\nGuild Member Count: {guild.member_count}\nGuild Members Online Count: {sum(member.status != discord.Status.offline for member in guild.members)}")
-        guildNameResults.append(str(guild.name))
-        
-        # Check if there are any active invites for the guild
-        try:
-            invites = await guild.invites()
-            if len(invites) > 0:
-                # Return the first invite in the list of invites
-                guildInviteResults.append(str(invites[0]))
-
-        except discord.Forbidden:
-            # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
-            print (f"Failed to get invites for guild with ID {guild.id}")
-            guildInviteResults.append("No Invite")
-            continue
-        try:
-            # Create a new invite and return it
-            channel = guild.text_channels[0]
-            invite = await channel.create_invite()
-            guildInviteResults.append(str(invite))
-        except:
-            # If the bot can't create an invite, return None
-            print (f"Failed to create invite for guild with ID {guild.id}")
-            guildInviteResults.append("Invite Creation Failed")
-            continue
-
-    return guildNameResults, guildInviteResults, guildInfo
 
 
 def main():
@@ -338,7 +98,7 @@ def main():
 
     def check_bot_permissions(ctx):
         binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
-        binary_required_permissions = bin(read_toml_var("permissionsInt"))
+        binary_required_permissions = bin(utilityBot.read_toml_var("permissionsInt"))
 
         #perform binary AND operation on the two binary strings
         check = int(binary_guild_permissions, 2) & int(binary_required_permissions, 2)
@@ -348,8 +108,8 @@ def main():
             return False
     
     async def command_topper(ctx):
-        edit_user_data(ctx.author, "commandsUsed", get_user_data(ctx.author, "commandsUsed") + 1)
-        if get_user_data(ctx.author, "commandsUsed") <= 1:
+        utilityBot.edit_user_data(ctx.author, "commandsUsed", utilityBot.get_user_data(ctx.author, "commandsUsed") + 1)
+        if utilityBot.get_user_data(ctx.author, "commandsUsed") <= 1:
             await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nRemember to use **/vote** if you find me useful (This will be the only reminder)", ephemeral=True)
 
         if not check_bot_permissions(ctx):
@@ -357,28 +117,14 @@ def main():
             return False
         return True
 
-    @bot.slash_command(name="log", description="Get the log file")
-    async def send_log_command(
-        ctx: discord.ApplicationContext,
-        clearLog: discord.Option(bool, name="clear-log", description="Clear the log file after sending it?"),
-    ):
-        if is_admin(ctx.author):
-            await ctx.user.send(file=discord.File("app.log"))
-            await ctx.respond("Sent log file.", ephemeral=True)
-            if clearLog == True:
-                clear_log()
-        else:
-            await ctx.respond(f"That command is offline right now.", ephemeral=True)
-        logging_command(ctx, clearLog)
-
     @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
-        if get_file_size(image_link) > read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if utilityBot.get_file_size(image_link) > utilityBot.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         await ctx.respond(f"Converting image to gif... ") # this message will be deleted when the gif is sent
         try:
-            newGif = convert_image_to_gif(image_link)
+            newGif = utilityBot.convert_image_to_gif(image_link)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
             os.remove(newGif)
             log.info(f"Converted image {image_link}")
@@ -395,8 +141,8 @@ def main():
         scale: discord.Option(int, "The scale of the gif", required=False, default=320),
     ):
         #do not download videos larger than maxFileSize
-        if get_file_size(video_link) > read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if utilityBot.get_file_size(video_link) > utilityBot.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         
         if fps > 25:
@@ -409,7 +155,7 @@ def main():
         
         await ctx.respond(f"Converting video to gif... ")
         try:
-            newGif = convert_video_to_gif(video_link, fps, scale)
+            newGif = utilityBot.convert_video_to_gif(video_link, fps, scale)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
             os.remove(newGif)
             log.info(f"Converted image {video_link}")
@@ -425,8 +171,8 @@ def main():
         speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
     ):
         #do not download videos larger than maxFileSize
-        if get_file_size(image_link) > read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if utilityBot.get_file_size(image_link) > utilityBot.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         
         if speech_bubble_size > 1 or speech_bubble_size < 0:
@@ -434,7 +180,7 @@ def main():
             return
         await ctx.respond(f"Adding speech bubble to image... ")
         try:
-            newImage = add_speech_bubble(image_link, speech_bubble_size)
+            newImage = utilityBot.add_speech_bubble(image_link, speech_bubble_size)
             await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
             os.remove(newImage)
             logging_command(f"Added speech bubble to image {image_link}")
@@ -456,7 +202,7 @@ def main():
         if check_bot_permissions(ctx):
             await ctx.respond(f"Permissions are already up to date!", ephemeral=True)
             return
-        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={read_toml_var('permissionsInt')}"
+        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         logging_command(ctx)
 
@@ -472,7 +218,7 @@ def main():
     ):
         await ctx.respond(f"Adding impact font to image... ")
 
-        newImage = add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
+        newImage = utilityBot.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
         await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
         os.remove(newImage)
         log.info(f"Added impact font to image {image_link}")
@@ -483,7 +229,7 @@ def main():
     async def invite_command(ctx):
         #respond with message with button that links to bot invite link
         client_id = bot.user.id
-        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={read_toml_var('permissionsInt')}"
+        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         await command_topper(ctx)
         logging_command(ctx)
@@ -670,17 +416,229 @@ def main():
         logging_command(ctx, index)
 
 
+    @bot.slash_command(name="cat", description="Get a random cat picture")
+    async def cat_command(ctx):
+        """Get a random cat gif"""
+        #use gif search function
+        await ctx.respond(utilityBot.gif_search("silly cat"))
+
+    @bot.slash_command(name="find-a-friend", description="Get a random discord user")
+    async def dox_command(ctx):
+        def get_random_user():
+            randomUser = bot.users[random.randint(0, len(bot.users))-1]
+            if randomUser == ctx.author or randomUser.bot:
+                return get_random_user()
+            else:
+                return randomUser
+        await ctx.respond(f"Your new friend is {get_random_user()}!")
+
+    @bot.slash_command(name="peepee", description="Get your peepee size")
+    async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
+        """Get your peepee size"""
+        #hash the user id to get a random number
+        if user == None:
+            user = ctx.author
+        peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
+        if user.id == utilityBot.read_toml_var("botOwner"):
+            peepeeSize = 34
+        peepee = "8" + "=" * peepeeSize + "D"
+        await ctx.respond(f"{user.mention} peepee size is {peepee}")
+
+    @bot.slash_command(name="rps", description="Play rock paper scissors with another user")
+    async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
+        """Play rock paper scissors with another user"""
+        if user is None:
+            await ctx.respond("Please mention a user to play with.", ephemeral=True)
+            return
+        
+        if user == ctx.author:
+            await ctx.respond("Sorry, you can't play with yourself ;)", ephemeral=True)
+            return
+        
+        if user.bot:
+            await ctx.respond("You can't play with a bot!", ephemeral=True)
+            return
+
+        view = RPSView(ctx.author, user)
+        await ctx.respond(f"{user.mention} has been challenged to a game of rock paper scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=view)
+
+    class RPSView(View):
+        def __init__(self, challenger, opponent):
+            super().__init__()
+            self.challenger = challenger
+            self.opponent = opponent
+            self.move = None
+            self.opponent_move = None
+
+        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+            # Only allow the two players to interact with the buttons
+            return interaction.user in [self.challenger, self.opponent]
+
+        @discord.ui.button(label="Rock 🗿", style=discord.ButtonStyle.primary, custom_id="rps_rock")
+        async def rock_button(self, button: discord.Button, interaction: discord.Interaction):
+            await self.process_move(button, interaction, "rock")
+
+        @discord.ui.button(label="Paper 📰", style=discord.ButtonStyle.primary, custom_id="rps_paper")
+        async def paper_button(self, button: discord.Button, interaction: discord.Interaction):
+            await self.process_move(button, interaction, "paper")
+
+        @discord.ui.button(label="Scissors ✂️", style=discord.ButtonStyle.primary, custom_id="rps_scissors")
+        async def scissors_button(self, button: discord.Button, interaction: discord.Interaction):
+            await self.process_move(button, interaction, "scissors")
+
+        async def process_move(self, button, interaction, move):
+            await interaction.response.defer(ephemeral=True)
+
+            if interaction.user == self.challenger and self.move is None:
+                self.move = move
+            elif interaction.user == self.opponent and self.opponent_move is None:
+                self.opponent_move = move
+            else:
+                return
+
+            await self.send_results(interaction)
+
+        async def send_results(self, interaction):
+            if self.opponent_move is None or self.move is None:
+                return
+
+            # Compare the moves and determine the winner
+            winner = determine_winner(self.move, self.opponent_move)
+
+            # Prepare the result message mentioning the winner and the choices
+            if winner == "tie":
+                result_message = f"⛔ It's a tie!\n\n{self.challenger.mention} chose {self.move}.\n{self.opponent.mention} chose {self.opponent_move}."
+            else:
+                winner = self.challenger if winner == self.move else self.opponent
+                result_message = f"🎉 {winner.mention} wins!\n\n{self.challenger.mention} chose {self.move}.\n{self.opponent.mention} chose {self.opponent_move}."
+
+            await interaction.followup.send(result_message)
+
+    def determine_winner(move1, move2):
+        if move1 == move2:
+            return "tie"
+        elif move1 == "rock":
+            if move2 == "paper":
+                return "paper"
+            else:
+                return "rock"
+        elif move1 == "paper":
+            if move2 == "scissors":
+                return "scissors"
+            else:
+                return "paper"
+        elif move1 == "scissors":
+            if move2 == "rock":
+                return "rock"
+            else:
+                return "scissors"
+            
+    @bot.slash_command(name="encode", description="Encode a message")
+    async def encode_command(ctx,
+                            message: discord.Option(str, description="Message to encode") = None,
+                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Encode mode") = None,
+                            hide: discord.Option(bool, description="Hide the message") = False,
+                            key: discord.Option(str, description="Key to encode with") = None):
+        """Encode a message"""
+        if message is None:
+            await ctx.respond("Please enter a message to encode.", ephemeral=True)
+            return
+        if mode is None:
+            await ctx.respond("Please enter a mode to encode with.", ephemeral=True)
+            return
+
+        encoded_message = None
+
+        if mode == "base64":
+            encoded_message = base64.b64encode(message.encode()).decode()
+        elif mode == "rot13":
+            encoded_message = codecs.encode(message, 'rot_13')
+        elif mode == "caesar":
+            if key is None:
+                await ctx.respond("Please enter a key for the Caesar cipher.", ephemeral=True)
+                return
+            encoded_message = utilityBot.caesar_cipher_encode(message, key)
+        elif mode == "vigenere":
+            if key is None:
+                await ctx.respond("Please enter a key for the Vigenère cipher.", ephemeral=True)
+                return
+            encoded_message = utilityBot.vigenere_cipher_encode(message, key)
+        elif mode == "atbash":
+            encoded_message = utilityBot.atbash_cipher_encode(message)
+        elif mode == "binary":
+            encoded_message = ' '.join(format(ord(char), '08b') for char in message)
+        elif mode == "hex":
+            encoded_message = ' '.join(format(ord(char), '02x') for char in message)
+
+        if encoded_message is None:
+            await ctx.respond("Invalid mode selected.", ephemeral=True)
+        else:
+            if hide:
+                # Hide the message if hide option is enabled
+                encoded_message = "*" * len(encoded_message)
+            await ctx.respond(f"Encoded message: {encoded_message}")
+
+    @bot.slash_command(name="decode", description="Decode a message")
+    async def decode_command(ctx,
+                            message: discord.Option(str, description="Message to decode") = None,
+                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Decode mode") = None,
+                            hide: discord.Option(bool, description="Hide the message") = False,
+                            key: discord.Option(str, description="Key to decode with") = None):
+        """Decode a message"""
+        if message is None:
+            await ctx.respond("Please enter a message to decode.", ephemeral=True)
+            return
+        if mode is None:
+            await ctx.respond("Please enter a mode to decode with.", ephemeral=True)
+            return
+
+        decoded_message = None
+
+        if mode == "base64":
+            try:
+                decoded_bytes = base64.b64decode(message.encode())
+                decoded_message = decoded_bytes.decode()
+            except ValueError:
+                await ctx.respond("Invalid base64 encoded message.", ephemeral=True)
+        elif mode == "rot13":
+            decoded_message = codecs.decode(message, 'rot_13')
+        elif mode == "caesar":
+            if key is None:
+                await ctx.respond("Please enter a key for the Caesar cipher.", ephemeral=True)
+                return
+            decoded_message = utilityBot.caesar_cipher_decode(message, key)
+        elif mode == "vigenere":
+            if key is None:
+                await ctx.respond("Please enter a key for the Vigenère cipher.", ephemeral=True)
+                return
+            decoded_message = utilityBot.vigenere_cipher_decode(message, key)
+        elif mode == "atbash":
+            decoded_message = utilityBot.atbash_cipher_decode(message)
+        elif mode == "binary":
+            decoded_message = utilityBot.binary_to_text(message)
+        elif mode == "hex":
+            decoded_message = utilityBot.hex_to_text(message)
+
+        if decoded_message is None:
+            await ctx.respond("Invalid mode selected.", ephemeral=True)
+        else:
+            if hide:
+                # Hide the message if hide option is enabled
+                decoded_message = "*" * len(decoded_message)
+            await ctx.respond(f"Decoded message: {decoded_message}")
+
+
+            
     @bot.slash_command(name="feedback", description="Send feedback")
     #feedback_type options: bug, feature, other
     #feedback_feature options: commands, events, other
     
-
     async def send_bot_owner_feedback(ctx,
         feedback_type: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
         feedback_feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
         feedback_description: discord.Option(str, description="Describe the issue / change") = None
     ):
-            botOwner = bot.get_user(512609720885051425)
+            botOwner = bot.get_user(utilityBot.read_toml_var("botOwner"))
             embed = discord.Embed(title="Bot Owner Notification", description=f"**{ctx.author.name}#{ctx.author.discriminator}** has submitted feedback", color=discord.Color.red())
             embed.add_field(name="Feedback Type", value=feedback_type, inline=False)
             embed.add_field(name="Feedback Feature", value=feedback_feature, inline=False)
@@ -688,7 +646,6 @@ def main():
             embed.set_footer(text=f"User ID: {ctx.author.id}")
             await botOwner.send(embed=embed)
             await ctx.respond("Thanks, Feedback has been sent!", ephemeral=True)
-
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
@@ -724,7 +681,7 @@ def main():
             data = request.json()
             if data['voted'] == 1:
                 await ctx.respond("Thanks for voting!")
-                edit_user_data(ctx.author, "votes", get_user_data(ctx.author, "votes") + 1)
+                utilityBot.edit_user_data(ctx.author, "votes", utilityBot.get_user_data(ctx.author, "votes") + 1)
                 #give VoteReward role
                 try:
                     if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
@@ -732,15 +689,13 @@ def main():
                     await ctx.author.add_roles(discord.utils.get(ctx.guild.roles, name="Vote Reward"))
                     await ctx.respond("You have been given the Vote Reward role!")
                 except discord.Forbidden:
-                    pass
-                    # await ctx.respond("I don't have permission to give you the Vote Reward role!")
+                    await ctx.respond("I don't have permission to give you the Vote Reward role!", ephemeral=True)
 
             else:
                 await ctx.respond(f"You haven't voted yet!\nhttps://top.gg/bot/{topggID}/vote")
         else:
             await ctx.respond("Error checking vote status!")
         await command_topper(ctx)
-
 
     @bot.event
     async def on_ready():
@@ -749,25 +704,25 @@ def main():
 
     @bot.event
     async def on_message(message):
-        botOwner = bot.get_user(512609720885051425)  # Get the bot owner
+        botOwner = bot.get_user(utilityBot.read_toml_var("botOwner"))  # Get the bot owner
         #messageAuthor = message.author.id # Get the author of the message
         #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
         if message.guild != None: # Any message in a server
             logging_message(message)
             #read how many messages the user has sent and add 1
-            edit_user_data(message.author, "messages", get_user_data(message.author, "messages") + 1)
+            utilityBot.edit_user_data(message.author, "messages", utilityBot.get_user_data(message.author, "messages") + 1)
             #add their username and discriminator
-            edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
+            utilityBot.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
             #if any keyword in keywords list is in the message content
             if any(keyword in message.content.lower() for keyword in keywords):
                 embed=discord.Embed(title="Message Link Detected", url=message.jump_url, color=discord.Color.blue())
                 embed.add_field(name="Message", value=message.content, inline=False)
+                embed.add_field(name="Server", value=message.guild, inline=False)
                 embed.add_field(name="Channel", value=message.channel, inline=False)
                 embed.add_field(name="User", value=message.author, inline=False)
 
                 await botOwner.send(embed=embed)
-
 
         # (A DM from a user) Check if the message is not from the bot or the bot owner 
         if message.author != bot.user and message.author != botOwner and message.guild == None:
@@ -807,17 +762,115 @@ def main():
                 pass
 
         # (!invites secret command)
-        if message.author == botOwner and message.content.startswith("!invites"):
-            guilds = await get_guild_invite(bot)
-            guildNames = guilds[0]
-            guildInvites = guilds[1]
-            guildInfo = guilds[2]
-            embed=discord.Embed(title="Guild Invites", color=discord.Color.green())
-            #add a column for guild name and guild invite and guild info
-            for i in range(len(guildNames)):
-                embed.add_field(name=guildNames[i], value=f"Invite: {guildInvites[i]}\n{guildInfo[i]}", inline=False)
-            await botOwner.send(embed=embed)
+        if message.guild == None:
+            if message.author == botOwner and message.content == ("!guilds"):
+                guilds = await utilityBot.get_guild_invite(bot)
+                guildNames = guilds[0]
+                guildInvites = guilds[1]
+                guildInfo = guilds[2]
+                embed=discord.Embed(title="Guild Invites", color=discord.Color.green())
+                #add a column for guild name and guild invite and guild info
+                for i in range(len(guildNames)):
+                    embed.add_field(name=guildNames[i], value=f"Invite: {guildInvites[i]}\n{guildInfo[i]}", inline=False)
+                await botOwner.send(embed=embed)
+
+            if message.author == botOwner and message.content == ("!log"):
+                await botOwner.send(file=discord.File('app.log'))
             
+            if message.author == botOwner and message.content == ("!clearlog"):
+                with open('app.log', 'w') as f:
+                    f.write('')
+            
+            if message.author == botOwner and message.content == ("!usercount"):
+                await botOwner.send(f"Users: {len(bot.users)}")
+
+            if message.author == botOwner and message.content == ("!userlist"):
+                # Write all users to a CSV file
+                # username, discriminator, id, account created, name of Guilds found in, id of Guilds found in, date joined Guilds found in, user description
+                with open('users.csv', 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(["Username", "Discriminator", "ID", "Account Created", "Guilds", "Guild IDs", "Date Joined Guilds", "User Description"])
+                    
+                    # For each user, find what guilds they are in
+                    for user in bot.users:
+                        guilds = []
+                        guild_ids = []
+                        joined_dates = []
+                        
+                        # Iterate through guilds to find user's membership details
+                        for guild in bot.guilds:
+                            member = guild.get_member(user.id)
+                            if member:
+                                guilds.append(guild.name)
+                                guild_ids.append(str(guild.id))
+                                joined_dates.append(member.joined_at.strftime("%Y-%m-%d %H:%M:%S"))  # Format the date
+                                
+                        # Write the user data to the CSV file
+                        guilds_str = "\n".join(guilds)
+                        guild_ids_str = "\n".join(guild_ids)
+                        joined_dates_str = "\n".join(joined_dates)
+                        writer.writerow([user.name, user.discriminator, str(user.id), str(user.created_at), guilds_str, guild_ids_str, joined_dates_str])
+                
+                # Send the CSV file to the bot owner
+                await botOwner.send(file=discord.File('users.csv'))
+            
+            if message.author == botOwner and message.content == ("!guildcount"):
+                await botOwner.send(f"Guilds: {len(bot.guilds)}")
+            
+            if message.author == botOwner and message.content == ("!users.json"):
+                await botOwner.send(file=discord.File('users.json'))
+
+            if message.author == botOwner and message.content.startswith("!loglevel"):
+                logLevel = message.content.split(": ")[1]
+                if logLevel == "debug":
+                    log.setLevel(log.DEBUG)
+                elif logLevel == "info":
+                    log.setLevel(log.INFO)
+                elif logLevel == "warning":
+                    log.setLevel(log.WARNING)
+                elif logLevel == "error":
+                    log.setLevel(log.ERROR)
+                elif logLevel == "critical":
+                    log.setLevel(log.CRITICAL)
+                else:
+                    await botOwner.send("Invalid log level")
+                await botOwner.send(f"Log level set to {logLevel}")
+
+            if message.author == botOwner and message.content.startswith("!setstatus"):
+                status = message.content.split(": ")[1]
+                await bot.change_presence(activity=discord.Game(name=status))
+                await botOwner.send(f"Status set to {status}")
+
+            if message.author == botOwner and message.content == ("!clearstatus"):
+                await bot.change_presence(activity=None)
+                await botOwner.send("Status cleared")
+            
+            if message.author == botOwner and message.content == ("!guilds.zip"):
+                shutil.make_archive('guilds', 'zip', 'guilds')
+                await botOwner.send(file=discord.File('guilds.zip'))
+                os.remove('guilds.zip')
+
+            if message.author == botOwner and message.content.startswith("!notes"):
+                await botOwner.send(file=discord.File('notes.json'))
+
+            if message.author == botOwner and message.content.startswith("!help"):
+                await botOwner.send("""\n
+                **!help** - Send this message\n
+                **!guilds** - List all guilds and their invites\n
+                **!guilds.zip** - Send a ZIP file of all messages\n
+                **!log** - Send the log file\n
+                **!clearlog** - Clear the log file\n
+                **!usercount** - Send the number of users\n
+                **!userlist** - Send a CSV file of all users\n
+                **!guildcount** - Send the number of guilds\n
+                **!users.json** - Send a JSON file of all users\n
+                **!loglevel** - Set the log level\n
+                **!setstatus** - Set the status\n
+                **!clearstatus** - Clear the status\n
+                **!setcustom** - Set the custom activity\n
+                """)
+
+
     bot.run(TOKEN)
 
 if __name__ == "__main__":

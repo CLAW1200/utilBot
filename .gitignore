@@ -1,6 +1,9 @@
-token.toml
 /temp/
 app.log
 notes.json
-token.toml
 users.json
+/__pycache__/
+/guilds/
+tokens.toml
+users.csv
+messages.zip
