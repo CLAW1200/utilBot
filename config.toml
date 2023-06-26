@@ -5,3 +5,4 @@ videoToGifCommand = true
 speechBubbleCommand = true
 maxFileSize = 8000000
 botOwner = 512609720885051425
+status = "090"

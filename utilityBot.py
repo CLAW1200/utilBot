@@ -11,28 +11,57 @@ import json
 
 def edit_user_data(user, field, data):
     # Edit users.json, add data to key
-    with open("users.json", "r") as f:
-        users = json.load(f)
-    
     user_id = str(user.id)
-    if user_id in users:
-        user_data = users[user_id]
-        user_data[field] = data
-    else:
-        user_data = {field: data}
+    try:
+        with open("users.json", "r+") as f:
+            users = json.load(f)
+            if user_id in users:
+                user_data = users[user_id]
+                user_data[field] = data
+            else:
+                user_data = {field: data}
+            users[user_id] = user_data
+            f.seek(0)
+            json.dump(users, f, indent=4)
+            f.truncate()
+    except FileNotFoundError:
+        users = {user_id: {field: data}}
+        with open("users.json", "w") as f:
+            json.dump(users, f, indent=4)
 
-    users[user_id] = user_data
-    
-    with open("users.json", "w") as f:
-        json.dump(users, f, indent=4)
+def add_user_data(user, field, data):
+    # Edit users.json, add data to key if it doesn't exist
+    user_id = str(user.id)
+    try:
+        with open("users.json", "r+") as f:
+            users = json.load(f)
+            if user_id in users:
+                user_data = users[user_id]
+                if field not in user_data:
+                    user_data[field] = data
+            else:
+                user_data = {field: data}
+                users[user_id] = user_data
+            f.seek(0)
+            json.dump(users, f, indent=4)
+            f.truncate()
+    except FileNotFoundError:
+        users = {user_id: {field: data}}
+        with open("users.json", "w") as f:
+            json.dump(users, f, indent=4)
 
 def get_user_data(user, field):
-    #get data from users.json
+    # Get data from users.json
+    user_id = str(user.id)
     try:
         with open("users.json", "r") as f:
             users = json.load(f)
-        return users[str(user.id)][field]
-    except KeyError:
+            if user_id in users:
+                user_data = users[user_id]
+                return user_data.get(field, 0)
+            else:
+                return 0
+    except FileNotFoundError:
         return 0
     
 def read_log():
@@ -264,46 +293,114 @@ def gif_search(query):
         return
 
 
+def status(status):
+    #open config toml and set status to string
+    configFile = "config.toml"
+    with open(configFile) as toml_file:
+        data = toml.load(toml_file)
+        data["status"] = status
+    #write toml file
+    with open(configFile, "w") as toml_file:
+        toml.dump(data, toml_file)
+
+def search(mode, query):
+    """Conduct a full search for either message or user."""
+    if mode == "message":
+        # Search through all text files in /guilds/ for query
+        def search_text_files(directory, search_string):
+            matching_lines = []
+            
+            # Iterate through all files in the directory
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if file.endswith(".txt"):
+                        file_path = os.path.join(root, file)
+                        
+                        # Open the file and search for the string
+                        with open(file_path, 'r', encoding="UTF-8") as f:
+                            lines = f.readlines()
+                            for line_number, line in enumerate(lines):
+                                if search_string.lower() in line:
+                                    matching_lines.append((line.strip(), file_path, line_number))
+            
+            return matching_lines
+        
+        with open("temp/search.txt", "w", encoding="UTF-8") as f:
+            f.write(f"Search results for '{query}':\n\n")
+            for result in search_text_files("guilds", query):
+                f.write(f"{result[0]}\n({result[1]}:{result[2]})\n\n")
+    
+    elif mode == "user":
+        # Search through all text files in /guilds/ for query between two lines of "--------------------------------"
+        def search_user_files(directory, search_string):
+            matching_lines = []
+            
+            # Iterate through all files in the directory
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if file.endswith(".txt"):
+                        file_path = os.path.join(root, file)
+                        
+                        # Open the file and search for the string between two lines of "--------------------------------"
+                        with open(file_path, 'r', encoding="UTF-8") as f:
+                            lines = f.readlines()
+                            start_line = None
+                            for line_number, line in enumerate(lines):
+                                if line.strip() == "--------------------------------":
+                                    if start_line is None:
+                                        start_line = line_number
+                                    else:
+                                        end_line = line_number
+                                        break
+                            if start_line is not None and end_line is not None:
+                                # Process lines between start_line and end_line
+                                for i in range(start_line + 1, end_line):
+                                    if search_string.lower() in lines[i]:
+                                        matching_lines.append((lines[i].strip(), file_path, i))
+            
+            return matching_lines
+        
+        with open("temp/search.txt", "w", encoding="UTF-8") as f:
+            f.write(f"Search results for '{query}' (User Mode):\n\n")
+            for result in search_user_files("guilds", query):
+                f.write(f"{result[0]}\n({result[1]}:{result[2]})\n\n")
+    
+    else:
+        print("Invalid search mode. Please specify either 'message' or 'user'.")
+    
+
 async def get_guild_invite(bot):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
-    guildNameResults = []
-    guildInviteResults = []
-    guildInfo = []
+    guildData = []
     for guild in bot.guilds:
-
-        if guild is None:
-            print (f"Failed to get guild with ID {guild.id}")
-            pass
-
-        guildInfo.append(f"Guild ID: {guild.id}\nGuild Owner: {guild.owner}\nGuild Member Count: {guild.member_count}\nGuild Members Online Count: {sum(member.status != discord.Status.offline for member in guild.members)}")
-        guildNameResults.append(str(guild.name))
-        
+       
         # Check if there are any active invites for the guild
         try:
             invites = await guild.invites()
             if len(invites) > 0:
                 # Return the first invite in the list of invites
-                guildInviteResults.append(str(invites[0]))
+                invite = str(invites[0])
+            else:
+                #invite = None
+                # If there are no active invites, create a new one and return it
+                try:
+                    channel = guild.text_channels[0]
+                    invite = await channel.create_invite()
+                except:
+                    # If the bot can't create an invite, return None
+                    print (f"Failed to create invite for guild with ID {guild.id}")
+                    invite = None
 
-        except discord.Forbidden:
+        except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
             print (f"Failed to get invites for guild with ID {guild.id}")
-            guildInviteResults.append("No Invite")
-            continue
-        try:
-            # Create a new invite and return it
-            channel = guild.text_channels[0]
-            invite = await channel.create_invite()
-            guildInviteResults.append(str(invite))
-        except:
-            # If the bot can't create an invite, return None
-            print (f"Failed to create invite for guild with ID {guild.id}")
-            guildInviteResults.append("Invite Creation Failed")
-            continue
+            invite = None
 
-    return guildNameResults, guildInviteResults, guildInfo
+        # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
+        guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, guild.member_count, sum(member.status != discord.Status.offline for member in guild.members)])
 
+    return guildData
 
 
 #ENCODING AND DECODING FUNCTIONS

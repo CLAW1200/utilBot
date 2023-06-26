@@ -4,6 +4,7 @@ notes.json
 users.json
 /__pycache__/
 /guilds/
-tokens.toml
+token.toml
 users.csv
 messages.zip
+app.py

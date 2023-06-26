@@ -1,3 +1,4 @@
+
 from discord.ui import View
 import os
 import random
@@ -16,7 +17,31 @@ import hashlib
 import base64
 import codecs
 import utilityBot
+from datetime import datetime, timedelta
+import asyncio
 ureg = UnitRegistry()
+
+def update_version():
+    current_version = "1.0.0"  # Change the current_version if needed
+    code_hash = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
+
+    try:
+        with open("version.txt", "r") as file:
+            saved_version, saved_hash = file.read().strip().split(",")
+    except FileNotFoundError:
+        saved_version, saved_hash = current_version, ""
+
+    if code_hash != saved_hash:
+        major, minor, patch = map(int, saved_version.split("."))
+        patch += 1
+        updated_version = f"{major}.{minor}.{patch}"
+        with open("version.txt", "w") as file:
+            file.write(f"{updated_version},{code_hash}")
+        print(f"Code has changed. New version: {updated_version}")
+    else:
+        print(f"Code remains unchanged. Version: {saved_version}")
+
+update_version()
 
 MESSAGE = 25
 DIRECT_MESSAGE = 30
@@ -41,6 +66,7 @@ def logging_message(message):
     # Get the server name and channel name
     server_name = message.guild.name
     channel_name = message.channel.name
+    time_code = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     
     # Create the directory if it doesn't exist
     directory = f"guilds/{message.guild.id}"
@@ -63,6 +89,7 @@ def logging_message(message):
         
         # Write the formatted message to the file
         file.write(f"{author_info}:\n")
+        file.write(f"Time: {time_code}\n")
         file.write(f"Message: {message.content}\n")
         file.write(f"{attachments_info}\n")
         file.write(f"{embeds_info}\n")
@@ -72,6 +99,7 @@ def logging_direct_message(message):
     log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
 
 def logging_command(ctx, *args):
+    print (        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}")
     log.log(
         COMMAND,
         f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}"
@@ -88,8 +116,6 @@ with open(tokenFile) as toml_file:
 #if there is no temp folder make one
 if not os.path.exists("temp"):
     os.makedirs("temp")
-
-
 
 def main():
     log.debug("Starting Main()")
@@ -109,8 +135,9 @@ def main():
     
     async def command_topper(ctx):
         utilityBot.edit_user_data(ctx.author, "commandsUsed", utilityBot.get_user_data(ctx.author, "commandsUsed") + 1)
+        utilityBot.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if utilityBot.get_user_data(ctx.author, "commandsUsed") <= 1:
-            await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nRemember to use **/vote** if you find me useful (This will be the only reminder)", ephemeral=True)
+            await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nPlease use **/feedback** if you have any issues!\nRemember to use **/vote** if you find me useful :) - This will be the only reminder", ephemeral=True)
 
         if not check_bot_permissions(ctx):
             await ctx.respond("Warning: I am missing some permissions which may cause errors. Please use /update-permissions to avoid any problems using commands", ephemeral=True)
@@ -179,14 +206,17 @@ def main():
             await ctx.respond(f"Sorry, values between 0 and 1 only!", ephemeral=True)
             return
         await ctx.respond(f"Adding speech bubble to image... ")
+
         try:
             newImage = utilityBot.add_speech_bubble(image_link, speech_bubble_size)
             await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
-            os.remove(newImage)
-            logging_command(f"Added speech bubble to image {image_link}")
         except Exception as e:
-            await ctx.edit(content = f"Sorry, but that image link is invalid!")
-            print (e)
+            await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image!")
+            log.error(e)
+        try:
+            os.remove(newImage)
+        except Exception as e:
+            print(f"{e}" + " - Failed to remove image")
             log.error(e)
         await command_topper(ctx)
         logging_command(ctx, image_link, speech_bubble_size)
@@ -204,7 +234,9 @@ def main():
             return
         inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
+        await command_topper(ctx)
         logging_command(ctx)
+
 
     @bot.slash_command(name="impact", description="Add impact font to an image")
     async def impact_command(
@@ -421,6 +453,8 @@ def main():
         """Get a random cat gif"""
         #use gif search function
         await ctx.respond(utilityBot.gif_search("silly cat"))
+        await command_topper(ctx)
+        logging_command(ctx)
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user")
     async def dox_command(ctx):
@@ -431,6 +465,8 @@ def main():
             else:
                 return randomUser
         await ctx.respond(f"Your new friend is {get_random_user()}!")
+        await command_topper(ctx)
+        logging_command(ctx)
 
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
@@ -443,8 +479,14 @@ def main():
             peepeeSize = 34
         peepee = "8" + "=" * peepeeSize + "D"
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
+        await command_topper(ctx)
+        logging_command(ctx)
 
-    @bot.slash_command(name="rps", description="Play rock paper scissors with another user")
+    ongoing_games = {}
+    @bot.slash_command(
+        name="rps",
+        description="Play rock paper scissors with another user"
+    )
     async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
         """Play rock paper scissors with another user"""
         if user is None:
@@ -458,9 +500,18 @@ def main():
         if user.bot:
             await ctx.respond("You can't play with a bot!", ephemeral=True)
             return
+        
+        if ctx.author.id in ongoing_games or user.id in ongoing_games:
+            await ctx.respond("There is already an ongoing game involving one of the players.", ephemeral=True)
+            return
 
         view = RPSView(ctx.author, user)
         await ctx.respond(f"{user.mention} has been challenged to a game of rock paper scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=view)
+
+        ongoing_games[ctx.author.id] = view
+        ongoing_games[user.id] = view
+
+        await view.start_timer()  # Add this line to start the timer
 
     class RPSView(View):
         def __init__(self, challenger, opponent):
@@ -469,10 +520,21 @@ def main():
             self.opponent = opponent
             self.move = None
             self.opponent_move = None
+            self.timer = None
 
         async def interaction_check(self, interaction: discord.Interaction) -> bool:
             # Only allow the two players to interact with the buttons
             return interaction.user in [self.challenger, self.opponent]
+
+        async def start_timer(self):
+            await asyncio.sleep(60)  # Wait for 60 seconds
+
+            if self.move is None or self.opponent_move is None:
+                # The game has expired
+                await self.on_timeout()
+            else:
+                # The game has already concluded, so no action needed
+                pass
 
         @discord.ui.button(label="Rock 🗿", style=discord.ButtonStyle.primary, custom_id="rps_rock")
         async def rock_button(self, button: discord.Button, interaction: discord.Interaction):
@@ -502,6 +564,11 @@ def main():
             if self.opponent_move is None or self.move is None:
                 return
 
+            # Stop the timer since the game has concluded
+            if self.timer is not None:
+                self.timer.cancel()
+                self.timer = None  # Reset the timer
+
             # Compare the moves and determine the winner
             winner = determine_winner(self.move, self.opponent_move)
 
@@ -512,8 +579,35 @@ def main():
                 winner = self.challenger if winner == self.move else self.opponent
                 result_message = f"🎉 {winner.mention} wins!\n\n{self.challenger.mention} chose {self.move}.\n{self.opponent.mention} chose {self.opponent_move}."
 
-            await interaction.followup.send(result_message)
+            # Edit the message with the result
+            await self.message.edit(content=result_message, view=None)
 
+            # Remove the game from the ongoing games
+            del ongoing_games[self.challenger.id]
+            del ongoing_games[self.opponent.id]
+
+        async def on_timeout(self):
+            # Reset the moves
+            self.move = None
+            self.opponent_move = None
+
+            # Edit the message to reflect the expiration
+            expiration_message = f"⌛ The game between {self.challenger.mention} and {self.opponent.mention} has expired."
+            await self.message.edit(content=expiration_message, view=None)
+
+            # Remove the game from the ongoing games
+            del ongoing_games[self.challenger.id]
+            del ongoing_games[self.opponent.id]
+
+        async def interaction_check(self, interaction: discord.Interaction) -> bool:
+            # Only allow the two players to interact with the buttons
+            return interaction.user in [self.challenger, self.opponent]
+
+        async def on_error(self, error, item, traceback):
+            # Handle errors and cancel the timer
+            if isinstance(error, discord.NotFound):
+                self.timer.cancel()
+        
     def determine_winner(move1, move2):
         if move1 == move2:
             return "tie"
@@ -577,6 +671,8 @@ def main():
                 # Hide the message if hide option is enabled
                 encoded_message = "*" * len(encoded_message)
             await ctx.respond(f"Encoded message: {encoded_message}")
+        await command_topper(ctx)
+        logging_command(ctx, "encode", message, mode, hide, key)
 
     @bot.slash_command(name="decode", description="Decode a message")
     async def decode_command(ctx,
@@ -626,6 +722,8 @@ def main():
                 # Hide the message if hide option is enabled
                 decoded_message = "*" * len(decoded_message)
             await ctx.respond(f"Decoded message: {decoded_message}")
+        await command_topper(ctx)
+        logging_command(ctx, "decode", message, mode, hide, key)
 
 
             
@@ -646,6 +744,8 @@ def main():
             embed.set_footer(text=f"User ID: {ctx.author.id}")
             await botOwner.send(embed=embed)
             await ctx.respond("Thanks, Feedback has been sent!", ephemeral=True)
+            await command_topper(ctx)
+            logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
@@ -654,6 +754,10 @@ def main():
         embed.add_field(name="image-to-gif", value="Convert an image to a gif", inline=False)
         embed.add_field(name="video-to-gif", value="Convert a video to a gif", inline=False)
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
+        embed.add_field(name="encode", value="Encode a message", inline=False)
+        embed.add_field(name="decode", value="Decode a message", inline=False)
+        embed.add_field(name="rps", value="Play rock paper scissors with another user", inline=False)
+        embed.add_field(name="cat" , value="Get a random cat gif", inline=False)
         embed.add_field(name="impact", value="Add impact text to an image", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
         embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)
@@ -682,6 +786,7 @@ def main():
             if data['voted'] == 1:
                 await ctx.respond("Thanks for voting!")
                 utilityBot.edit_user_data(ctx.author, "votes", utilityBot.get_user_data(ctx.author, "votes") + 1)
+                utilityBot.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
                 #give VoteReward role
                 try:
                     if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
@@ -696,6 +801,7 @@ def main():
         else:
             await ctx.respond("Error checking vote status!")
         await command_topper(ctx)
+        logging_command(ctx)
 
     @bot.event
     async def on_ready():
@@ -711,7 +817,6 @@ def main():
             logging_message(message)
             #read how many messages the user has sent and add 1
             utilityBot.edit_user_data(message.author, "messages", utilityBot.get_user_data(message.author, "messages") + 1)
-            #add their username and discriminator
             utilityBot.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
             #if any keyword in keywords list is in the message content
@@ -761,30 +866,35 @@ def main():
             except IndexError:
                 pass
 
-        # (!invites secret command)
-        if message.guild == None:
+        #BOT OWNER ONLY COMMANDS
+        if message.guild == None and message.author == botOwner:
             if message.author == botOwner and message.content == ("!guilds"):
+                print(f"{message.author} requested guilds")
                 guilds = await utilityBot.get_guild_invite(bot)
-                guildNames = guilds[0]
-                guildInvites = guilds[1]
-                guildInfo = guilds[2]
-                embed=discord.Embed(title="Guild Invites", color=discord.Color.green())
+                embed=discord.Embed(title="Guilds", color=discord.Color.green())
                 #add a column for guild name and guild invite and guild info
-                for i in range(len(guildNames)):
-                    embed.add_field(name=guildNames[i], value=f"Invite: {guildInvites[i]}\n{guildInfo[i]}", inline=False)
+                for guild in guilds:
+                    #[guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
+                    embed.add_field(name=guild[0], value=f"Invite: {guild[1]}\nID: {guild[2]}\nOwner: {guild[3]}\nMembers: {guild[4]}\nOnline: {guild[5]}", inline=False)
                 await botOwner.send(embed=embed)
 
+
             if message.author == botOwner and message.content == ("!log"):
+                print (f"{message.author} requested log")
                 await botOwner.send(file=discord.File('app.log'))
-            
-            if message.author == botOwner and message.content == ("!clearlog"):
+
+            if message.content == ("!clearlog"):
+                print (f"{message.author} cleared log")
                 with open('app.log', 'w') as f:
                     f.write('')
+                await botOwner.send("Log cleared")
             
-            if message.author == botOwner and message.content == ("!usercount"):
+            if message.content == ("!usercount"):
+                print (f"{message.author} requested user count")
                 await botOwner.send(f"Users: {len(bot.users)}")
 
-            if message.author == botOwner and message.content == ("!userlist"):
+            if message.content == ("!userlist"):
+                print (f"{message.author} requested user list")
                 # Write all users to a CSV file
                 # username, discriminator, id, account created, name of Guilds found in, id of Guilds found in, date joined Guilds found in, user description
                 with open('users.csv', 'w', newline='', encoding='utf-8') as csvfile:
@@ -814,60 +924,67 @@ def main():
                 # Send the CSV file to the bot owner
                 await botOwner.send(file=discord.File('users.csv'))
             
-            if message.author == botOwner and message.content == ("!guildcount"):
+            if message.content == ("!guildcount"):
+                print (f"{message.author} requested guild count")
                 await botOwner.send(f"Guilds: {len(bot.guilds)}")
             
-            if message.author == botOwner and message.content == ("!users.json"):
+            if message.content == ("!userdata"):
+                print (f"{message.author} requested users.json")
                 await botOwner.send(file=discord.File('users.json'))
 
-            if message.author == botOwner and message.content.startswith("!loglevel"):
-                logLevel = message.content.split(": ")[1]
-                if logLevel == "debug":
-                    log.setLevel(log.DEBUG)
-                elif logLevel == "info":
-                    log.setLevel(log.INFO)
-                elif logLevel == "warning":
-                    log.setLevel(log.WARNING)
-                elif logLevel == "error":
-                    log.setLevel(log.ERROR)
-                elif logLevel == "critical":
-                    log.setLevel(log.CRITICAL)
-                else:
-                    await botOwner.send("Invalid log level")
-                await botOwner.send(f"Log level set to {logLevel}")
+            if message.content.startswith("!status"):
+                print (f"{message.author} requested status change")
 
-            if message.author == botOwner and message.content.startswith("!setstatus"):
-                status = message.content.split(": ")[1]
-                await bot.change_presence(activity=discord.Game(name=status))
-                await botOwner.send(f"Status set to {status}")
+                try:
+                    status = message.content.split(" ")[1]
+                    utilityBot.status(status)
+                    await bot.change_presence(activity=discord.Game(name=status))
+                    await botOwner.send(f"Status set to {status}")
 
-            if message.author == botOwner and message.content == ("!clearstatus"):
-                await bot.change_presence(activity=None)
-                await botOwner.send("Status cleared")
-            
-            if message.author == botOwner and message.content == ("!guilds.zip"):
+                except IndexError:
+                    utilityBot.status(None)
+                    await bot.change_presence(activity=None)
+                    await botOwner.send("Status cleared")
+
+            if message.content == ("!guilds.zip"):
+                print (f"{message.author} requested guilds.zip")
                 shutil.make_archive('guilds', 'zip', 'guilds')
                 await botOwner.send(file=discord.File('guilds.zip'))
                 os.remove('guilds.zip')
 
-            if message.author == botOwner and message.content.startswith("!notes"):
-                await botOwner.send(file=discord.File('notes.json'))
+            if message.content.startswith("!notes"):
+                print (f"{message.author} requested notes")
+                try:
+                    await botOwner.send(file=discord.File('notes.json'))
+                except FileNotFoundError:
+                    await botOwner.send("No notes file found")
 
-            if message.author == botOwner and message.content.startswith("!help"):
-                await botOwner.send("""\n
-                **!help** - Send this message\n
-                **!guilds** - List all guilds and their invites\n
-                **!guilds.zip** - Send a ZIP file of all messages\n
-                **!log** - Send the log file\n
-                **!clearlog** - Clear the log file\n
-                **!usercount** - Send the number of users\n
-                **!userlist** - Send a CSV file of all users\n
-                **!guildcount** - Send the number of guilds\n
-                **!users.json** - Send a JSON file of all users\n
-                **!loglevel** - Set the log level\n
-                **!setstatus** - Set the status\n
-                **!clearstatus** - Clear the status\n
-                **!setcustom** - Set the custom activity\n
+            if message.content.startswith("!search"):
+                print (f"{message.author} requested search")
+                try:
+                    mode = message.content.split(" ")[1]
+                    query = message.content.split(" ")[2]
+                    print (f"Mode: {mode}, Query: {query}")
+                    utilityBot.search(mode, query)
+                    await botOwner.send(file=discord.File("temp/search.txt"))
+                    os.remove("temp/search.txt")
+                except IndexError:
+                    await botOwner.send("No search term provided")
+
+            if message.content.startswith("!help"):
+                print (f"{message.author} requested help")
+                await botOwner.send("""**!help** - Send this message
+**!guilds** - Send a list of guilds the bot is in
+**!log** - Send the log file
+**!clearlog** - Clear the log file
+**!usercount** - Send the number of users the bot can see
+**!userlist** - Send a CSV file of all users the bot can see
+**!guildcount** - Send the number of guilds the bot is in
+**!userdata** - Send the users.json file
+**!status** - Set the bot status
+**!guilds.zip** - Send a zip file of all guilds the bot is in
+**!notes** - Send the notes.json file
+**!search** - Search all messages for a query
                 """)
 
 

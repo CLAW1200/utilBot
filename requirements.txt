@@ -1,0 +1,7 @@
+pycord
+Pillow
+requests
+aiohttp
+pint
+toml
+ffmpeg-python
