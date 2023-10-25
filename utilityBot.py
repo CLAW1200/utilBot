@@ -8,6 +8,96 @@ from PIL import Image, ImageSequence, ImageFont, ImageDraw
 import requests
 import ffmpeg
 import json
+import datetime
+import hashlib
+
+def update_version():
+    current_version = "1.0.0"  # Change the current_version if needed
+    code_hash = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
+
+    try:
+        with open("version.txt", "r") as file:
+            saved_version, saved_hash = file.read().strip().split(",")
+    except FileNotFoundError:
+        saved_version, saved_hash = current_version, ""
+
+    if code_hash != saved_hash:
+        major, minor, patch = map(int, saved_version.split("."))
+        patch += 1
+        updated_version = f"{major}.{minor}.{patch}"
+        with open("version.txt", "w") as file:
+            file.write(f"{updated_version},{code_hash}")
+        print(f"Code has changed. New version: {updated_version}")
+    else:
+        print(f"Code remains unchanged. Version: {saved_version}")
+
+MESSAGE = 25
+DIRECT_MESSAGE = 30
+COMMAND = 35
+remove_char = "'"
+
+# Define custom log level names
+log.addLevelName(MESSAGE, "MESSAGE")
+log.addLevelName(DIRECT_MESSAGE, "DIRECT_MESSAGE")
+log.addLevelName(COMMAND, "COMMAND")
+
+# Configure the logger
+log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
+
+def log_guild_message(message):
+    # Get the server name and channel name
+    server_name = message.guild.name
+    channel_name = message.channel.name
+    time_code = datetime.time().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Create the directory if it doesn't exist
+    directory = f"guilds/{message.guild.id}"
+    os.makedirs(directory, exist_ok=True)
+    
+    # Create the file path
+    file_path = f"{directory}/{message.channel.id}.txt"
+    
+    # Write the server name and channel name to the file
+    with open(file_path, "a", encoding="utf-8") as file:
+        # Write the server name and channel name if the file is empty
+        if file.tell() == 0:
+            file.write(f"Server: {server_name}\n")
+            file.write(f"Channel: {channel_name}\n")
+        
+        # Format the message information
+        author_info = f"{message.author.name}#{message.author.discriminator} ({message.author.id})"
+        attachments_info = f"Attachments: {', '.join(str(attachment) for attachment in message.attachments)}"
+        embeds_info = f"Embeds: {', '.join(str(embed) for embed in message.embeds)}"
+        
+        # Write the formatted message to the file
+        file.write(f"{author_info}:\n")
+        file.write(f"Time: {time_code}\n")
+        file.write(f"Message: {message.content}\n")
+        file.write(f"{attachments_info}\n")
+        file.write(f"{embeds_info}\n")
+        file.write("--------------------------------\n")
+
+def logging_direct_message(message):
+    log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
+
+def logging_command(ctx, *args):
+    if ctx.guild == None:
+        logging_command_direct_message(ctx, *args)
+        return
+
+    print (        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}")
+    log.log(
+        COMMAND,
+        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}"
+    )
+
+def logging_command_direct_message(ctx, *args):
+    print (        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}")
+    log.log(
+        COMMAND,
+        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}"
+    )
+
 
 def edit_user_data(user, field, data):
     # Edit users.json, add data to key
@@ -64,6 +154,14 @@ def get_user_data(user, field):
     except FileNotFoundError:
         return 0
     
+def archive_file(file):
+    #move file to /archive/
+    log.debug(f"Archiving file '{time.gmtime}{file}'")
+    try:
+        os.rename(file, f"archive/{file}")
+    except Exception as e:
+        log.error(f"Error archiving file '{file}': {e}")
+   
 def read_log():
     log.debug("Reading log")
     with open("app.log", "r") as f:
@@ -398,7 +496,8 @@ async def get_guild_invite(bot):
             invite = None
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
-        guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, guild.member_count, sum(member.status != discord.Status.offline for member in guild.members)])
+        online_members = len([member for member in guild.members if member.status == discord.Status.online])
+        guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, online_members])
 
     return guildData
 

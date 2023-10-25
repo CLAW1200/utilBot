@@ -1,5 +1,15 @@
 
-from discord.ui import View
+
+"""
+
+Fix decode / encode for b64 when using "hide" option, just sends * lol
+Fix cypher encode key, should only allow numbers, crashes otherwise
+Invalid mode selected error when setting hide: true
+RPS is bugged, expire timer not keeping accurate time, message is edited even when game is over
+Fix note command showing note number including deleted notes numbers
+
+"""
+from discord.ui import View, Button
 import os
 import random
 import logging as log
@@ -17,93 +27,15 @@ import hashlib
 import base64
 import codecs
 import utilityBot
-from datetime import datetime, timedelta
 import asyncio
 ureg = UnitRegistry()
 
-def update_version():
-    current_version = "1.0.0"  # Change the current_version if needed
-    code_hash = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
-
-    try:
-        with open("version.txt", "r") as file:
-            saved_version, saved_hash = file.read().strip().split(",")
-    except FileNotFoundError:
-        saved_version, saved_hash = current_version, ""
-
-    if code_hash != saved_hash:
-        major, minor, patch = map(int, saved_version.split("."))
-        patch += 1
-        updated_version = f"{major}.{minor}.{patch}"
-        with open("version.txt", "w") as file:
-            file.write(f"{updated_version},{code_hash}")
-        print(f"Code has changed. New version: {updated_version}")
-    else:
-        print(f"Code remains unchanged. Version: {saved_version}")
-
-update_version()
-
-MESSAGE = 25
-DIRECT_MESSAGE = 30
-COMMAND = 35
-
-remove_char = "'"
+#utilityBot.update_version()
 
 keywords = {
     "https://discord",
     "claw",
 }
-
-# Define custom log level names
-log.addLevelName(MESSAGE, "MESSAGE")
-log.addLevelName(DIRECT_MESSAGE, "DIRECT_MESSAGE")
-log.addLevelName(COMMAND, "COMMAND")
-
-# Configure the logger
-log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
-
-def logging_message(message):
-    # Get the server name and channel name
-    server_name = message.guild.name
-    channel_name = message.channel.name
-    time_code = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Create the directory if it doesn't exist
-    directory = f"guilds/{message.guild.id}"
-    os.makedirs(directory, exist_ok=True)
-    
-    # Create the file path
-    file_path = f"{directory}/{message.channel.id}.txt"
-    
-    # Write the server name and channel name to the file
-    with open(file_path, "a", encoding="utf-8") as file:
-        # Write the server name and channel name if the file is empty
-        if file.tell() == 0:
-            file.write(f"Server: {server_name}\n")
-            file.write(f"Channel: {channel_name}\n")
-        
-        # Format the message information
-        author_info = f"{message.author.name}#{message.author.discriminator} ({message.author.id})"
-        attachments_info = f"Attachments: {', '.join(str(attachment) for attachment in message.attachments)}"
-        embeds_info = f"Embeds: {', '.join(str(embed) for embed in message.embeds)}"
-        
-        # Write the formatted message to the file
-        file.write(f"{author_info}:\n")
-        file.write(f"Time: {time_code}\n")
-        file.write(f"Message: {message.content}\n")
-        file.write(f"{attachments_info}\n")
-        file.write(f"{embeds_info}\n")
-        file.write("--------------------------------\n")
-
-def logging_direct_message(message):
-    log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
-
-def logging_command(ctx, *args):
-    print (        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}")
-    log.log(
-        COMMAND,
-        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}"
-    )
 
 tokenFile = "token.toml"
 with open(tokenFile) as toml_file:
@@ -123,6 +55,9 @@ def main():
     log.debug("Bot object created")
 
     def check_bot_permissions(ctx):
+        if ctx.guild == None:
+            return True
+
         binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
         binary_required_permissions = bin(utilityBot.read_toml_var("permissionsInt"))
 
@@ -153,12 +88,12 @@ def main():
         try:
             newGif = utilityBot.convert_image_to_gif(image_link)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
-            os.remove(newGif)
+            utilityBot.archive_file(newGif)
             log.info(f"Converted image {image_link}")
         except Image.UnidentifiedImageError:
             await ctx.edit(content = f"Sorry, but that image link is invalid!")
         await command_topper(ctx)
-        logging_command(ctx, image_link)
+        utilityBot.logging_command(ctx, image_link)
 
     @bot.slash_command(name="video-to-gif", description="Take a video link and send it as a gif")
     async def video_to_gif_command(
@@ -184,12 +119,12 @@ def main():
         try:
             newGif = utilityBot.convert_video_to_gif(video_link, fps, scale)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
-            os.remove(newGif)
+            utilityBot.archive_file(newGif)
             log.info(f"Converted image {video_link}")
         except Exception as e:
             await ctx.edit(content = f"Sorry, but that video link is invalid!")
         await command_topper(ctx)
-        logging_command(ctx, video_link, fps, scale)
+        utilityBot.logging_command(ctx, video_link, fps, scale)
 
     @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image")
     async def speech_bubble_command(
@@ -214,12 +149,12 @@ def main():
             await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image!")
             log.error(e)
         try:
-            os.remove(newImage)
+            utilityBot.archive_file(newImage)
         except Exception as e:
             print(f"{e}" + " - Failed to remove image")
             log.error(e)
         await command_topper(ctx)
-        logging_command(ctx, image_link, speech_bubble_size)
+        utilityBot.logging_command(ctx, image_link, speech_bubble_size)
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
@@ -235,7 +170,7 @@ def main():
         inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
 
     @bot.slash_command(name="impact", description="Add impact font to an image")
@@ -252,10 +187,10 @@ def main():
 
         newImage = utilityBot.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
         await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
-        os.remove(newImage)
+        utilityBot.archive_file(newImage)
         log.info(f"Added impact font to image {image_link}")
         await command_topper(ctx)
-        logging_command(ctx, image_link, top_text, bottom_text, font_size, font_color)
+        utilityBot.logging_command(ctx, image_link, top_text, bottom_text, font_size, font_color)
 
     @bot.slash_command(name="invite", description="Get the bot's invite link")
     async def invite_command(ctx):
@@ -264,7 +199,7 @@ def main():
         inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     @bot.slash_command(name="urban", description="Find a definition of a word on urban dictionary")
     async def urban_command(
@@ -300,7 +235,7 @@ def main():
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
         await command_topper(ctx)
-        logging_command(ctx, word, random_result)
+        utilityBot.logging_command(ctx, word, random_result)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
     async def random_word_command(ctx):
@@ -319,7 +254,7 @@ def main():
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
         await command_topper(ctx)
-        logging_command(ctx, word)
+        utilityBot.logging_command(ctx, word)
 
     @bot.slash_command(name="units", description="Convert units")
     async def convert(ctx, value: float, unit_from: str, unit_to: str):
@@ -343,7 +278,7 @@ def main():
         except Exception as e:
             await ctx.respond(f"{str(e)}")
         await command_topper(ctx)
-        logging_command(ctx, value, unit_from, unit_to)
+        utilityBot.logging_command(ctx, value, unit_from, unit_to)
 
     @bot.slash_command(name="new-note", description="Write a new note")
     async def new_note_command(ctx, note: str):
@@ -365,7 +300,7 @@ def main():
 
         await ctx.respond("New note added!", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx, note)
+        utilityBot.logging_command(ctx, note)
 
     @bot.slash_command(name="edit-note", description="Edit a note")
     async def edit_note_command(ctx, index: int, note: str):
@@ -380,19 +315,25 @@ def main():
 
         user_notes = notes.get(str(ctx.author.id), [])
 
-        if 1 <= index <= len(user_notes):
-            user_notes[index - 1] = note
-            notes[str(ctx.author.id)] = user_notes
+        if user_notes:
+            undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
 
-            with open("notes.json", "w") as f:
-                json.dump(notes, f, indent=4)
+            if 1 <= index <= len(undeleted_user_notes):
+                undeleted_index = index - 1
+                edited_note = undeleted_user_notes[undeleted_index]
+                user_notes[user_notes.index(edited_note)] = note
+                notes[str(ctx.author.id)] = user_notes
 
-            await ctx.respond(f"Note {index} updated!", ephemeral=True)
+                with open("notes.json", "w") as f:
+                    json.dump(notes, f, indent=4)
+
+                await ctx.respond(f"Note {index} updated!", ephemeral=True)
+            else:
+                await ctx.respond("Invalid note index!", ephemeral=True)
         else:
-            await ctx.respond("Invalid note index!", ephemeral=True)
+            await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx, index, note)
-
+        utilityBot.logging_command(ctx, index, note)
 
     @bot.slash_command(name="my-notes", description="Read your notes")
     async def my_notes_command(ctx):
@@ -408,17 +349,17 @@ def main():
         user_notes = notes.get(str(ctx.author.id), [])
 
         if user_notes:
-            formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(user_notes))
+            formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(user_notes) if "[X]" not in note)
             await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     @bot.slash_command(name="delete-note", description="Delete a note")
     #delete all or delete one
     async def delete_note_command(ctx, index: int = None):
-        """Delete a note for the user"""
+        """Delete a note, or all for the user"""
         notes = {}
 
         try:
@@ -431,10 +372,16 @@ def main():
 
         if user_notes:
             if index is None:
-                notes[str(ctx.author.id)] = []
+                for i, note in enumerate(user_notes):
+                    if "[X]" not in note:
+                        user_notes[i] = f"[X] {note}"
+                notes[str(ctx.author.id)] = user_notes
                 await ctx.respond("All notes deleted!", ephemeral=True)
             elif 1 <= index <= len(user_notes):
-                del user_notes[index - 1]
+                undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
+                undeleted_index = index - 1
+                deleted_note = undeleted_user_notes[undeleted_index]
+                user_notes[user_notes.index(deleted_note)] = f"[X] {deleted_note}"
                 notes[str(ctx.author.id)] = user_notes
                 await ctx.respond(f"Note {index} deleted!", ephemeral=True)
             else:
@@ -445,7 +392,8 @@ def main():
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        logging_command(ctx, index)
+        utilityBot.logging_command(ctx, index)
+
 
 
     @bot.slash_command(name="cat", description="Get a random cat picture")
@@ -454,7 +402,7 @@ def main():
         #use gif search function
         await ctx.respond(utilityBot.gif_search("silly cat"))
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user")
     async def dox_command(ctx):
@@ -466,7 +414,7 @@ def main():
                 return randomUser
         await ctx.respond(f"Your new friend is {get_random_user()}!")
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
@@ -480,7 +428,7 @@ def main():
         peepee = "8" + "=" * peepeeSize + "D"
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     ongoing_games = {}
     @bot.slash_command(
@@ -672,7 +620,7 @@ def main():
                 encoded_message = "*" * len(encoded_message)
             await ctx.respond(f"Encoded message: {encoded_message}")
         await command_topper(ctx)
-        logging_command(ctx, "encode", message, mode, hide, key)
+        utilityBot.logging_command(ctx, "encode", message, mode, hide, key)
 
     @bot.slash_command(name="decode", description="Decode a message")
     async def decode_command(ctx,
@@ -723,8 +671,7 @@ def main():
                 decoded_message = "*" * len(decoded_message)
             await ctx.respond(f"Decoded message: {decoded_message}")
         await command_topper(ctx)
-        logging_command(ctx, "decode", message, mode, hide, key)
-
+        utilityBot.logging_command(ctx, "decode", message, mode, hide, key)
 
             
     @bot.slash_command(name="feedback", description="Send feedback")
@@ -745,7 +692,7 @@ def main():
             await botOwner.send(embed=embed)
             await ctx.respond("Thanks, Feedback has been sent!", ephemeral=True)
             await command_topper(ctx)
-            logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
+            utilityBot.logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
@@ -772,7 +719,7 @@ def main():
         embed.add_field(name="vote", value="Vote for the bot and claim a reward", inline=False)
         await ctx.respond(embed=embed)
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
 
     @bot.slash_command(name="vote", description="Vote for the bot and claim a reward")
@@ -801,7 +748,7 @@ def main():
         else:
             await ctx.respond("Error checking vote status!")
         await command_topper(ctx)
-        logging_command(ctx)
+        utilityBot.logging_command(ctx)
 
     @bot.event
     async def on_ready():
@@ -814,7 +761,7 @@ def main():
         #messageAuthor = message.author.id # Get the author of the message
         #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
         if message.guild != None: # Any message in a server
-            logging_message(message)
+            utilityBot.log_guild_message(message)
             #read how many messages the user has sent and add 1
             utilityBot.edit_user_data(message.author, "messages", utilityBot.get_user_data(message.author, "messages") + 1)
             utilityBot.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
@@ -868,18 +815,24 @@ def main():
 
         #BOT OWNER ONLY COMMANDS
         if message.guild == None and message.author == botOwner:
-            if message.author == botOwner and message.content == ("!guilds"):
+            if message.content == "!guilds":
                 print(f"{message.author} requested guilds")
                 guilds = await utilityBot.get_guild_invite(bot)
-                embed=discord.Embed(title="Guilds", color=discord.Color.green())
-                #add a column for guild name and guild invite and guild info
-                for guild in guilds:
-                    #[guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
-                    embed.add_field(name=guild[0], value=f"Invite: {guild[1]}\nID: {guild[2]}\nOwner: {guild[3]}\nMembers: {guild[4]}\nOnline: {guild[5]}", inline=False)
-                await botOwner.send(embed=embed)
+
+                # Create a text file to store guild information
+                with open("guilds.txt", "w", encoding="UTF-8") as file:
+                    for guild in guilds:
+                        file.write(f"Guild Name: {guild[0]}\nInvite: {guild[1]}\nID: {guild[2]}\nOwner: {guild[3]}\nMembers: {guild[4]}\nOnline: {guild[5]}\n\n")
+
+                # Send the text file
+                with open("guilds.txt", "rb") as file:
+                    await botOwner.send(file=discord.File(file, "guilds.txt"))
+
+                # Delete the temporary file
+                utilityBot.archive_file("guilds.txt")
 
 
-            if message.author == botOwner and message.content == ("!log"):
+            if message.content == ("!log"):
                 print (f"{message.author} requested log")
                 await botOwner.send(file=discord.File('app.log'))
 
@@ -950,7 +903,7 @@ def main():
                 print (f"{message.author} requested guilds.zip")
                 shutil.make_archive('guilds', 'zip', 'guilds')
                 await botOwner.send(file=discord.File('guilds.zip'))
-                os.remove('guilds.zip')
+                utilityBot.archive_file('guilds.zip')
 
             if message.content.startswith("!notes"):
                 print (f"{message.author} requested notes")
@@ -967,10 +920,55 @@ def main():
                     print (f"Mode: {mode}, Query: {query}")
                     utilityBot.search(mode, query)
                     await botOwner.send(file=discord.File("temp/search.txt"))
-                    os.remove("temp/search.txt")
+                    utilityBot.archive_file("temp/search.txt")
                 except IndexError:
                     await botOwner.send("No search term provided")
 
+            if message.content.startswith("!userlookup"):
+                print (f"{message.author} requested user lookup")
+                try:
+
+                    user_id = message.content.split(" ")[1]
+                    user = bot.get_user(int(user_id))
+                    embed = discord.Embed(title="User Lookup", color=discord.Color.green())
+                    embed.set_thumbnail(url=user.avatar.url)
+                    embed.add_field(name="Username", value=user.name, inline=True)
+                    embed.add_field(name="Discriminator", value=user.discriminator, inline=True)
+                    embed.add_field(name="Account Created", value=user.created_at.strftime("%Y-%m-%d %H:%M:%S"), inline=False)
+                    embed.add_field(name="Bot", value=user.bot, inline=True)
+                    #embed.add_field(name="Status", value=user.status, inline=True)
+                    embed.add_field(name="Guilds", value="\n".join([guild.name for guild in bot.guilds if guild.get_member(user.id)]))
+                    embed.add_field(name="Guild IDs", value="\n".join([str(guild.id) for guild in bot.guilds if guild.get_member(user.id)]))
+                    embed.add_field(name="Date Joined Guilds", value="\n".join([guild.get_member(user.id).joined_at.strftime("%Y-%m-%d %H:%M:%S") for guild in bot.guilds if guild.get_member(user.id)]), inline=True)
+                    
+                    embed.set_footer(text=f"User ID: {user.id}")
+                    await botOwner.send(embed=embed)
+                except IndexError:
+                    await botOwner.send("No user ID provided")
+                except AttributeError:
+                    await botOwner.send("User not found")
+
+            if message.content.startswith("!guildlookup"):
+                print (f"{message.author} requested guild lookup")
+                try:
+                    guild_id = message.content.split(" ")[1]
+                    guild = bot.get_guild(int(guild_id))
+                    embed = discord.Embed(title="Guild Lookup", color=discord.Color.green())
+                    embed.add_field(name="Guild Name", value=guild.name, inline=True)
+                    embed.add_field(name="Owner", value=guild.owner, inline=True)
+                    embed.add_field(name="Members", value=len(guild.members), inline=True)
+                    embed.add_field(name="Online", value=len([member for member in guild.members if member.status != discord.Status.offline]), inline=True)
+                    embed.add_field(name="Channels", value=len(guild.channels), inline=True)
+                    embed.add_field(name="Roles", value=len(guild.roles), inline=True)
+                    embed.add_field(name="Created At", value=guild.created_at.strftime("%Y-%m-%d %H:%M:%S"), inline=True)
+                    embed.set_thumbnail(url=guild.icon.url)
+                    embed.set_footer(text=f"Guild ID: {guild.id}")
+                    await botOwner.send(embed=embed)
+                except IndexError:
+                    await botOwner.send("No guild ID provided")
+                except AttributeError as e:
+                    await botOwner.send(f"Guild not found: {e}")
+        
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
                 await botOwner.send("""**!help** - Send this message
@@ -985,9 +983,11 @@ def main():
 **!guilds.zip** - Send a zip file of all guilds the bot is in
 **!notes** - Send the notes.json file
 **!search** - Search all messages for a query
+**!userlookup** - Search a user ID
+**!guildlookup** - Search a guild ID                        
                 """)
 
-
+    bot.response_messages = {}
     bot.run(TOKEN)
 
 if __name__ == "__main__":

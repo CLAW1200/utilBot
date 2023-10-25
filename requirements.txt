@@ -1,4 +1,4 @@
-pycord
+py-cord
 Pillow
 requests
 aiohttp
