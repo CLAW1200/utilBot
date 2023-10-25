@@ -2,11 +2,7 @@
 
 """
 
-Fix decode / encode for b64 when using "hide" option, just sends * lol
-Fix cypher encode key, should only allow numbers, crashes otherwise
-Invalid mode selected error when setting hide: true
 RPS is bugged, expire timer not keeping accurate time, message is edited even when game is over
-Fix note command showing note number including deleted notes numbers
 
 """
 from discord.ui import View, Button
@@ -28,6 +24,7 @@ import base64
 import codecs
 import utilityBot
 import asyncio
+import traceback
 ureg = UnitRegistry()
 
 #utilityBot.update_version()
@@ -99,21 +96,20 @@ def main():
     async def video_to_gif_command(
         ctx: discord.ApplicationContext,
         video_link: str,
-        fps: discord.Option(int, "The FPS of the gif", required=False, default=20),
-        scale: discord.Option(int, "The scale of the gif", required=False, default=320),
+        fps: discord.Option(int, "The FPS of the gif", required=False, default=25),
+        scale: discord.Option(int, "The scale of the gif", required=False),
     ):
         #do not download videos larger than maxFileSize
         if utilityBot.get_file_size(video_link) > utilityBot.read_toml_var("maxFileSize"):
             await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
-        
-        if fps > 25:
-            await ctx.respond(f"Sorry, but the max FPS is 25!", ephemeral=True)
+        if fps > 40:
+            await ctx.respond(f"Sorry, but the max FPS is 40!", ephemeral=True)
             return
-        
-        if scale > 500:
-            await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
-            return
+        if scale != None:
+            if scale > 500:
+                await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
+                return
         
         await ctx.respond(f"Converting video to gif... ")
         try:
@@ -123,6 +119,8 @@ def main():
             log.info(f"Converted image {video_link}")
         except Exception as e:
             await ctx.edit(content = f"Sorry, but that video link is invalid!")
+            print (e)
+            traceback.print_exc()
         await command_topper(ctx)
         utilityBot.logging_command(ctx, video_link, fps, scale)
 
@@ -280,7 +278,7 @@ def main():
         await command_topper(ctx)
         utilityBot.logging_command(ctx, value, unit_from, unit_to)
 
-    @bot.slash_command(name="new-note", description="Write a new note")
+    @bot.slash_command(name="note-new", description="Write a new note")
     async def new_note_command(ctx, note: str):
         """Create a new note for the user"""
         notes = {}
@@ -298,7 +296,7 @@ def main():
         with open("notes.json", "w") as f:
             json.dump(notes, f, indent=4)
 
-        await ctx.respond("New note added!", ephemeral=True)
+        await ctx.respond("New note added!\nSee your new note with /notes.", ephemeral=True)
         await command_topper(ctx)
         utilityBot.logging_command(ctx, note)
 
@@ -335,11 +333,10 @@ def main():
         await command_topper(ctx)
         utilityBot.logging_command(ctx, index, note)
 
-    @bot.slash_command(name="my-notes", description="Read your notes")
+    @bot.slash_command(name="notes", description="Read your notes")
     async def my_notes_command(ctx):
         """Read the user's notes"""
         notes = {}
-
         try:
             with open("notes.json", "r") as f:
                 notes = json.load(f)
@@ -348,15 +345,18 @@ def main():
 
         user_notes = notes.get(str(ctx.author.id), [])
 
-        if user_notes:
-            formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(user_notes) if "[X]" not in note)
+        non_completed_notes = [note for note in user_notes if "[X]" not in note]
+
+        if non_completed_notes:
+            formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(non_completed_notes))
             await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
         utilityBot.logging_command(ctx)
 
-    @bot.slash_command(name="delete-note", description="Delete a note")
+
+    @bot.slash_command(name="note-delete", description="Delete a note or leave index blank to delete all")
     #delete all or delete one
     async def delete_note_command(ctx, index: int = None):
         """Delete a note, or all for the user"""
@@ -380,7 +380,11 @@ def main():
             elif 1 <= index <= len(user_notes):
                 undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
                 undeleted_index = index - 1
-                deleted_note = undeleted_user_notes[undeleted_index]
+                try:
+                    deleted_note = undeleted_user_notes[undeleted_index]
+                except IndexError:
+                    await ctx.respond("Invalid note index!", ephemeral=True)
+                    return
                 user_notes[user_notes.index(deleted_note)] = f"[X] {deleted_note}"
                 notes[str(ctx.author.id)] = user_notes
                 await ctx.respond(f"Note {index} deleted!", ephemeral=True)
@@ -429,8 +433,9 @@ def main():
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
         await command_topper(ctx)
         utilityBot.logging_command(ctx)
-
+    
     ongoing_games = {}
+
     @bot.slash_command(
         name="rps",
         description="Play rock paper scissors with another user"
@@ -440,15 +445,15 @@ def main():
         if user is None:
             await ctx.respond("Please mention a user to play with.", ephemeral=True)
             return
-        
+
         if user == ctx.author:
             await ctx.respond("Sorry, you can't play with yourself ;)", ephemeral=True)
             return
-        
+
         if user.bot:
             await ctx.respond("You can't play with a bot!", ephemeral=True)
             return
-        
+
         if ctx.author.id in ongoing_games or user.id in ongoing_games:
             await ctx.respond("There is already an ongoing game involving one of the players.", ephemeral=True)
             return
@@ -456,14 +461,11 @@ def main():
         view = RPSView(ctx.author, user)
         await ctx.respond(f"{user.mention} has been challenged to a game of rock paper scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=view)
 
-        ongoing_games[ctx.author.id] = view
-        ongoing_games[user.id] = view
-
-        await view.start_timer()  # Add this line to start the timer
+        ongoing_games[(ctx.author.id, user.id)] = view
 
     class RPSView(View):
         def __init__(self, challenger, opponent):
-            super().__init__()
+            super().__init__(timeout=None)  # Explicitly call the parent class's __init__
             self.challenger = challenger
             self.opponent = opponent
             self.move = None
@@ -471,14 +473,12 @@ def main():
             self.timer = None
 
         async def interaction_check(self, interaction: discord.Interaction) -> bool:
-            # Only allow the two players to interact with the buttons
             return interaction.user in [self.challenger, self.opponent]
 
         async def start_timer(self):
             await asyncio.sleep(60)  # Wait for 60 seconds
 
             if self.move is None or self.opponent_move is None:
-                # The game has expired
                 await self.on_timeout()
             else:
                 # The game has already concluded, so no action needed
@@ -505,7 +505,7 @@ def main():
                 self.opponent_move = move
             else:
                 return
-
+            
             await self.send_results(interaction)
 
         async def send_results(self, interaction):
@@ -539,9 +539,11 @@ def main():
             self.move = None
             self.opponent_move = None
 
-            # Edit the message to reflect the expiration
-            expiration_message = f"⌛ The game between {self.challenger.mention} and {self.opponent.mention} has expired."
-            await self.message.edit(content=expiration_message, view=None)
+            #if game is not over, edit message to say game is over
+            if self.timer is not None:
+                # Edit the message to reflect the expiration
+                expiration_message = f"⌛ The game between {self.challenger.mention} and {self.opponent.mention} has expired."
+                await self.message.edit(content=expiration_message, view=None)
 
             # Remove the game from the ongoing games
             del ongoing_games[self.challenger.id]
@@ -574,13 +576,14 @@ def main():
                 return "rock"
             else:
                 return "scissors"
-            
+
     @bot.slash_command(name="encode", description="Encode a message")
     async def encode_command(ctx,
                             message: discord.Option(str, description="Message to encode") = None,
                             mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Encode mode") = None,
-                            hide: discord.Option(bool, description="Hide the message") = False,
-                            key: discord.Option(str, description="Key to encode with") = None):
+                            key: discord.Option(str, description="Key to encode with") = None,
+                            hide: discord.Option(bool, description="Hide the message") = False):
+
         """Encode a message"""
         if message is None:
             await ctx.respond("Please enter a message to encode.", ephemeral=True)
@@ -596,13 +599,13 @@ def main():
         elif mode == "rot13":
             encoded_message = codecs.encode(message, 'rot_13')
         elif mode == "caesar":
-            if key is None:
-                await ctx.respond("Please enter a key for the Caesar cipher.", ephemeral=True)
+            if key is None or not key.isdigit():
+                await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 return
             encoded_message = utilityBot.caesar_cipher_encode(message, key)
         elif mode == "vigenere":
             if key is None:
-                await ctx.respond("Please enter a key for the Vigenère cipher.", ephemeral=True)
+                await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 return
             encoded_message = utilityBot.vigenere_cipher_encode(message, key)
         elif mode == "atbash":
@@ -616,9 +619,9 @@ def main():
             await ctx.respond("Invalid mode selected.", ephemeral=True)
         else:
             if hide:
-                # Hide the message if hide option is enabled
-                encoded_message = "*" * len(encoded_message)
-            await ctx.respond(f"Encoded message: {encoded_message}")
+                await ctx.respond(f"Encoded message: {encoded_message}", ephemeral=True)
+            else:
+                await ctx.respond(f"Encoded message: {encoded_message}")
         await command_topper(ctx)
         utilityBot.logging_command(ctx, "encode", message, mode, hide, key)
 
@@ -626,8 +629,9 @@ def main():
     async def decode_command(ctx,
                             message: discord.Option(str, description="Message to decode") = None,
                             mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Decode mode") = None,
-                            hide: discord.Option(bool, description="Hide the message") = False,
-                            key: discord.Option(str, description="Key to decode with") = None):
+                            key: discord.Option(str, description="Key to decode with") = None,
+                            hide: discord.Option(bool, description="Hide the message") = False):
+        
         """Decode a message"""
         if message is None:
             await ctx.respond("Please enter a message to decode.", ephemeral=True)
@@ -647,13 +651,13 @@ def main():
         elif mode == "rot13":
             decoded_message = codecs.decode(message, 'rot_13')
         elif mode == "caesar":
-            if key is None:
-                await ctx.respond("Please enter a key for the Caesar cipher.", ephemeral=True)
+            if key is None or not key.isdigit():
+                await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 return
             decoded_message = utilityBot.caesar_cipher_decode(message, key)
         elif mode == "vigenere":
             if key is None:
-                await ctx.respond("Please enter a key for the Vigenère cipher.", ephemeral=True)
+                await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 return
             decoded_message = utilityBot.vigenere_cipher_decode(message, key)
         elif mode == "atbash":
@@ -667,13 +671,13 @@ def main():
             await ctx.respond("Invalid mode selected.", ephemeral=True)
         else:
             if hide:
-                # Hide the message if hide option is enabled
-                decoded_message = "*" * len(decoded_message)
-            await ctx.respond(f"Decoded message: {decoded_message}")
-        await command_topper(ctx)
+                await ctx.respond(f"Decoded message: {decoded_message}", ephemeral=True)
+            else:
+                await ctx.respond(f"Decoded message: {decoded_message}")
+
         utilityBot.logging_command(ctx, "decode", message, mode, hide, key)
 
-            
+
     @bot.slash_command(name="feedback", description="Send feedback")
     #feedback_type options: bug, feature, other
     #feedback_feature options: commands, events, other

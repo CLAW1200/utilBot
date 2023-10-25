@@ -10,6 +10,7 @@ import ffmpeg
 import json
 import datetime
 import hashlib
+import urllib
 
 def update_version():
     current_version = "1.0.0"  # Change the current_version if needed
@@ -209,27 +210,32 @@ def convert_image_to_gif(image_link):
     log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
     return output_path
 
-def convert_video_to_gif(video_link, fps = 20, scale = None):
+def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
     #this function will take a link to an image and convert it to a gif
     #download image in temp folder
-    fileType = video_link.split(".")[-1]
+    fileType = urllib.parse.urlparse(video_link).path.split(".")[-1]
     video_seed = random.randint(10000,99999)
     output_path = f"temp/video{video_seed}.gif"
     #download image
     with open(f"temp/video{video_seed}.{fileType}", "wb") as f:
         f.write(requests.get(video_link).content)
-    
-    # Open the PNG image
-    video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
-    video = ffmpeg.filter(video, 'fps', fps=fps, round='up')
-    if scale != None:
-        video = ffmpeg.filter(video, 'scale', scale, -1)
-    video = ffmpeg.output(video, output_path)
-    ffmpeg.run(video)
-    os.remove(f"temp/video{video_seed}.{fileType}")
-    log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
-    return output_path
+    print (fps)
+    print (scale)
+    # Open the Video file and convert to gif in good quality
+    try:
+        video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
+        if scale != None:
+            video = ffmpeg.filter(video, 'scale', scale)
+        video = ffmpeg.output(video, output_path, r=fps, pix_fmt='rgb24')
+        ffmpeg.run(video)
+        os.remove(f"temp/video{video_seed}.{fileType}")
+        log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
+        return output_path
+    except Exception as e:
+        log.error(f"Error converting video '{video_link}' to gif: {e}")
+        return None
+
 
 def get_file_size(link):
     #function to check the size of a video or image link
