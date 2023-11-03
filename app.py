@@ -957,6 +957,16 @@ def main():
                     await botOwner.send("No guild ID provided")
                 except AttributeError as e:
                     await botOwner.send(f"Guild not found: {e}")
+
+            if message.content == ("!update"):
+                print (f"{message.author} requested update")
+                try:
+                    if utilityBot.is_bot_version_latest() == False:
+                        print ("Update found, updating...")
+                        utilityBot.update_bot()
+                        await botOwner.send("Bot updated")
+                except Exception as e:
+                    await botOwner.send(f"Failed to update bot: {e}")
         
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
@@ -973,7 +983,8 @@ def main():
 **!notes** - Send the notes.json file
 **!search** - Search all messages for a query
 **!userlookup** - Search a user ID
-**!guildlookup** - Search a guild ID                        
+**!guildlookup** - Search a guild ID
+**!update** - Update the bot code from GitHub if there is a new version available           
                 """)
 
     bot.response_messages = {}
