@@ -42,10 +42,13 @@ def get_latest_commit_hash():
     """
     Use git command line to get the latest commit hash from github
     """
-    # use git log -n 1 to get the latest commit hash
-    latest_commit_hash = os.popen("git log -n 1 --pretty=format:'%H'").read().strip().strip("'")
+    # get latest commit hash from github
+    os.system("git fetch")
+    os.system("git reset --hard origin/master")
+    with open(".git/refs/heads/master", "r") as f:
+        latest_commit_hash = f.read().strip().strip("'")
     print (f"Latest commit hash: {latest_commit_hash}")
-    return latest_commit_hash
+
 
 
 def update_bot():
