@@ -1,8 +1,6 @@
-
-
 """
 
-RPS is bugged, expire timer not keeping accurate time, message is edited even when game is over
+If the previous game has not concluded and another game is started by someone else, the previous game gives an "interaction failed" message when played. The issue occurs even if two completely different people start a game.
 
 """
 from discord.ui import View, Button
@@ -433,6 +431,13 @@ def main():
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
         await command_topper(ctx)
         utilityBot.logging_command(ctx)
+
+    @bot.slash_command(name="showrps", description="test")
+    async def showrps(ctx):
+        """test"""
+        await ctx.respond(ongoing_games)
+        await command_topper(ctx)
+        utilityBot.logging_command(ctx)
     
     ongoing_games = {}
 
@@ -440,6 +445,7 @@ def main():
         name="rps",
         description="Play rock paper scissors with another user"
     )
+    
     async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
         """Play rock paper scissors with another user"""
         if user is None:
@@ -454,31 +460,33 @@ def main():
             await ctx.respond("You can't play with a bot!", ephemeral=True)
             return
 
-        if ctx.author.id in ongoing_games or user.id in ongoing_games:
-            await ctx.respond("There is already an ongoing game involving one of the players.", ephemeral=True)
+        game_key = tuple(sorted([ctx.author.id, user.id]))
+        if game_key in ongoing_games:
+            await ctx.respond("There is already an ongoing game involving these players.", ephemeral=True)
             return
 
-        view = RPSView(ctx.author, user)
-        await ctx.respond(f"{user.mention} has been challenged to a game of rock paper scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=view)
+        #create a list of games and append a new game to it
+        ongoing_games[game_key] = RPSView(ctx.author, user)
 
-        ongoing_games[(ctx.author.id, user.id)] = view
+        #send the message
+        await ctx.respond(f"{user.mention}, you have been challenged to a game of Rock Paper Scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=ongoing_games[game_key])
+        ongoing_games[game_key].timer = bot.loop.create_task(ongoing_games[game_key].start_timer())
 
     class RPSView(View):
         def __init__(self, challenger, opponent):
             super().__init__(timeout=None)  # Explicitly call the parent class's __init__
             self.challenger = challenger
             self.opponent = opponent
-            self.move = None
-            self.opponent_move = None
+            self.moves = {self.challenger.id: None, self.opponent.id: None}
             self.timer = None
 
         async def interaction_check(self, interaction: discord.Interaction) -> bool:
             return interaction.user in [self.challenger, self.opponent]
 
         async def start_timer(self):
-            await asyncio.sleep(60)  # Wait for 60 seconds
+            await asyncio.sleep(30)  # Wait for 60 seconds
 
-            if self.move is None or self.opponent_move is None:
+            if None in self.moves.values():
                 await self.on_timeout()
             else:
                 # The game has already concluded, so no action needed
@@ -499,45 +507,42 @@ def main():
         async def process_move(self, button, interaction, move):
             await interaction.response.defer(ephemeral=True)
 
-            if interaction.user == self.challenger and self.move is None:
-                self.move = move
-            elif interaction.user == self.opponent and self.opponent_move is None:
-                self.opponent_move = move
+            if interaction.user == self.challenger and self.moves[self.challenger.id] is None:
+                self.moves[self.challenger.id] = move
+            elif interaction.user == self.opponent and self.moves[self.opponent.id] is None:
+                self.moves[self.opponent.id] = move
             else:
                 return
-            
-            await self.send_results(interaction)
+
+            if None not in self.moves.values():
+                await self.send_results(interaction)
 
         async def send_results(self, interaction):
-            if self.opponent_move is None or self.move is None:
-                return
-
             # Stop the timer since the game has concluded
             if self.timer is not None:
                 self.timer.cancel()
                 self.timer = None  # Reset the timer
 
             # Compare the moves and determine the winner
-            winner = determine_winner(self.move, self.opponent_move)
+            winner = determine_winner(self.moves[self.challenger.id], self.moves[self.opponent.id])
 
             # Prepare the result message mentioning the winner and the choices
             if winner == "tie":
-                result_message = f"⛔ It's a tie!\n\n{self.challenger.mention} chose {self.move}.\n{self.opponent.mention} chose {self.opponent_move}."
+                result_message = f"⛔ It's a tie!\n\n{self.challenger.mention} chose {self.moves[self.challenger.id]}.\n{self.opponent.mention} chose {self.moves[self.opponent.id]}."
             else:
-                winner = self.challenger if winner == self.move else self.opponent
-                result_message = f"🎉 {winner.mention} wins!\n\n{self.challenger.mention} chose {self.move}.\n{self.opponent.mention} chose {self.opponent_move}."
+                winner = self.challenger if winner == self.moves[self.challenger.id] else self.opponent
+                result_message = f"🎉 {winner.mention} wins!\n\n{self.challenger.mention} chose {self.moves[self.challenger.id]}.\n{self.opponent.mention} chose {self.moves[self.opponent.id]}."
 
             # Edit the message with the result
             await self.message.edit(content=result_message, view=None)
 
             # Remove the game from the ongoing games
-            del ongoing_games[self.challenger.id]
-            del ongoing_games[self.opponent.id]
+            game_key = tuple(sorted([self.challenger.id, self.opponent.id]))
+            del ongoing_games[game_key]
 
         async def on_timeout(self):
             # Reset the moves
-            self.move = None
-            self.opponent_move = None
+            self.moves = {self.challenger.id: None, self.opponent.id: None}
 
             #if game is not over, edit message to say game is over
             if self.timer is not None:
@@ -546,8 +551,8 @@ def main():
                 await self.message.edit(content=expiration_message, view=None)
 
             # Remove the game from the ongoing games
-            del ongoing_games[self.challenger.id]
-            del ongoing_games[self.opponent.id]
+            game_key = tuple(sorted([self.challenger.id, self.opponent.id]))
+            del ongoing_games[game_key]
 
         async def interaction_check(self, interaction: discord.Interaction) -> bool:
             # Only allow the two players to interact with the buttons
@@ -557,7 +562,7 @@ def main():
             # Handle errors and cancel the timer
             if isinstance(error, discord.NotFound):
                 self.timer.cancel()
-        
+
     def determine_winner(move1, move2):
         if move1 == move2:
             return "tie"
@@ -800,6 +805,7 @@ def main():
             embed.add_field(name="UserID", value=message.author.id)
 
             await botOwner.send(embed=embed)
+            utilityBot.logging_direct_message(message)
 
         # (Reply to DMs) If the message is from the botOwner and a reply to an embed message, get the user from the embed and send the message to them 
         if message.author == botOwner and message.reference:
