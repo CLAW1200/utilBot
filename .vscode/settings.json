@@ -1,16 +1,22 @@
 {
     "cSpell.words": [
+        "atbash",
         "bestaudio",
         "danceability",
         "getlogin",
+        "giphy",
+        "gmtime",
         "instrumentalness",
+        "levelname",
         "nocheckcertificate",
         "noplaylist",
         "outtmpl",
         "speechiness",
         "spotipy",
         "startfile",
+        "textsize",
         "tomlfile",
+        "vigenere",
         "ytsearch"
     ]
 }

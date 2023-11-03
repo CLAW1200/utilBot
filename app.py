@@ -3,13 +3,8 @@
 If the previous game has not concluded and another game is started by someone else, the previous game gives an "interaction failed" message when played. The issue occurs even if two completely different people start a game.
 
 """
+import traceback
 import utilityBot
-
-if utilityBot.is_bot_version_latest() == False:
-    print ("Update found, updating...")
-else:
-    print ("Bot is up to date")
-
 from discord.ui import View
 import os
 import random
@@ -28,27 +23,7 @@ import hashlib
 import base64
 import codecs
 import asyncio
-import traceback
-ureg = UnitRegistry()
 
-#utilityBot.update_version()
-
-keywords = {
-    "https://discord",
-    "claw",
-}
-
-tokenFile = "token.toml"
-with open(tokenFile) as toml_file:
-    data = toml.load(toml_file)
-    TOKEN = data["token"]
-    TOP_GG_TOKEN = data["top-gg-token"]
-    GIPHY_API_KEY = data["giphy-api-key"]
-    log.debug(f"Token read from '{tokenFile}'")
-
-#if there is no temp folder make one
-if not os.path.exists("temp"):
-    os.makedirs("temp")
 
 def main():
     log.debug("Starting Main()")
@@ -1005,4 +980,33 @@ def main():
     bot.run(TOKEN)
 
 if __name__ == "__main__":
+
+    ureg = UnitRegistry()
+
+    if utilityBot.is_bot_version_latest() == False:
+        print ("Update found, updating...")
+        try:
+            utilityBot.update_bot()
+        except Exception as e:
+            print (e)
+            print ("Failed to update bot")
+    else:
+        print ("Bot is up to date")
+
+    keywords = {
+        "https://discord",
+    }
+
+    tokenFile = "token.toml"
+    with open(tokenFile) as toml_file:
+        data = toml.load(toml_file)
+        TOKEN = data["token"]
+        TOP_GG_TOKEN = data["top-gg-token"]
+        GIPHY_API_KEY = data["giphy-api-key"]
+        log.debug(f"Token read from '{tokenFile}'")
+
+    #if there is no temp folder make one
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
+        
     main()
