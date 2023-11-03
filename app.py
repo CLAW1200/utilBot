@@ -965,12 +965,15 @@ def main():
                         print ("Update found, updating...")
                         utilityBot.update_bot()
                         await botOwner.send("Bot updated")
+                    else:
+                        await botOwner.send("Bot is already up to date")
                 except Exception as e:
                     await botOwner.send(f"Failed to update bot: {e}")
         
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
                 await botOwner.send("""**!help** - Send this message
+
 **!guilds** - Send a list of guilds the bot is in
 **!log** - Send the log file
 **!clearlog** - Clear the log file
