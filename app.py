@@ -996,17 +996,6 @@ def main():
 if __name__ == "__main__":
 
     ureg = UnitRegistry()
-
-    if utilityBot.is_bot_version_latest() == False:
-        print ("Update found, updating...")
-        try:
-            utilityBot.update_bot()
-        except Exception as e:
-            print (e)
-            print ("Failed to update bot")
-    else:
-        print ("Bot is up to date")
-
     keywords = {
         "https://discord",
     }
