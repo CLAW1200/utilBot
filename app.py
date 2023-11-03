@@ -1000,6 +1000,14 @@ if __name__ == "__main__":
         "https://discord",
     }
 
+    #check for updates
+    if utilityBot.is_bot_version_latest() == False:
+        print ("Update found, updating...")
+        utilityBot.update_bot()
+    else:
+        print ("Bot is up to date")
+        
+
     tokenFile = "token.toml"
     with open(tokenFile) as toml_file:
         data = toml.load(toml_file)
