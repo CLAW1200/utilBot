@@ -3,7 +3,14 @@
 If the previous game has not concluded and another game is started by someone else, the previous game gives an "interaction failed" message when played. The issue occurs even if two completely different people start a game.
 
 """
-from discord.ui import View, Button
+import utilityBot
+
+if utilityBot.is_bot_version_latest() == False:
+    print ("Update found, updating...")
+else:
+    print ("Bot is up to date")
+
+from discord.ui import View
 import os
 import random
 import logging as log
@@ -20,7 +27,6 @@ import csv
 import hashlib
 import base64
 import codecs
-import utilityBot
 import asyncio
 import traceback
 ureg = UnitRegistry()
@@ -395,8 +401,6 @@ def main():
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
         utilityBot.logging_command(ctx, index)
-
-
 
     @bot.slash_command(name="cat", description="Get a random cat picture")
     async def cat_command(ctx):

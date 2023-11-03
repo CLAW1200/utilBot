@@ -9,28 +9,55 @@ import requests
 import ffmpeg
 import json
 import datetime
-import hashlib
 import urllib
 
-def update_version():
-    current_version = "1.0.0"  # Change the current_version if needed
-    code_hash = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
 
-    try:
-        with open("version.txt", "r") as file:
-            saved_version, saved_hash = file.read().strip().split(",")
-    except FileNotFoundError:
-        saved_version, saved_hash = current_version, ""
+def is_bot_version_latest():
+    """
+    Check for an update to the bot via github
+    """
+    # Get the current commit hash
+    current_commit_hash = get_current_commit_hash()
 
-    if code_hash != saved_hash:
-        major, minor, patch = map(int, saved_version.split("."))
-        patch += 1
-        updated_version = f"{major}.{minor}.{patch}"
-        with open("version.txt", "w") as file:
-            file.write(f"{updated_version},{code_hash}")
-        print(f"Code has changed. New version: {updated_version}")
+    # Get the latest commit hash from github
+    latest_commit_hash = get_latest_commit_hash()
+
+    # Check if the bot is up to date
+    if current_commit_hash == latest_commit_hash:
+        return True
     else:
-        print(f"Code remains unchanged. Version: {saved_version}")
+        return False
+    
+def get_current_commit_hash():
+    """
+    Get the current commit hash of the bot
+    """
+    # Get the current commit hash
+    with open(".git/refs/heads/master", "r") as f:
+        current_commit_hash = f.read().strip()
+    print (f"Current commit hash: {current_commit_hash}")
+    return current_commit_hash
+
+def get_latest_commit_hash():
+    """
+    Use git command line to get the latest commit hash from github
+    """
+    # use git log -n 1 to get the latest commit hash
+    latest_commit_hash = os.popen("git log -n 1 --pretty=format:'%H'").read().strip().strip("'")
+    print (f"Latest commit hash: {latest_commit_hash}")
+    return latest_commit_hash
+
+
+def update_bot():
+    """
+    Update the bot and restart it
+    """        
+    # Pull the latest commit
+    os.system("git pull")
+
+    # Restart the bot
+    os.system("python3 app.py")
+    os._exit(0)
 
 MESSAGE = 25
 DIRECT_MESSAGE = 30
@@ -395,7 +422,6 @@ def gif_search(query):
     else:
         print('Failed to get a response from the API.')
         return
-
 
 def status(status):
     #open config toml and set status to string
