@@ -23,18 +23,6 @@ import base64
 import codecs
 import asyncio
 
-def exit_bot():
-    log.info("Exiting bot")
-    raise SystemExit
-
-def run_update():
-    log.info("Running update")
-    print ("Running update now")
-    os.system("python3 updateBot.py")
-    return
-
-
-
 def main():
     
     print ("""
@@ -996,17 +984,6 @@ def main():
                 except AttributeError as e:
                     await botOwner.send(f"Guild not found: {e}")
 
-            if message.content == ("!update"):
-                print (f"{message.author} requested update")
-                print ("""
-########################################
-#                                      #
-#       Starting Update                #
-#                                      #
-########################################
-                """)
-                run_update()
-        
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
                 await botOwner.send("""**!help** - Send this message
@@ -1023,8 +1000,6 @@ def main():
 **!search** - Search all messages for a query
 **!userlookup** - Search a user ID
 **!guildlookup** - Search a guild ID
-**!update** - Update the bot code from GitHub if there is a new version available           
-**!version** - Get the current version of the bot
                 """)
 
     bot.response_messages = {}
