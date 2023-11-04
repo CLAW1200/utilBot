@@ -52,7 +52,8 @@ def main():
 
 
     log.debug("Starting Main()")
-    bot = discord.Bot(intents=discord.Intents.all())
+    intents = discord.Intents.default()
+    bot = discord.Bot(intents)
     log.debug("Bot object created")
 
     def check_bot_permissions(ctx):
