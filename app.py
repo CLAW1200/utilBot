@@ -52,9 +52,15 @@ def main():
 
 
     log.debug("Starting Main()")
-    intents = discord.Intents.all()
+
+
+    intents = discord.Intents.default()  # Create an intents object with default intents
+    intents.typing = False  # Disable the typing intent
     intents.presences = False  # Disable the presence intent
+
     bot = discord.Bot(intents=intents)
+
+
     log.debug("Bot object created")
 
     def check_bot_permissions(ctx):
