@@ -53,11 +53,8 @@ def main():
 
     log.debug("Starting Main()")
     intents = discord.Intents.all()
-    intents = discord.Intents(
-        presences=False,
-    )
-
-    bot = discord.Bot(intents)
+    intents.presences = False  # Disable the presence intent
+    bot = discord.Bot(intents=intents)
     log.debug("Bot object created")
 
     def check_bot_permissions(ctx):
