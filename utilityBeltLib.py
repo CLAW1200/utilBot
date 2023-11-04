@@ -19,6 +19,7 @@ def exit_bot():
 
 def run_update():
     log.info("Running update")
+    print ("Running update now")
     os.system("python3 updateBot.py")
     return
 

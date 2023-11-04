@@ -4,16 +4,21 @@ import utilityBeltLib as ublib
 def update_bot():
     """
     Update the bot and restart it
-    """        
+    """ 
+    print ("Updating bot from updateBot.py")
     #end the bot 
     ublib.exit_bot()
+    print ("Bot ended")
 
     # Check if the bot is up to date
     if not is_bot_version_latest():
         os.system("git pull")
+        print ("Bot updated")
 
     #Start the bot
+    print ("Starting bot")
     os.system("python3 app.py")
+    print ("Bot started")
     return
 
 def is_bot_version_latest():
