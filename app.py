@@ -52,7 +52,11 @@ def main():
 
 
     log.debug("Starting Main()")
-    intents = discord.Intents.default()
+    intents = discord.Intents.all()
+    intents = discord.Intents(
+        presences=False,
+    )
+
     bot = discord.Bot(intents)
     log.debug("Bot object created")
 
