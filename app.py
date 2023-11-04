@@ -1025,6 +1025,7 @@ def main():
 **!userlookup** - Search a user ID
 **!guildlookup** - Search a guild ID
 **!update** - Update the bot code from GitHub if there is a new version available           
+**!version** - Get the current version of the bot
                 """)
 
     bot.response_messages = {}
