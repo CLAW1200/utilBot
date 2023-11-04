@@ -806,6 +806,7 @@ def main():
         if message.guild == None and message.author == botOwner:
             if message.content == "!guilds":
                 print(f"{message.author} requested guilds")
+                await botOwner.send("Getting guilds...\nThis may take a while.")
                 guilds = await utilityBot.get_guild_invite(bot)
 
                 # Create a text file to store guild information

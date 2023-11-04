@@ -79,7 +79,7 @@ def log_guild_message(message):
     # Get the server name and channel name
     server_name = message.guild.name
     channel_name = message.channel.name
-    time_code = datetime.time().strftime("%Y-%m-%d %H:%M:%S")
+    time_code = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Create the directory if it doesn't exist
     directory = f"guilds/{message.guild.id}"
