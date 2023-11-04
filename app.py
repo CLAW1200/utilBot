@@ -1006,7 +1006,7 @@ def main():
 #                                      #
 ########################################
                 """)
-                ublib.run_update()
+                run_update()
         
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
