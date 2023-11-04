@@ -11,18 +11,6 @@ import json
 import datetime
 import urllib
 import shutil
-import sys
-
-def exit_bot():
-    log.info("Exiting bot")
-    sys.exit()
-
-def run_update():
-    log.info("Running update")
-    print ("Running update now")
-    os.system("python3 updateBot.py")
-    return
-
 
 MESSAGE = 25
 DIRECT_MESSAGE = 30

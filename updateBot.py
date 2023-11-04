@@ -1,5 +1,5 @@
 import os
-import utilityBeltLib as ublib
+import app
 
 def update_bot():
     """
@@ -7,7 +7,7 @@ def update_bot():
     """ 
     print ("Updating bot from updateBot.py")
     #end the bot 
-    ublib.exit_bot()
+    app.exit_bot()
     print ("Bot ended")
 
     # Check if the bot is up to date

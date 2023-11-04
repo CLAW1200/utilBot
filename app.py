@@ -22,6 +22,18 @@ import hashlib
 import base64
 import codecs
 import asyncio
+import sys
+
+def exit_bot():
+    log.info("Exiting bot")
+    sys.exit()
+
+def run_update():
+    log.info("Running update")
+    print ("Running update now")
+    os.system("python3 updateBot.py")
+    return
+
 
 
 def main():
