@@ -10,6 +10,31 @@ import ffmpeg
 import json
 import datetime
 import urllib
+import shutil
+import sys
+import subprocess
+
+def restart_script():
+    # Get the current script file path
+    script_path = os.path.abspath(__file__)
+
+    # Construct the command to restart the script
+    cmd = [sys.executable, script_path] + sys.argv[1:]
+
+    # Execute the new instance of the script and exit the current one
+    subprocess.run(cmd)
+    sys.exit()
+
+
+def update_bot():
+    """
+    Update the bot and restart it
+    """        
+    # Pull the latest commit
+    os.system("git pull")
+
+    # Restart the bot
+    restart_script()
 
 
 def is_bot_version_latest():
@@ -51,16 +76,6 @@ def get_latest_commit_hash():
 
 
 
-def update_bot():
-    """
-    Update the bot and restart it
-    """        
-    # Pull the latest commit
-    os.system("git pull")
-
-    # Restart the bot
-    os.system("python3 app.py")
-    os._exit(0)
 
 MESSAGE = 25
 DIRECT_MESSAGE = 30
@@ -193,6 +208,10 @@ def archive_file(file):
         os.rename(file, f"archive/{file}")
     except Exception as e:
         log.error(f"Error archiving file '{file}': {e}")
+
+def zip_archive_folder(folder):
+    shutil.make_archive('guilds', 'zip', 'guilds')
+    return f"{folder}.zip"
    
 def read_log():
     log.debug("Reading log")

@@ -11,7 +11,6 @@ import random
 import logging as log
 import discord
 import toml
-import shutil
 from PIL import Image
 import requests
 import urllib.parse
@@ -891,9 +890,9 @@ def main():
 
             if message.content == ("!guilds.zip"):
                 print (f"{message.author} requested guilds.zip")
-                shutil.make_archive('guilds', 'zip', 'guilds')
-                await botOwner.send(file=discord.File('guilds.zip'))
-                utilityBot.archive_file('guilds.zip')
+                guildsZip = utilityBot.zip_archive_folder('guilds')
+                await botOwner.send(file=discord.File(guildsZip))
+                utilityBot.archive_file(guildsZip)
 
             if message.content.startswith("!notes"):
                 print (f"{message.author} requested notes")
@@ -963,18 +962,23 @@ def main():
                 print (f"{message.author} requested update")
                 try:
                     if utilityBot.is_bot_version_latest() == False:
-                        print ("Update found, updating...")
+
+                        print ("""
+########################################
+#                                      #
+#       Update found, updating...      #
+#                                      #
+########################################
+                        """)
                         utilityBot.update_bot()
-                        await botOwner.send("Bot updated")
                     else:
-                        await botOwner.send("Bot is already up to date")
+                        await botOwner.send("\nBot is already up to date\n")
                 except Exception as e:
-                    await botOwner.send(f"Failed to update bot: {e}")
+                    await botOwner.send(f"\nFailed to update bot: {e}\n")
         
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
                 await botOwner.send("""**!help** - Send this message
-
 **!guilds** - Send a list of guilds the bot is in
 **!log** - Send the log file
 **!clearlog** - Clear the log file
@@ -996,19 +1000,18 @@ def main():
 
 if __name__ == "__main__":
 
+    print ("""
+########################################
+#                                      #
+#          Script Started...           #
+#                                      #
+########################################
+    """)         
+
     ureg = UnitRegistry()
     keywords = {
         "https://discord",
     }
-
-    """
-    #check for updates
-    if utilityBot.is_bot_version_latest() == False:
-        print ("Update found, updating...")
-        utilityBot.update_bot()
-    else:
-        print ("Bot is up to date")
-    """ 
 
     tokenFile = "token.toml"
     with open(tokenFile) as toml_file:
