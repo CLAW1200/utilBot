@@ -4,7 +4,7 @@ If the previous game has not concluded and another game is started by someone el
 
 """
 import traceback
-import utilityBot
+import utilityBeltLib as ublib
 from discord.ui import View
 import os
 import random
@@ -25,6 +25,33 @@ import asyncio
 
 
 def main():
+    
+    print ("""
+########################################
+#                                      #
+#          Script Started...           #
+#                                      #
+########################################
+    """)         
+
+    ureg = UnitRegistry()
+    keywords = {
+        "https://discord",
+    }
+
+    tokenFile = "token.toml"
+    with open(tokenFile) as toml_file:
+        data = toml.load(toml_file)
+        TOKEN = data["token"]
+        TOP_GG_TOKEN = data["top-gg-token"]
+        GIPHY_API_KEY = data["giphy-api-key"]
+        log.debug(f"Token read from '{tokenFile}'")
+
+    #if there is no temp folder make one
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
+
+
     log.debug("Starting Main()")
     bot = discord.Bot(intents=discord.Intents.all())
     log.debug("Bot object created")
@@ -34,7 +61,7 @@ def main():
             return True
 
         binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
-        binary_required_permissions = bin(utilityBot.read_toml_var("permissionsInt"))
+        binary_required_permissions = bin(ublib.read_toml_var("permissionsInt"))
 
         #perform binary AND operation on the two binary strings
         check = int(binary_guild_permissions, 2) & int(binary_required_permissions, 2)
@@ -44,9 +71,9 @@ def main():
             return False
     
     async def command_topper(ctx):
-        utilityBot.edit_user_data(ctx.author, "commandsUsed", utilityBot.get_user_data(ctx.author, "commandsUsed") + 1)
-        utilityBot.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
-        if utilityBot.get_user_data(ctx.author, "commandsUsed") <= 1:
+        ublib.edit_user_data(ctx.author, "commandsUsed", ublib.get_user_data(ctx.author, "commandsUsed") + 1)
+        ublib.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
+        if ublib.get_user_data(ctx.author, "commandsUsed") <= 1:
             await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nPlease use **/feedback** if you have any issues!\nRemember to use **/vote** if you find me useful :) - This will be the only reminder", ephemeral=True)
 
         if not check_bot_permissions(ctx):
@@ -56,19 +83,19 @@ def main():
 
     @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
-        if utilityBot.get_file_size(image_link) > utilityBot.read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if ublib.get_file_size(image_link) > ublib.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         await ctx.respond(f"Converting image to gif... ") # this message will be deleted when the gif is sent
         try:
-            newGif = utilityBot.convert_image_to_gif(image_link)
+            newGif = ublib.convert_image_to_gif(image_link)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
-            utilityBot.archive_file(newGif)
+            ublib.archive_file(newGif)
             log.info(f"Converted image {image_link}")
         except Image.UnidentifiedImageError:
             await ctx.edit(content = f"Sorry, but that image link is invalid!")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, image_link)
+        ublib.logging_command(ctx, image_link)
 
     @bot.slash_command(name="video-to-gif", description="Take a video link and send it as a gif")
     async def video_to_gif_command(
@@ -78,8 +105,8 @@ def main():
         scale: discord.Option(int, "The scale of the gif", required=False),
     ):
         #do not download videos larger than maxFileSize
-        if utilityBot.get_file_size(video_link) > utilityBot.read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if ublib.get_file_size(video_link) > ublib.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         if fps > 40:
             await ctx.respond(f"Sorry, but the max FPS is 40!", ephemeral=True)
@@ -91,16 +118,16 @@ def main():
         
         await ctx.respond(f"Converting video to gif... ")
         try:
-            newGif = utilityBot.convert_video_to_gif(video_link, fps, scale)
+            newGif = ublib.convert_video_to_gif(video_link, fps, scale)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
-            utilityBot.archive_file(newGif)
+            ublib.archive_file(newGif)
             log.info(f"Converted image {video_link}")
         except Exception as e:
             await ctx.edit(content = f"Sorry, but that video link is invalid!")
             print (e)
             traceback.print_exc()
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, video_link, fps, scale)
+        ublib.logging_command(ctx, video_link, fps, scale)
 
     @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image")
     async def speech_bubble_command(
@@ -109,8 +136,8 @@ def main():
         speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
     ):
         #do not download videos larger than maxFileSize
-        if utilityBot.get_file_size(image_link) > utilityBot.read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {utilityBot.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        if ublib.get_file_size(image_link) > ublib.read_toml_var("maxFileSize"):
+            await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         
         if speech_bubble_size > 1 or speech_bubble_size < 0:
@@ -119,18 +146,18 @@ def main():
         await ctx.respond(f"Adding speech bubble to image... ")
 
         try:
-            newImage = utilityBot.add_speech_bubble(image_link, speech_bubble_size)
+            newImage = ublib.add_speech_bubble(image_link, speech_bubble_size)
             await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
         except Exception as e:
             await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image!")
             log.error(e)
         try:
-            utilityBot.archive_file(newImage)
+            ublib.archive_file(newImage)
         except Exception as e:
             print(f"{e}" + " - Failed to remove image")
             log.error(e)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, image_link, speech_bubble_size)
+        ublib.logging_command(ctx, image_link, speech_bubble_size)
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
@@ -143,10 +170,10 @@ def main():
         if check_bot_permissions(ctx):
             await ctx.respond(f"Permissions are already up to date!", ephemeral=True)
             return
-        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
+        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ublib.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
 
     @bot.slash_command(name="impact", description="Add impact font to an image")
@@ -161,21 +188,21 @@ def main():
     ):
         await ctx.respond(f"Adding impact font to image... ")
 
-        newImage = utilityBot.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
+        newImage = ublib.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
         await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
-        utilityBot.archive_file(newImage)
+        ublib.archive_file(newImage)
         log.info(f"Added impact font to image {image_link}")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, image_link, top_text, bottom_text, font_size, font_color)
+        ublib.logging_command(ctx, image_link, top_text, bottom_text, font_size, font_color)
 
     @bot.slash_command(name="invite", description="Get the bot's invite link")
     async def invite_command(ctx):
         #respond with message with button that links to bot invite link
         client_id = bot.user.id
-        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={utilityBot.read_toml_var('permissionsInt')}"
+        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ublib.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
     @bot.slash_command(name="urban", description="Find a definition of a word on urban dictionary")
     async def urban_command(
@@ -211,7 +238,7 @@ def main():
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, word, random_result)
+        ublib.logging_command(ctx, word, random_result)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
     async def random_word_command(ctx):
@@ -230,7 +257,7 @@ def main():
                 embed.add_field(name="Example", value=example, inline=False)
                 await ctx.respond(embed=embed)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, word)
+        ublib.logging_command(ctx, word)
 
     @bot.slash_command(name="units", description="Convert units")
     async def convert(ctx, value: float, unit_from: str, unit_to: str):
@@ -254,7 +281,7 @@ def main():
         except Exception as e:
             await ctx.respond(f"{str(e)}")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, value, unit_from, unit_to)
+        ublib.logging_command(ctx, value, unit_from, unit_to)
 
     @bot.slash_command(name="note-new", description="Write a new note")
     async def new_note_command(ctx, note: str):
@@ -276,7 +303,7 @@ def main():
 
         await ctx.respond("New note added!\nSee your new note with /notes.", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, note)
+        ublib.logging_command(ctx, note)
 
     @bot.slash_command(name="edit-note", description="Edit a note")
     async def edit_note_command(ctx, index: int, note: str):
@@ -309,7 +336,7 @@ def main():
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, index, note)
+        ublib.logging_command(ctx, index, note)
 
     @bot.slash_command(name="notes", description="Read your notes")
     async def my_notes_command(ctx):
@@ -331,7 +358,7 @@ def main():
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
 
     @bot.slash_command(name="note-delete", description="Delete a note or leave index blank to delete all")
@@ -374,15 +401,15 @@ def main():
         else:
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, index)
+        ublib.logging_command(ctx, index)
 
     @bot.slash_command(name="cat", description="Get a random cat picture")
     async def cat_command(ctx):
         """Get a random cat gif"""
         #use gif search function
-        await ctx.respond(utilityBot.gif_search("silly cat"))
+        await ctx.respond(ublib.gif_search("silly cat"))
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user")
     async def dox_command(ctx):
@@ -394,7 +421,7 @@ def main():
                 return randomUser
         await ctx.respond(f"Your new friend is {get_random_user()}!")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
@@ -403,19 +430,19 @@ def main():
         if user == None:
             user = ctx.author
         peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
-        if user.id == utilityBot.read_toml_var("botOwner"):
+        if user.id == ublib.read_toml_var("botOwner"):
             peepeeSize = 34
         peepee = "8" + "=" * peepeeSize + "D"
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
     @bot.slash_command(name="showrps", description="test")
     async def showrps(ctx):
         """test"""
         await ctx.respond(ongoing_games)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
     
     ongoing_games = {}
 
@@ -585,14 +612,14 @@ def main():
             if key is None or not key.isdigit():
                 await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 return
-            encoded_message = utilityBot.caesar_cipher_encode(message, key)
+            encoded_message = ublib.caesar_cipher_encode(message, key)
         elif mode == "vigenere":
             if key is None:
                 await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 return
-            encoded_message = utilityBot.vigenere_cipher_encode(message, key)
+            encoded_message = ublib.vigenere_cipher_encode(message, key)
         elif mode == "atbash":
-            encoded_message = utilityBot.atbash_cipher_encode(message)
+            encoded_message = ublib.atbash_cipher_encode(message)
         elif mode == "binary":
             encoded_message = ' '.join(format(ord(char), '08b') for char in message)
         elif mode == "hex":
@@ -606,7 +633,7 @@ def main():
             else:
                 await ctx.respond(f"Encoded message: {encoded_message}")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx, "encode", message, mode, hide, key)
+        ublib.logging_command(ctx, "encode", message, mode, hide, key)
 
     @bot.slash_command(name="decode", description="Decode a message")
     async def decode_command(ctx,
@@ -637,18 +664,18 @@ def main():
             if key is None or not key.isdigit():
                 await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 return
-            decoded_message = utilityBot.caesar_cipher_decode(message, key)
+            decoded_message = ublib.caesar_cipher_decode(message, key)
         elif mode == "vigenere":
             if key is None:
                 await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 return
-            decoded_message = utilityBot.vigenere_cipher_decode(message, key)
+            decoded_message = ublib.vigenere_cipher_decode(message, key)
         elif mode == "atbash":
-            decoded_message = utilityBot.atbash_cipher_decode(message)
+            decoded_message = ublib.atbash_cipher_decode(message)
         elif mode == "binary":
-            decoded_message = utilityBot.binary_to_text(message)
+            decoded_message = ublib.binary_to_text(message)
         elif mode == "hex":
-            decoded_message = utilityBot.hex_to_text(message)
+            decoded_message = ublib.hex_to_text(message)
 
         if decoded_message is None:
             await ctx.respond("Invalid mode selected.", ephemeral=True)
@@ -658,7 +685,7 @@ def main():
             else:
                 await ctx.respond(f"Decoded message: {decoded_message}")
 
-        utilityBot.logging_command(ctx, "decode", message, mode, hide, key)
+        ublib.logging_command(ctx, "decode", message, mode, hide, key)
 
 
     @bot.slash_command(name="feedback", description="Send feedback")
@@ -670,7 +697,7 @@ def main():
         feedback_feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
         feedback_description: discord.Option(str, description="Describe the issue / change") = None
     ):
-            botOwner = bot.get_user(utilityBot.read_toml_var("botOwner"))
+            botOwner = bot.get_user(ublib.read_toml_var("botOwner"))
             embed = discord.Embed(title="Bot Owner Notification", description=f"**{ctx.author.name}#{ctx.author.discriminator}** has submitted feedback", color=discord.Color.red())
             embed.add_field(name="Feedback Type", value=feedback_type, inline=False)
             embed.add_field(name="Feedback Feature", value=feedback_feature, inline=False)
@@ -679,7 +706,7 @@ def main():
             await botOwner.send(embed=embed)
             await ctx.respond("Thanks, Feedback has been sent!", ephemeral=True)
             await command_topper(ctx)
-            utilityBot.logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
+            ublib.logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
@@ -706,7 +733,7 @@ def main():
         embed.add_field(name="vote", value="Vote for the bot and claim a reward", inline=False)
         await ctx.respond(embed=embed)
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
 
     @bot.slash_command(name="vote", description="Vote for the bot and claim a reward")
@@ -719,8 +746,8 @@ def main():
             data = request.json()
             if data['voted'] == 1:
                 await ctx.respond("Thanks for voting!")
-                utilityBot.edit_user_data(ctx.author, "votes", utilityBot.get_user_data(ctx.author, "votes") + 1)
-                utilityBot.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
+                ublib.edit_user_data(ctx.author, "votes", ublib.get_user_data(ctx.author, "votes") + 1)
+                ublib.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
                 #give VoteReward role
                 try:
                     if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
@@ -735,7 +762,7 @@ def main():
         else:
             await ctx.respond("Error checking vote status!")
         await command_topper(ctx)
-        utilityBot.logging_command(ctx)
+        ublib.logging_command(ctx)
 
     @bot.event
     async def on_ready():
@@ -744,14 +771,14 @@ def main():
 
     @bot.event
     async def on_message(message):
-        botOwner = bot.get_user(utilityBot.read_toml_var("botOwner"))  # Get the bot owner
+        botOwner = bot.get_user(ublib.read_toml_var("botOwner"))  # Get the bot owner
         #messageAuthor = message.author.id # Get the author of the message
         #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
         if message.guild != None: # Any message in a server
-            utilityBot.log_guild_message(message)
+            ublib.log_guild_message(message)
             #read how many messages the user has sent and add 1
-            utilityBot.edit_user_data(message.author, "messages", utilityBot.get_user_data(message.author, "messages") + 1)
-            utilityBot.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
+            ublib.edit_user_data(message.author, "messages", ublib.get_user_data(message.author, "messages") + 1)
+            ublib.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
             #if any keyword in keywords list is in the message content
             if any(keyword in message.content.lower() for keyword in keywords):
@@ -783,7 +810,7 @@ def main():
             embed.add_field(name="UserID", value=message.author.id)
 
             await botOwner.send(embed=embed)
-            utilityBot.logging_direct_message(message)
+            ublib.logging_direct_message(message)
 
         # (Reply to DMs) If the message is from the botOwner and a reply to an embed message, get the user from the embed and send the message to them 
         if message.author == botOwner and message.reference:
@@ -806,7 +833,7 @@ def main():
             if message.content == "!guilds":
                 print(f"{message.author} requested guilds")
                 await botOwner.send("Getting guilds...\nThis may take a while.")
-                guilds = await utilityBot.get_guild_invite(bot)
+                guilds = await ublib.get_guild_invite(bot)
 
                 # Create a text file to store guild information
                 with open("guilds.txt", "w", encoding="UTF-8") as file:
@@ -818,7 +845,7 @@ def main():
                     await botOwner.send(file=discord.File(file, "guilds.txt"))
 
                 # Delete the temporary file
-                utilityBot.archive_file("guilds.txt")
+                ublib.archive_file("guilds.txt")
 
 
             if message.content == ("!log"):
@@ -879,20 +906,20 @@ def main():
 
                 try:
                     status = message.content.split(" ")[1]
-                    utilityBot.status(status)
+                    ublib.status(status)
                     await bot.change_presence(activity=discord.Game(name=status))
                     await botOwner.send(f"Status set to {status}")
 
                 except IndexError:
-                    utilityBot.status(None)
+                    ublib.status(None)
                     await bot.change_presence(activity=None)
                     await botOwner.send("Status cleared")
 
             if message.content == ("!guilds.zip"):
                 print (f"{message.author} requested guilds.zip")
-                guildsZip = utilityBot.zip_archive_folder('guilds')
+                guildsZip = ublib.zip_archive_folder('guilds')
                 await botOwner.send(file=discord.File(guildsZip))
-                utilityBot.archive_file(guildsZip)
+                ublib.archive_file(guildsZip)
 
             if message.content.startswith("!notes"):
                 print (f"{message.author} requested notes")
@@ -907,9 +934,9 @@ def main():
                     mode = message.content.split(" ")[1]
                     query = message.content.split(" ")[2]
                     print (f"Mode: {mode}, Query: {query}")
-                    utilityBot.search(mode, query)
+                    ublib.search(mode, query)
                     await botOwner.send(file=discord.File("temp/search.txt"))
-                    utilityBot.archive_file("temp/search.txt")
+                    ublib.archive_file("temp/search.txt")
                 except IndexError:
                     await botOwner.send("No search term provided")
 
@@ -961,7 +988,7 @@ def main():
             if message.content == ("!update"):
                 print (f"{message.author} requested update")
                 try:
-                    if utilityBot.is_bot_version_latest() == False:
+                    if ublib.is_bot_version_latest() == False:
 
                         print ("""
 ########################################
@@ -970,7 +997,7 @@ def main():
 #                                      #
 ########################################
                         """)
-                        utilityBot.update_bot()
+                        ublib.update_bot()
                     else:
                         await botOwner.send("\nBot is already up to date\n")
                 except Exception as e:
@@ -998,31 +1025,5 @@ def main():
     bot.response_messages = {}
     bot.run(TOKEN)
 
-if __name__ == "__main__":
-
-    print ("""
-########################################
-#                                      #
-#          Script Started...           #
-#                                      #
-########################################
-    """)         
-
-    ureg = UnitRegistry()
-    keywords = {
-        "https://discord",
-    }
-
-    tokenFile = "token.toml"
-    with open(tokenFile) as toml_file:
-        data = toml.load(toml_file)
-        TOKEN = data["token"]
-        TOP_GG_TOKEN = data["top-gg-token"]
-        GIPHY_API_KEY = data["giphy-api-key"]
-        log.debug(f"Token read from '{tokenFile}'")
-
-    #if there is no temp folder make one
-    if not os.path.exists("temp"):
-        os.makedirs("temp")
-        
+if __name__ == "__main__":        
     main()

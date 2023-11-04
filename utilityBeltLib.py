@@ -11,20 +11,10 @@ import json
 import datetime
 import urllib
 import shutil
-import sys
-import subprocess
+import app
 
 def restart_script():
-    # Get the current script file path
-    script_path = os.path.abspath(__file__)
-
-    # Construct the command to restart the script
-    cmd = [sys.executable, script_path] + sys.argv[1:]
-
-    # Execute the new instance of the script and exit the current one
-    subprocess.run(cmd)
-    sys.exit()
-
+    app.main()
 
 def update_bot():
     """
