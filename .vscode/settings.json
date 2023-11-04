@@ -16,6 +16,7 @@
         "startfile",
         "textsize",
         "tomlfile",
+        "ublib",
         "vigenere",
         "ytsearch"
     ]
