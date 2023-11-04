@@ -17,6 +17,12 @@ def exit_bot():
     log.info("Exiting bot")
     sys.exit()
 
+def run_update():
+    log.info("Running update")
+    os.system("python3 updateBot.py")
+    return
+
+
 MESSAGE = 25
 DIRECT_MESSAGE = 30
 COMMAND = 35

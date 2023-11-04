@@ -987,21 +987,14 @@ def main():
 
             if message.content == ("!update"):
                 print (f"{message.author} requested update")
-                try:
-                    if ublib.is_bot_version_latest() == False:
-
-                        print ("""
+                print ("""
 ########################################
 #                                      #
 #       Update found, updating...      #
 #                                      #
 ########################################
-                        """)
-                        ublib.update_bot()
-                    else:
-                        await botOwner.send("\nBot is already up to date\n")
-                except Exception as e:
-                    await botOwner.send(f"\nFailed to update bot: {e}\n")
+                """)
+                ublib.run_update()
         
             if message.content.startswith("!help"):
                 print (f"{message.author} requested help")
