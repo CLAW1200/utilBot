@@ -22,11 +22,10 @@ import hashlib
 import base64
 import codecs
 import asyncio
-import sys
 
 def exit_bot():
     log.info("Exiting bot")
-    sys.exit()
+    raise SystemExit
 
 def run_update():
     log.info("Running update")
