@@ -79,7 +79,8 @@ def log_guild_message(message):
     # Get the server name and channel name
     server_name = message.guild.name
     channel_name = message.channel.name
-    time_code = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #get the time in GMT
+    time_code = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     
     # Create the directory if it doesn't exist
     directory = f"guilds/{message.guild.id}"
@@ -102,7 +103,7 @@ def log_guild_message(message):
         
         # Write the formatted message to the file
         file.write(f"{author_info}:\n")
-        file.write(f"Time: {time_code}\n")
+        file.write(f"Time (GMT): {time_code}\n")
         file.write(f"Message: {message.content}\n")
         file.write(f"{attachments_info}\n")
         file.write(f"{embeds_info}\n")
