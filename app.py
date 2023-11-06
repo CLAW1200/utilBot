@@ -54,14 +54,13 @@ def main():
     log.debug("Starting Main()")
 
 
-    intents = discord.Intents.default()  # Create an intents object with default intents
+    intents = discord.Intents.all()  # Create an intents object with default intents
     intents.typing = False  # Disable the typing intent
     intents.presences = False  # Disable the presence intent
 
     bot = discord.Bot(intents=intents)
-
-
-    log.debug("Bot object created")
+    print (f"Bot object created: {bot}")
+    log.debug(f"Bot object created: {bot}")
 
     def check_bot_permissions(ctx):
         if ctx.guild == None:
@@ -779,8 +778,6 @@ def main():
     @bot.event
     async def on_message(message):
         botOwner = bot.get_user(ublib.read_toml_var("botOwner"))  # Get the bot owner
-        #messageAuthor = message.author.id # Get the author of the message
-        #messageAuthor = bot.get_user(messageAuthor) # Get the specific author
         if message.guild != None: # Any message in a server
             ublib.log_guild_message(message)
             #read how many messages the user has sent and add 1
