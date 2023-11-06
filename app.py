@@ -55,6 +55,7 @@ def main():
 
 
     intents = discord.Intents.all()  # Create an intents object with default intents
+    intents.message_content = False  # Disable the message content intent
     intents.typing = False  # Disable the typing intent
     intents.presences = False  # Disable the presence intent
 
