@@ -851,8 +851,7 @@ def main():
         if message.channel.id == ublib.read_toml_var("feedbackChannel") and message.author != bot.user and message.reference:
             try:
                 #get the user id from the embed
-                messageReference = message.reference.message_id
-                messageReference = messageReference.embeds[0].fields[5].value
+                messageReference = message.reference.embeds[0].fields[5].value
                 #get the user from the user id
                 messageReference = bot.get_user(int(messageReference))
                 #send the message to the user
