@@ -857,8 +857,9 @@ def main():
                 #send the message to the user
                 await messageReference.send(message.content)
             except IndexError:
+                print ("Error replying to feedback message")
                 pass
-                
+
         #BOT OWNER ONLY COMMANDS
         if message.guild == None and message.author == botOwner:
             if message.content == "!guilds":
