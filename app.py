@@ -694,26 +694,30 @@ def main():
 
         ublib.logging_command(ctx, "decode", message, mode, hide, key)
 
-
-    @bot.slash_command(name="feedback", description="Send feedback")
+    @bot.slash_command(name="feedback", description="Send feedback to the developer")
     #feedback_type options: bug, feature, other
     #feedback_feature options: commands, events, other
     
     async def send_bot_owner_feedback(ctx,
-        feedback_type: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
-        feedback_feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
-        feedback_description: discord.Option(str, description="Describe the issue / change") = None
+        option: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
+        feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
+        description: discord.Option(str, description="Describe the issue / change") = None
     ):
-            botOwner = bot.get_user(ublib.read_toml_var("botOwner"))
+            #make post in feedback channel in support server
+            feedbackID = int(hashlib.sha256(str(ctx.author.id).encode() + ublib.get_date_time_gmt()).encode()).hexdigest
             embed = discord.Embed(title="Bot Owner Notification", description=f"**{ctx.author.name}#{ctx.author.discriminator}** has submitted feedback", color=discord.Color.red())
-            embed.add_field(name="Feedback Type", value=feedback_type, inline=False)
-            embed.add_field(name="Feedback Feature", value=feedback_feature, inline=False)
-            embed.add_field(name="Feedback Description", value=feedback_description, inline=False)
+            embed.add_field(name="Feedback Type", value=option, inline=False)
+            embed.add_field(name="Feedback Feature", value=feature, inline=False)
+            embed.add_field(name="Feedback Description", value=description, inline=False)
+            embed.add_field(name="Server", value=ctx.guild, inline=False)
+            embed.add_field(name="Channel", value=ctx.channel, inline=False)
+            embed.add_field(name="User", value=ctx.author, inline=False)
+            embed.add_field(name="Feedback ID", value=feedbackID, inline=False)
             embed.set_footer(text=f"User ID: {ctx.author.id}")
-            await botOwner.send(embed=embed)
-            await ctx.respond("Thanks, Feedback has been sent!", ephemeral=True)
+            await bot.get_channel(ublib.read_toml_var("feedbackChannel")).send(embed=embed)
+            await ctx.respond(f"Thanks, Feedback has been sent!\nTicket ID: {feedbackID}", ephemeral=True)
             await command_topper(ctx)
-            ublib.logging_command(ctx, "feedback", feedback_type, feedback_feature, feedback_description)
+            ublib.logging_command(ctx, "feedback", option, feature, description)
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
@@ -741,7 +745,6 @@ def main():
         await ctx.respond(embed=embed)
         await command_topper(ctx)
         ublib.logging_command(ctx)
-
 
     @bot.slash_command(name="vote", description="Vote for the bot and claim a reward")
     async def vote(ctx):
@@ -853,7 +856,6 @@ def main():
 
                 # Delete the temporary file
                 ublib.archive_file("guilds.txt")
-
 
             if message.content == ("!log"):
                 print (f"{message.author} requested log")

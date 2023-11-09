@@ -607,3 +607,7 @@ def hex_to_text(message):
         return byte_data.decode()
     except ValueError:
         return None
+    
+def get_date_time_gmt():
+    #get the time in GMT
+    return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
