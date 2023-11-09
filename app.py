@@ -449,15 +449,7 @@ def main():
         await command_topper(ctx)
         ublib.logging_command(ctx)
 
-    @bot.slash_command(name="showrps", description="test")
-    async def showrps(ctx):
-        """test"""
-        await ctx.respond(ongoing_games)
-        await command_topper(ctx)
-        ublib.logging_command(ctx)
-    
     ongoing_games = {}
-
     @bot.slash_command(
         name="rps",
         description="Play rock paper scissors with another user"
