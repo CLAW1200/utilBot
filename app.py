@@ -848,7 +848,7 @@ def main():
                 pass
 
         #reply to feedback messages in feedback channel
-        if message.channel.id == ublib.read_toml_var("feedbackChannel") and message.author == bot.user and message.reference:
+        if message.channel.id == ublib.read_toml_var("feedbackChannel") and message.author != bot.user and message.reference:
             try:
                 #get the user id from the embed
                 messageReference = message.embeds[0].fields[7].value
