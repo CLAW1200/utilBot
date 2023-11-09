@@ -847,22 +847,6 @@ def main():
             except IndexError:
                 pass
 
-        #reply to feedback messages in feedback channel
-        if message.channel.id == ublib.read_toml_var("feedbackChannel") and message.author != bot.user and message.reference:
-            try:
-                #from the reference, get the embed message
-                messageReference = message.reference.message_id
-                #get the embed in the message reference
-                messageReference = await message.channel.fetch_message(messageReference)
-                #get the user id from the embed
-                messageReference = messageReference.embeds[0].fields[8].value
-                #get the user from the user id
-                messageReference = bot.get_user(int(messageReference))
-                #send the message to the user
-                await messageReference.send(message.content)
-            except IndexError:
-                pass
-
         #BOT OWNER ONLY COMMANDS
         if message.guild == None and message.author == botOwner:
             if message.content == "!guilds":
