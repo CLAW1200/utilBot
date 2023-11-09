@@ -857,6 +857,7 @@ def main():
                 #send the message to the user
                 await messageReference.send(message.content)
             except IndexError as e:
+                traceback.print_exc()
                 print ("Error replying to feedback message")
                 print (e)
                 pass
