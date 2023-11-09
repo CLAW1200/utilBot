@@ -856,8 +856,9 @@ def main():
                 messageReference = bot.get_user(int(messageReference))
                 #send the message to the user
                 await messageReference.send(message.content)
-            except IndexError:
+            except IndexError as e:
                 print ("Error replying to feedback message")
+                print (e)
                 pass
 
         #BOT OWNER ONLY COMMANDS
