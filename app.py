@@ -90,7 +90,12 @@ def main():
 
     @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
-        if ublib.get_file_size(image_link) > ublib.read_toml_var("maxFileSize"):
+        try:
+            imageFileSize = ublib.get_file_size(image_link)
+        except Exception as e:
+            await ctx.respond(f"Sorry, but that image link is invalid!\n Make sure your using an image link not a message link.", ephemeral=True)
+            return
+        if imageFileSize > ublib.read_toml_var("maxFileSize"):
             await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
             return
         await ctx.respond(f"Converting image to gif... ") # this message will be deleted when the gif is sent
