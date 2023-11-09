@@ -715,7 +715,20 @@ def main():
             embed.add_field(name="User", value=ctx.author, inline=False)
             embed.add_field(name="Feedback ID", value=feedbackID, inline=False)
             embed.set_footer(text=f"User ID: {ctx.author.id}")
-            await bot.get_channel(ublib.read_toml_var("feedbackChannel")).send(embed=embed)
+            try:
+                await bot.get_channel(ublib.read_toml_var("feedbackChannel")).send(embed=embed)
+            except Exception as e:
+                print(f"{e}" + " - Failed to send feedback")
+                log.error(e)
+                print ("Falling back to DMs")
+                botOwner = bot.get_user(ublib.read_toml_var("botOwner"))  # Get the bot owner
+                try:
+                    await botOwner.send(embed=embed)
+                except Exception as e:
+                    print(f"{e}" + " - Failed to send feedback")
+                    log.error(e)
+                    await ctx.respond(f"Sorry, but I failed to send your feedback!", ephemeral=True)
+                    return
             await ctx.respond(f"Thanks, Feedback has been sent!\nTicket ID: {feedbackID}", ephemeral=True)
             await command_topper(ctx)
             ublib.logging_command(ctx, "feedback", option, feature, description)
