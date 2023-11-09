@@ -704,7 +704,8 @@ def main():
         description: discord.Option(str, description="Describe the issue / change") = None
     ):
             #make post in feedback channel in support server
-            feedbackID = int(hashlib.sha256(str(ctx.author.id).encode() + ublib.get_date_time_gmt()).encode()).hexdigest
+            feedbackID = str(f"{ctx.author.id}{ublib.get_date_time_gmt()}")
+            feedbackID = int(hashlib.sha256(str(feedbackID).encode()).hexdigest(), 16) % 100001
             embed = discord.Embed(title="Bot Owner Notification", description=f"**{ctx.author.name}#{ctx.author.discriminator}** has submitted feedback", color=discord.Color.red())
             embed.add_field(name="Feedback Type", value=option, inline=False)
             embed.add_field(name="Feedback Feature", value=feature, inline=False)
