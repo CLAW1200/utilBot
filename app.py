@@ -66,7 +66,7 @@ def main():
     def check_bot_permissions(ctx):
         if ctx.guild == None:
             return True
-
+    #example
         binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
         binary_required_permissions = bin(ublib.read_toml_var("permissionsInt"))
 
