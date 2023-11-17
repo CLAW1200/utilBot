@@ -114,8 +114,13 @@ def main():
         scale: discord.Option(int, "The scale of the gif", required=False),
     ):
         #do not download videos larger than maxFileSize
-        if ublib.get_file_size(video_link) > ublib.read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        try:
+            videoFileSize = ublib.get_file_size(video_link)
+            if videoFileSize > ublib.read_toml_var("maxFileSize"):
+                await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                return
+        except Exception as e:
+            await ctx.respond(f"Sorry, but that image link is invalid!\nMake sure your using an image link not a message link.", ephemeral=True)
             return
         if fps > 40:
             await ctx.respond(f"Sorry, but the max FPS is 40!", ephemeral=True)
@@ -145,8 +150,13 @@ def main():
         speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
     ):
         #do not download videos larger than maxFileSize
-        if ublib.get_file_size(image_link) > ublib.read_toml_var("maxFileSize"):
-            await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+        try:
+            imageFileSize = ublib.get_file_size(image_link)
+            if imageFileSize > ublib.read_toml_var("maxFileSize"):
+                await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                return
+        except Exception as e:
+            await ctx.respond(f"Sorry, but that image link is invalid!\nMake sure your using an image link not a message link.", ephemeral=True)
             return
         
         if speech_bubble_size > 1 or speech_bubble_size < 0:
