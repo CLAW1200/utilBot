@@ -43,14 +43,11 @@ def main():
         data = toml.load(toml_file)
         TOKEN = data["token"]
         TOP_GG_TOKEN = data["top-gg-token"]
-        GIPHY_API_KEY = data["giphy-api-key"]
         log.debug(f"Token read from '{tokenFile}'")
 
     #if there is no temp folder make one
     if not os.path.exists("temp"):
         os.makedirs("temp")
-
-
     log.debug("Starting Main()")
 
 
@@ -414,14 +411,6 @@ def main():
             await ctx.respond("You have no notes!", ephemeral=True)
         await command_topper(ctx)
         ublib.logging_command(ctx, index)
-
-    @bot.slash_command(name="cat", description="Get a random cat picture")
-    async def cat_command(ctx):
-        """Get a random cat gif"""
-        #use gif search function
-        await ctx.respond(ublib.gif_search("silly cat"))
-        await command_topper(ctx)
-        ublib.logging_command(ctx)
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user")
     async def dox_command(ctx):
