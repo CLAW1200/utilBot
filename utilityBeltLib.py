@@ -12,15 +12,7 @@ import datetime
 import urllib
 import shutil
 
-MESSAGE = 25
-DIRECT_MESSAGE = 30
-COMMAND = 35
 remove_char = "'"
-
-# Define custom log level names
-log.addLevelName(MESSAGE, "MESSAGE")
-log.addLevelName(DIRECT_MESSAGE, "DIRECT_MESSAGE")
-log.addLevelName(COMMAND, "COMMAND")
 
 # Configure the logger
 log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
