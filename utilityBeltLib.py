@@ -59,27 +59,6 @@ def log_guild_message(message):
         file.write(f"{embeds_info}\n")
         file.write("--------------------------------\n")
 
-def logging_direct_message(message):
-    log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
-
-def logging_command(ctx, *args):
-    if ctx.guild == None:
-        logging_command_direct_message(ctx, *args)
-        return
-
-    print (        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}")
-    log.log(
-        COMMAND,
-        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}"
-    )
-
-def logging_command_direct_message(ctx, *args):
-    print (        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}")
-    log.log(
-        COMMAND,
-        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}"
-    )
-
 
 def edit_user_data(user, field, data):
     # Edit users.json, add data to key
