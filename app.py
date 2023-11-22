@@ -3,7 +3,7 @@ import utilityBeltLib as ublib
 from discord.ui import View
 import os
 import random
-import logging as log
+import logging
 import discord
 import toml
 from PIL import Image
@@ -20,27 +20,27 @@ import asyncio
 
 def setup_log():
     # Create a log
-    log = log.getLogger('Utility Belt')
-    log.setLevel(log.DEBUG)
+    log = logging.getLogger('Utility Belt')
+    log.setLevel(logging.DEBUG)
 
     # Create a console handler and set the level to INFO
-    console_handler = log.StreamHandler()
-    console_handler.setLevel(log.INFO)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
 
     # Create a formatter and set it to the handler
-    formatter = log.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
 
     # Add the console handler to the log
     log.addHandler(console_handler)
 
     # Add custom levels
-    log.addLevelName(25, "bot_got_message")
-    log.addLevelName(25, "bot_got_command")
-    log.addLevelName(29, "bot_got_command_admin")
-    log.addLevelName(25, "bot_reply")
-    log.addLevelName(25, "bot_reply_fail")
-    log.addLevelName(25, "bot_reply_success")
+    logging.addLevelName(25, "bot_got_message")
+    logging.addLevelName(25, "bot_got_command")
+    logging.addLevelName(29, "bot_got_command_admin")
+    logging.addLevelName(25, "bot_reply")
+    logging.addLevelName(25, "bot_reply_fail")
+    logging.addLevelName(25, "bot_reply_success")
 
     return log
 
