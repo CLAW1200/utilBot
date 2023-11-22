@@ -3,7 +3,7 @@ import utilityBeltLib as ublib
 from discord.ui import View
 import os
 import random
-import logging
+import log as log
 import discord
 import toml
 from PIL import Image
@@ -18,31 +18,31 @@ import base64
 import codecs
 import asyncio
 
-def setup_logging():
-    # Create a logger
-    logger = logging.getLogger('Utility Belt')
-    logger.setLevel(logging.DEBUG)
+def setup_log():
+    # Create a log
+    log = log.getLogger('Utility Belt')
+    log.setLevel(log.DEBUG)
 
     # Create a console handler and set the level to INFO
-    console_handler = logger.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler = log.StreamHandler()
+    console_handler.setLevel(log.INFO)
 
     # Create a formatter and set it to the handler
-    formatter = logger.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = log.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
 
-    # Add the console handler to the logger
-    logger.addHandler(console_handler)
+    # Add the console handler to the log
+    log.addHandler(console_handler)
 
     # Add custom levels
-    logger.addLevelName(25, "bot_got_message")
-    logger.addLevelName(25, "bot_got_command")
-    logger.addLevelName(29, "bot_got_command_admin")
-    logger.addLevelName(25, "bot_reply")
-    logger.addLevelName(25, "bot_reply_fail")
-    logger.addLevelName(25, "bot_reply_success")
+    log.addLevelName(25, "bot_got_message")
+    log.addLevelName(25, "bot_got_command")
+    log.addLevelName(29, "bot_got_command_admin")
+    log.addLevelName(25, "bot_reply")
+    log.addLevelName(25, "bot_reply_fail")
+    log.addLevelName(25, "bot_reply_success")
 
-    return logger
+    return log
 
 def get_tokens(tokenFile):
     with open(tokenFile) as toml_file:
@@ -52,7 +52,7 @@ def get_tokens(tokenFile):
         return bot_token, top_gg_token
 
 def main():
-    log = setup_logging()
+    log = setup_log()
     ureg = UnitRegistry()
 
     ########################
