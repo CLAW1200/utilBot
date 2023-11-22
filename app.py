@@ -46,7 +46,7 @@ def setup_logging():
 def get_tokens(tokenFile):
     with open(tokenFile) as toml_file:
         data = toml.load(toml_file)
-        bot_token = data["tokenTest"]
+        bot_token = data["tokenLive"]
         top_gg_token = data["top-gg-token"]
         return bot_token, top_gg_token
 
