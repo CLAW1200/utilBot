@@ -35,12 +35,12 @@ def setup_logging():
     log.addHandler(console_handler)
 
     # Add custom levels
-    logging.addLevelName(25, "bot_got_message")
-    logging.addLevelName(25, "bot_got_command")
-    logging.addLevelName(29, "bot_got_command_admin")
-    logging.addLevelName(25, "bot_reply")
-    logging.addLevelName(25, "bot_reply_fail")
-    logging.addLevelName(25, "bot_reply_success")
+    log.addLevelName(25, "bot_got_message")
+    log.addLevelName(25, "bot_got_command")
+    log.addLevelName(29, "bot_got_command_admin")
+    log.addLevelName(25, "bot_reply")
+    log.addLevelName(25, "bot_reply_fail")
+    log.addLevelName(25, "bot_reply_success")
     return log
 
 def get_tokens(tokenFile):
