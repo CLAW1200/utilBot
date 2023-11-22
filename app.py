@@ -18,31 +18,29 @@ import base64
 import codecs
 import asyncio
 
-def setup_log():
-    # Create a log
-    log = logging.getLogger('Utility Belt')
-    log.setLevel(logging.DEBUG)
+# Create a log
+log = logging.getLogger('Utility Belt')
+log.setLevel(logging.DEBUG)
 
-    # Create a console handler and set the level to INFO
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+# Create a console handler and set the level to INFO
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
 
-    # Create a formatter and set it to the handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(formatter)
+# Create a formatter and set it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
 
-    # Add the console handler to the log
-    log.addHandler(console_handler)
+# Add the console handler to the log
+log.addHandler(console_handler)
 
-    # Add custom levels
-    logging.addLevelName(25, "bot_got_message")
-    logging.addLevelName(25, "bot_got_command")
-    logging.addLevelName(29, "bot_got_command_admin")
-    logging.addLevelName(25, "bot_reply")
-    logging.addLevelName(25, "bot_reply_fail")
-    logging.addLevelName(25, "bot_reply_success")
+# Add custom levels
+logging.addLevelName(25, "bot_got_message")
+logging.addLevelName(25, "bot_got_command")
+logging.addLevelName(29, "bot_got_command_admin")
+logging.addLevelName(25, "bot_reply")
+logging.addLevelName(25, "bot_reply_fail")
+logging.addLevelName(25, "bot_reply_success")
 
-    return log
 
 def get_tokens(tokenFile):
     with open(tokenFile) as toml_file:
