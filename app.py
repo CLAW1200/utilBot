@@ -3,7 +3,7 @@ import utilityBeltLib as ublib
 from discord.ui import View
 import os
 import random
-import log as log
+import logging as log
 import discord
 import toml
 from PIL import Image
