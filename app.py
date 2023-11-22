@@ -20,28 +20,29 @@ import asyncio
 
 def setup_logging():
     # Create a logger
-    log = logging.getLogger('Utility Belt')
-    log.setLevel(logging.DEBUG)
+    logger = logging.getLogger('Utility Belt')
+    logger.setLevel(logging.DEBUG)
 
     # Create a console handler and set the level to INFO
-    console_handler = logging.StreamHandler()
+    console_handler = logger.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
     # Create a formatter and set it to the handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logger.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
 
     # Add the console handler to the logger
-    log.addHandler(console_handler)
+    logger.addHandler(console_handler)
 
     # Add custom levels
-    log.addLevelName(25, "bot_got_message")
-    log.addLevelName(25, "bot_got_command")
-    log.addLevelName(29, "bot_got_command_admin")
-    log.addLevelName(25, "bot_reply")
-    log.addLevelName(25, "bot_reply_fail")
-    log.addLevelName(25, "bot_reply_success")
-    return log
+    logger.addLevelName(25, "bot_got_message")
+    logger.addLevelName(25, "bot_got_command")
+    logger.addLevelName(29, "bot_got_command_admin")
+    logger.addLevelName(25, "bot_reply")
+    logger.addLevelName(25, "bot_reply_fail")
+    logger.addLevelName(25, "bot_reply_success")
+
+    return logger
 
 def get_tokens(tokenFile):
     with open(tokenFile) as toml_file:
