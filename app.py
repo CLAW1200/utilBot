@@ -1,5 +1,5 @@
 import traceback
-import utilityBeltLib as ublib
+import utilityBeltLib as ub
 from discord.ui import View
 import os
 import random
@@ -87,7 +87,7 @@ def main():
             return True
         
         binary_guild_permissions = bin(ctx.guild.me.guild_permissions.value)
-        binary_required_permissions = bin(ublib.read_toml_var("permissionsInt"))
+        binary_required_permissions = bin(ub.read_toml_var("permissionsInt"))
 
         #perform binary AND operation on the two binary strings
         check = int(binary_guild_permissions, 2) & int(binary_required_permissions, 2)
@@ -97,9 +97,9 @@ def main():
             return False
     
     async def command_topper(ctx):
-        ublib.edit_user_data(ctx.author, "commandsUsed", ublib.get_user_data(ctx.author, "commandsUsed") + 1)
-        ublib.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
-        if ublib.get_user_data(ctx.author, "commandsUsed") <= 1:
+        ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
+        ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
+        if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
             await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nPlease use **/feedback** if you have any issues!\nRemember to use **/vote** if you find me useful :) - This will be the only reminder", ephemeral=True)
             log.BOT_REPLY(f"Sent welcome message to {ctx.author.name}#{ctx.author.discriminator}")
 
@@ -113,9 +113,9 @@ def main():
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
         log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         try:
-            imageFileSize = ublib.get_file_size(image_link)
-            if imageFileSize > ublib.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            imageFileSize = ub.get_file_size(image_link)
+            if imageFileSize > ub.read_toml_var("maxFileSize"):
+                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                 return
         except Exception as e:
@@ -126,7 +126,7 @@ def main():
         await ctx.respond(f"Converting image to gif... ") # this message will be edited when the gif is sent
         log.info(f"Converting image {image_link} to gif")
         try:
-            newGif = ublib.convert_image_to_gif(image_link)
+            newGif = ub.convert_image_to_gif(image_link)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
             log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
         except Image.UnidentifiedImageError as e:
@@ -144,9 +144,9 @@ def main():
         log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         #do not download videos larger than maxFileSize
         try:
-            videoFileSize = ublib.get_file_size(video_link)
-            if videoFileSize > ublib.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            videoFileSize = ub.get_file_size(video_link)
+            if videoFileSize > ub.read_toml_var("maxFileSize"):
+                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
                 return
         except Exception as e:
@@ -167,7 +167,7 @@ def main():
         await ctx.respond(f"Converting video to gif... ")
         log.info(f"Converting video {video_link} to gif")
         try:
-            newGif = ublib.convert_video_to_gif(video_link, fps, scale)
+            newGif = ub.convert_video_to_gif(video_link, fps, scale)
             await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
             log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
         except Exception as e:
@@ -184,9 +184,9 @@ def main():
         log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
         #do not download videos larger than maxFileSize
         try:
-            imageFileSize = ublib.get_file_size(image_link)
-            if imageFileSize > ublib.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ublib.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+            imageFileSize = ub.get_file_size(image_link)
+            if imageFileSize > ub.read_toml_var("maxFileSize"):
+                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                 return
         except Exception as e:
@@ -203,7 +203,7 @@ def main():
         await ctx.respond(f"Adding speech bubble to image... ")
         log.info(f"Adding speech bubble to image {image_link}")
         try:
-            newImage = ublib.add_speech_bubble(image_link, speech_bubble_size)
+            newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
             await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
             log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
         except Exception as e:
@@ -230,7 +230,7 @@ def main():
             await ctx.respond(f"Permissions are already up to date!", ephemeral=True)
             log.BOT_REPLY_SUCCESS(f"Permissions are already up to date")
             return
-        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ublib.read_toml_var('permissionsInt')}"
+        inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ub.read_toml_var('permissionsInt')}"
         await ctx.respond(f"{inviteLink}", ephemeral=True)
         log.BOT_REPLY_SUCCESS(f"Sent invite link to {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
@@ -248,7 +248,7 @@ def main():
         log.BOT_GOT_COMMAND(f"Received command /impact from {ctx.author.name}#{ctx.author.discriminator}")
         await ctx.respond(f"Adding impact font to image... ")
         try:
-            newImage = ublib.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
+            newImage = ub.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
         except Exception as e:
             await ctx.edit(content = f"Sorry, but I could not add impact font to that image!")
             log.BOT_REPLY_FAIL(f"Failed to add impact font to image {image_link}")
@@ -264,7 +264,7 @@ def main():
         #respond with message with button that links to bot invite link
         try:
             client_id = bot.user.id
-            inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ublib.read_toml_var('permissionsInt')}"
+            inviteLink = f"https://discord.com/oauth2/authorize?client_id={client_id}&scope=bot&permissions={ub.read_toml_var('permissionsInt')}"
             await ctx.respond(f"{inviteLink}", ephemeral=True)
             await command_topper(ctx)
         except Exception as e:
@@ -541,7 +541,7 @@ def main():
         if user == None:
             user = ctx.author
         peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
-        if user.id == ublib.read_toml_var("botOwner"):
+        if user.id == ub.read_toml_var("botOwner"):
             peepeeSize = 34
         peepee = "8" + "=" * peepeeSize + "D"
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
@@ -723,15 +723,15 @@ def main():
                 await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
                 return
-            encoded_message = ublib.caesar_cipher_encode(message, key)
+            encoded_message = ub.caesar_cipher_encode(message, key)
         elif mode == "vigenere":
             if key is None:
                 await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
                 return
-            encoded_message = ublib.vigenere_cipher_encode(message, key)
+            encoded_message = ub.vigenere_cipher_encode(message, key)
         elif mode == "atbash":
-            encoded_message = ublib.atbash_cipher_encode(message)
+            encoded_message = ub.atbash_cipher_encode(message)
         elif mode == "binary":
             encoded_message = ' '.join(format(ord(char), '08b') for char in message)
         elif mode == "hex":
@@ -783,19 +783,19 @@ def main():
                 await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
                 return
-            decoded_message = ublib.caesar_cipher_decode(message, key)
+            decoded_message = ub.caesar_cipher_decode(message, key)
         elif mode == "vigenere":
             if key is None:
                 await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
                 return
-            decoded_message = ublib.vigenere_cipher_decode(message, key)
+            decoded_message = ub.vigenere_cipher_decode(message, key)
         elif mode == "atbash":
-            decoded_message = ublib.atbash_cipher_decode(message)
+            decoded_message = ub.atbash_cipher_decode(message)
         elif mode == "binary":
-            decoded_message = ublib.binary_to_text(message)
+            decoded_message = ub.binary_to_text(message)
         elif mode == "hex":
-            decoded_message = ublib.hex_to_text(message)
+            decoded_message = ub.hex_to_text(message)
 
         if decoded_message is None:
             await ctx.respond("Invalid mode selected.", ephemeral=True)
@@ -816,7 +816,7 @@ def main():
     ):
             log.BOT_GOT_COMMAND(f"Received command /feedback from {ctx.author.name}#{ctx.author.discriminator}")
             #make post in feedback channel in support server
-            feedbackID = str(f"{ctx.author.id}{ublib.get_date_time_gmt()}")
+            feedbackID = str(f"{ctx.author.id}{ub.get_date_time_gmt()}")
             feedbackID = int(hashlib.sha256(str(feedbackID).encode()).hexdigest(), 16) % 100001
             embed = discord.Embed(title="Bot Owner Notification", description=f"**{ctx.author.name}#{ctx.author.discriminator}** has submitted feedback", color=discord.Color.red())
             embed.add_field(name="Feedback Type", value=option, inline=False)
@@ -828,13 +828,13 @@ def main():
             embed.add_field(name="Feedback ID", value=feedbackID, inline=False)
             embed.set_footer(text=f"User ID: {ctx.author.id}")
             try:
-                await bot.get_channel(ublib.read_toml_var("feedbackChannel")).send(embed=embed)
+                await bot.get_channel(ub.read_toml_var("feedbackChannel")).send(embed=embed)
                 log.BOT_REPLY_SUCCESS(f"Sent feedback to bot owner from {ctx.author.name}#{ctx.author.discriminator}")
             except Exception as e:
                 # print(f"{e}" + " - Failed to send feedback")
                 log.error(e)
                 # print ("Falling back to DMs")
-                botOwner = bot.get_user(ublib.read_toml_var("botOwner"))  # Get the bot owner
+                botOwner = bot.get_user(ub.read_toml_var("botOwner"))  # Get the bot owner
                 try:
                     await botOwner.send(embed=embed)
                     log.BOT_REPLY_SUCCESS(f"Sent feedback to bot owner from {ctx.author.name}#{ctx.author.discriminator}")
@@ -887,8 +887,8 @@ def main():
             data = request.json()
             if data['voted'] == 1:
                 await ctx.respond("Thanks for voting!")
-                ublib.edit_user_data(ctx.author, "votes", ublib.get_user_data(ctx.author, "votes") + 1)
-                ublib.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
+                ub.edit_user_data(ctx.author, "votes", ub.get_user_data(ctx.author, "votes") + 1)
+                ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
                 #give VoteReward role
                 try:
                     if discord.utils.get(ctx.guild.roles, name="Vote Reward") is None:
@@ -914,12 +914,12 @@ def main():
 
     @bot.event
     async def on_message(message):
-        botOwner = bot.get_user(ublib.read_toml_var("botOwner"))  # Get the bot owner
+        botOwner = bot.get_user(ub.read_toml_var("botOwner"))  # Get the bot owner
         if message.guild != None: # Any message in a server
-            ublib.log_guild_message(message)
+            ub.log_guild_message(message)
             #read how many messages the user has sent and add 1
-            ublib.edit_user_data(message.author, "messages", ublib.get_user_data(message.author, "messages") + 1)
-            ublib.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
+            ub.edit_user_data(message.author, "messages", ub.get_user_data(message.author, "messages") + 1)
+            ub.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
             #if any keyword in keywords list is in the message content
             if any(keyword in message.content.lower() for keyword in keywords):
@@ -973,7 +973,7 @@ def main():
             if message.content == "!guilds":
                 # print(f"{message.author} requested guilds")
                 await botOwner.send("Getting guilds...\nThis may take a while.")
-                guilds = await ublib.get_guild_invite(bot)
+                guilds = await ub.get_guild_invite(bot)
 
                 # Create a text file to store guild information
                 with open("guilds.txt", "w", encoding="UTF-8") as file:
@@ -985,7 +985,7 @@ def main():
                     await botOwner.send(file=discord.File(file, "guilds.txt"))
 
                 # Delete the temporary file
-                # ublib.archive_file("guilds.txt")
+                # ub.archive_file("guilds.txt")
 
             if message.content == ("!log"):
                 # print (f"{message.author} requested log")
@@ -1045,20 +1045,20 @@ def main():
 
                 try:
                     status = message.content.split(" ")[1]
-                    ublib.status(status)
+                    ub.status(status)
                     await bot.change_presence(activity=discord.Game(name=status))
                     await botOwner.send(f"Status set to {status}")
 
                 except IndexError:
-                    ublib.status(None)
+                    ub.status(None)
                     await bot.change_presence(activity=None)
                     await botOwner.send("Status cleared")
 
             if message.content == ("!guilds.zip"):
                 # print (f"{message.author} requested guilds.zip")
-                guildsZip = ublib.zip_archive_folder('guilds')
+                guildsZip = ub.zip_archive_folder('guilds')
                 await botOwner.send(file=discord.File(guildsZip))
-                ublib.archive_file(guildsZip)
+                ub.archive_file(guildsZip)
 
             if message.content.startswith("!notes"):
                 # print (f"{message.author} requested notes")
@@ -1073,9 +1073,9 @@ def main():
                     mode = message.content.split(" ")[1]
                     query = message.content.split(" ")[2]
                     # print (f"Mode: {mode}, Query: {query}")
-                    ublib.search(mode, query)
+                    ub.search(mode, query)
                     await botOwner.send(file=discord.File("temp/search.txt"))
-                    # ublib.archive_file("temp/search.txt")
+                    # ub.archive_file("temp/search.txt")
                 except IndexError:
                     await botOwner.send("No search term provided")
 

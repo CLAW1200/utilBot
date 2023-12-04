@@ -139,7 +139,7 @@ def read_toml_var(var):
 def clean_up_temp_files():
     log.debug("Checking for old files")
     for file in os.listdir("temp"):
-        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60):
+        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60): # 5 minutes
             try:
                 os.remove(f"temp/{file}")
                 log.debug(f"Removed old file '{file}'")
@@ -150,21 +150,16 @@ def convert_image_to_gif(image_link):
     clean_up_temp_files()
     #this function will take a link to an image and convert it to a gif
     #download image in temp folder
-    image_seed = random.randint(10000,99999)
+    image_seed = random.randint(100000000,999999999) # this is bad but it works at the moment
     output_path = f"temp/image{image_seed}.gif"
     #download image
     with open(f"temp/image{image_seed}.png", "wb") as f:
         f.write(requests.get(image_link).content)
-    
-    # Open the PNG image
-    image = Image.open(f"temp/image{image_seed}.png")
-
-    # Convert the image to GIF
-    image.save(output_path, format="GIF", save_all=True)
-    image.close()
-    os.remove(f"temp/image{image_seed}.png")
+    #change extension to .gif
+    os.rename(f"temp/image{image_seed}.png", f"temp/image{image_seed}.gif")
     log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
     return output_path
+    
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
@@ -176,8 +171,6 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     #download image
     with open(f"temp/video{video_seed}.{fileType}", "wb") as f:
         f.write(requests.get(video_link).content)
-    print (fps)
-    print (scale)
     # Open the Video file and convert to gif in good quality
     try:
         video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
@@ -277,8 +270,10 @@ def add_impact_font(image_link, top_text, bottom_text, font_size, font_color=(25
     draw = ImageDraw.Draw(image)
 
     # Calculate the text dimensions
-    top_text_width, top_text_height = draw.textsize(top_text, font=font)
-    bottom_text_width, bottom_text_height = draw.textsize(bottom_text, font=font)
+
+    font = ImageFont.truetype('arial.ttf', 15)
+    top_text_width, top_text_height = font.getsize(top_text)
+    bottom_text_width, bottom_text_height = font.getsize(bottom_text)
 
     # Calculate the position for the top and bottom text
     image_width, image_height = image.size
