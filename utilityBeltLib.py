@@ -11,6 +11,7 @@ import json
 import datetime
 import urllib
 import shutil
+import subprocess
 
 remove_char = "'"
 
@@ -173,11 +174,12 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
         f.write(requests.get(video_link).content)
     # Open the Video file and convert to gif in good quality
     try:
-        video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
-        if scale != None:
-            video = ffmpeg.filter(video, 'scale', scale)
-        video = ffmpeg.output(video, output_path, r=fps, pix_fmt='rgb24')
-        ffmpeg.run(video)
+        # ffmpeg -i input.mp4 -filter_complex "[0:v] fps=fps,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" output.gif
+        if scale is None:
+            scale = "scale=480:-1"
+        else:
+            scale = f"scale={scale}:-1"
+        subprocess.call(['ffmpeg', '-i', f"temp/video{video_seed}.{fileType}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
         os.remove(f"temp/video{video_seed}.{fileType}")
         log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path

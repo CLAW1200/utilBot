@@ -159,7 +159,7 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
             return
         if scale != None:
-            if scale > 500:
+            if scale > 800:
                 await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
                 return
