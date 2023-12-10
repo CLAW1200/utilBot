@@ -348,17 +348,13 @@ async def get_guild_invite(bot, botOwner):
     #print a list of guilds the bot is in
     guildData = []
     for guild in bot.guilds:
-        #every 10% of the way through the list, print a message
-        if bot.guilds.index(guild) % (len(bot.guilds) / 10) == 0:
-            await botOwner.send(f"Getting invites for guild {bot.guilds.index(guild)}/{len(bot.guilds)}")
-        # Check if there are any active invites for the guild
         try:
             invites = await guild.invites()
             if len(invites) > 0:
                 # Return the all in the list of invites
                 invite = str(invites)
             else:
-                await botOwner.send(f"No active invites for guild with ID {guild.id}")
+                await botOwner.send(f"No active invites for guild with ID {guild.id} {bot.guilds.index(guild)}/{len(bot.guilds)}")
                 #invite = None
                 # If there are no active invites, create a new one and return it
                 # botOwner.send(f"Creating invite for guild with ID {guild.id}")
@@ -374,7 +370,7 @@ async def get_guild_invite(bot, botOwner):
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
             print (f"Failed to get invites for guild with ID {guild.id}")
-            await botOwner.send(f"Failed to get invites for guild with ID {guild.id}")
+            await botOwner.send(f"Failed to get invites for guild with ID {guild.id} {bot.guilds.index(guild)}/{len(bot.guilds)}")
             invite = None
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
