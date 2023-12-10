@@ -350,7 +350,7 @@ async def get_guild_invite(bot, botOwner):
     for guild in bot.guilds:
         #every 10% of the way through the list, print a message
         if bot.guilds.index(guild) % (len(bot.guilds) / 10) == 0:
-            botOwner.send(f"Getting invites for guild {bot.guilds.index(guild)}/{len(bot.guilds)}")
+            await botOwner.send(f"Getting invites for guild {bot.guilds.index(guild)}/{len(bot.guilds)}")
         # Check if there are any active invites for the guild
         try:
             invites = await guild.invites()
@@ -358,7 +358,7 @@ async def get_guild_invite(bot, botOwner):
                 # Return the all in the list of invites
                 invite = str(invites)
             else:
-                botOwner.send(f"No active invites for guild with ID {guild.id}")
+                await botOwner.send(f"No active invites for guild with ID {guild.id}")
                 #invite = None
                 # If there are no active invites, create a new one and return it
                 # botOwner.send(f"Creating invite for guild with ID {guild.id}")
