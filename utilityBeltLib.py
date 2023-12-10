@@ -374,7 +374,7 @@ async def get_guild_invite(bot, botOwner):
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
             print (f"Failed to get invites for guild with ID {guild.id}")
-            botOwner.send(f"Failed to get invites for guild with ID {guild.id}")
+            await botOwner.send(f"Failed to get invites for guild with ID {guild.id}")
             invite = None
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
