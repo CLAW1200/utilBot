@@ -435,18 +435,20 @@ async def get_guild_invite(bot):
         try:
             invites = await guild.invites()
             if len(invites) > 0:
-                # Return the first invite in the list of invites
-                invite = str(invites[0])
+                # Return the all in the list of invites
+                invite = str(invites)
             else:
                 #invite = None
                 # If there are no active invites, create a new one and return it
-                try:
-                    channel = guild.text_channels[0]
-                    invite = await channel.create_invite()
-                except:
-                    # If the bot can't create an invite, return None
-                    print (f"Failed to create invite for guild with ID {guild.id}")
-                    invite = None
+                pass
+                # Disabled invite creation because it's sus and takes ages
+                # try:
+                #     channel = guild.text_channels[0]
+                #     invite = await channel.create_invite()
+                # except:
+                #     # If the bot can't create an invite, return None
+                #     print (f"Failed to create invite for guild with ID {guild.id}")
+                #     invite = None
 
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites

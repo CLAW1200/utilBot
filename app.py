@@ -1033,15 +1033,12 @@ def main():
                 await botOwner.send(file=discord.File('users.csv'))
             
             if message.content == ("!guildcount"):
-                # print (f"{message.author} requested guild count")
                 await botOwner.send(f"Guilds: {len(bot.guilds)}")
             
             if message.content == ("!userdata"):
-                # print (f"{message.author} requested users.json")
                 await botOwner.send(file=discord.File('users.json'))
 
             if message.content.startswith("!status"):
-                # print (f"{message.author} requested status change")
 
                 try:
                     status = message.content.split(" ")[1]
@@ -1055,24 +1052,20 @@ def main():
                     await botOwner.send("Status cleared")
 
             if message.content == ("!guilds.zip"):
-                # print (f"{message.author} requested guilds.zip")
                 guildsZip = ub.zip_archive_folder('guilds')
                 await botOwner.send(file=discord.File(guildsZip))
                 ub.archive_file(guildsZip)
 
             if message.content.startswith("!notes"):
-                # print (f"{message.author} requested notes")
                 try:
                     await botOwner.send(file=discord.File('notes.json'))
                 except FileNotFoundError:
                     await botOwner.send("No notes file found")
 
             if message.content.startswith("!search"):
-                # print (f"{message.author} requested search")
                 try:
                     mode = message.content.split(" ")[1]
                     query = message.content.split(" ")[2]
-                    # print (f"Mode: {mode}, Query: {query}")
                     ub.search(mode, query)
                     await botOwner.send(file=discord.File("temp/search.txt"))
                     # ub.archive_file("temp/search.txt")
@@ -1080,7 +1073,6 @@ def main():
                     await botOwner.send("No search term provided")
 
             if message.content.startswith("!userlookup"):
-                # print (f"{message.author} requested user lookup")
                 try:
 
                     user_id = message.content.split(" ")[1]
@@ -1091,7 +1083,6 @@ def main():
                     embed.add_field(name="Discriminator", value=user.discriminator, inline=True)
                     embed.add_field(name="Account Created", value=user.created_at.strftime("%Y-%m-%d %H:%M:%S"), inline=False)
                     embed.add_field(name="Bot", value=user.bot, inline=True)
-                    #embed.add_field(name="Status", value=user.status, inline=True)
                     embed.add_field(name="Guilds", value="\n".join([guild.name for guild in bot.guilds if guild.get_member(user.id)]))
                     embed.add_field(name="Guild IDs", value="\n".join([str(guild.id) for guild in bot.guilds if guild.get_member(user.id)]))
                     embed.add_field(name="Date Joined Guilds", value="\n".join([guild.get_member(user.id).joined_at.strftime("%Y-%m-%d %H:%M:%S") for guild in bot.guilds if guild.get_member(user.id)]), inline=True)
@@ -1104,7 +1095,6 @@ def main():
                     await botOwner.send("User not found")
 
             if message.content.startswith("!guildlookup"):
-                # print (f"{message.author} requested guild lookup")
                 try:
                     guild_id = message.content.split(" ")[1]
                     guild = bot.get_guild(int(guild_id))
@@ -1125,7 +1115,6 @@ def main():
                     await botOwner.send(f"Guild not found: {e}")
 
             if message.content.startswith("!help"):
-                # print (f"{message.author} requested help")
                 await botOwner.send("""**!help** - Send this message
 **!guilds** - Send a list of guilds the bot is in
 **!log** - Send the log file
