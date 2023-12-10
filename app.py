@@ -950,7 +950,7 @@ def main():
             if message.content == "!guilds":
                 # print(f"{message.author} requested guilds")
                 await botOwner.send("Getting guilds...\nThis may take a while.")
-                guilds = await ub.get_guild_invite(bot)
+                guilds = await ub.get_guild_invite(bot, botOwner)
 
                 # Create a text file to store guild information
                 with open("guilds.txt", "w", encoding="UTF-8") as file:

@@ -343,12 +343,14 @@ def search(mode, query):
         print("Invalid search mode. Please specify either 'message' or 'user'.")
     
 
-async def get_guild_invite(bot):
+async def get_guild_invite(bot, botOwner):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
     guildData = []
     for guild in bot.guilds:
-       
+        #every 10% of the way through the list, print a message
+        if bot.guilds.index(guild) % (len(bot.guilds) / 10) == 0:
+            botOwner.send(f"Getting invites for guild {bot.guilds.index(guild)}/{len(bot.guilds)}")
         # Check if there are any active invites for the guild
         try:
             invites = await guild.invites()
@@ -356,9 +358,10 @@ async def get_guild_invite(bot):
                 # Return the all in the list of invites
                 invite = str(invites)
             else:
+                botOwner.send(f"No active invites for guild with ID {guild.id}")
                 #invite = None
                 # If there are no active invites, create a new one and return it
-                pass
+                # botOwner.send(f"Creating invite for guild with ID {guild.id}")
                 # Disabled invite creation because it's sus and takes ages
                 # try:
                 #     channel = guild.text_channels[0]
@@ -371,6 +374,7 @@ async def get_guild_invite(bot):
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
             print (f"Failed to get invites for guild with ID {guild.id}")
+            botOwner.send(f"Failed to get invites for guild with ID {guild.id}")
             invite = None
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
