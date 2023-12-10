@@ -235,29 +235,6 @@ def main():
         log.BOT_REPLY_SUCCESS(f"Sent invite link to {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
 
-    @bot.slash_command(name="impact", description="Add impact font to an image")
-    async def impact_command(
-        ctx: discord.ApplicationContext,
-        
-        image_link: str,
-        top_text: discord.Option(str, "The top text", required=False, default=""),
-        bottom_text: discord.Option(str, "The bottom text", required=False, default=""),
-        font_size: discord.Option(int, "The font size", required=False, default=50),
-        font_color: discord.Option(str, "The font color", required=False, default="white"),  
-    ):
-        log.BOT_GOT_COMMAND(f"Received command /impact from {ctx.author.name}#{ctx.author.discriminator}")
-        await ctx.respond(f"Adding impact font to image... ")
-        try:
-            newImage = ub.add_impact_font(image_link, top_text, bottom_text, font_size, font_color)
-        except Exception as e:
-            await ctx.edit(content = f"Sorry, but I could not add impact font to that image!")
-            log.BOT_REPLY_FAIL(f"Failed to add impact font to image {image_link}")
-            log.error(e)
-            return
-        await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
-        log.BOT_REPLY_SUCCESS(f"Added impact font to image {image_link}")
-        await command_topper(ctx)
-
     @bot.slash_command(name="invite", description="Get the bot's invite link")
     async def invite_command(ctx):
         log.BOT_GOT_COMMAND(f"Received command /invite from {ctx.author.name}#{ctx.author.discriminator}")
