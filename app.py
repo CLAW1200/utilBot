@@ -1016,12 +1016,22 @@ def main():
                 await botOwner.send(file=discord.File('users.json'))
 
             if message.content.startswith("!status"):
-
                 try:
-                    #get everyting after the first space
                     status = message.content.split(" ", 1)[1]
                     ub.status(status)
-                    await bot.change_presence(activity=discord.Game(name=status))
+                    await bot.change_presence(activity=discord.Streaming(name=status))
+                    await botOwner.send(f"Status set to {status}")
+
+                except IndexError:
+                    ub.status(None)
+                    await bot.change_presence(activity=None)
+                    await botOwner.send("Status cleared")
+                    
+            if message.content.startswith("!streamstatus"):
+                try:
+                    status = message.content.split(" ", 1)[1]
+                    ub.status(status)
+                    await bot.change_presence(activity=discord.Streaming(name=status))
                     await botOwner.send(f"Status set to {status}")
 
                 except IndexError:
