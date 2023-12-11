@@ -1018,7 +1018,8 @@ def main():
             if message.content.startswith("!status"):
 
                 try:
-                    status = message.content.split(" ")[1]
+                    #get everyting after the first space
+                    status = message.content.split(" ", 1)[1]
                     ub.status(status)
                     await bot.change_presence(activity=discord.Game(name=status))
                     await botOwner.send(f"Status set to {status}")
