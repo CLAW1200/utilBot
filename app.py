@@ -1,4 +1,3 @@
-import traceback
 import utilityBeltLib as ub
 from discord.ui import View
 import os

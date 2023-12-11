@@ -6,7 +6,6 @@ import discord
 import toml
 from PIL import Image, ImageSequence, ImageFont, ImageDraw
 import requests
-import ffmpeg
 import json
 import datetime
 import urllib
@@ -160,7 +159,6 @@ def convert_image_to_gif(image_link):
     os.rename(f"temp/image{image_seed}.png", f"temp/image{image_seed}.gif")
     log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
     return output_path
-    
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
@@ -186,7 +184,6 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     except Exception as e:
         log.error(f"Error converting video '{video_link}' to gif: {e}")
         return None
-
 
 def get_file_size(link):
     #function to check the size of a video or image link
@@ -338,11 +335,9 @@ def search(mode, query):
             f.write(f"Search results for '{query}' (User Mode):\n\n")
             for result in search_user_files("guilds", query):
                 f.write(f"{result[0]}\n({result[1]}:{result[2]})\n\n")
-    
     else:
         print("Invalid search mode. Please specify either 'message' or 'user'.")
     
-
 async def get_guild_invite(bot, botOwner):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
@@ -379,7 +374,6 @@ async def get_guild_invite(bot, botOwner):
         guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, online_members])
 
     return guildData
-
 
 #ENCODING AND DECODING FUNCTIONS
 def caesar_cipher_encode(message, key):
