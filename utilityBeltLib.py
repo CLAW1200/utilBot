@@ -424,6 +424,8 @@ async def create_guild_invite(bot, botOwner, guildID):
         try:
             channel = guild.text_channels[0]
             invite = await channel.create_invite()
+            log.debug(invite)
+            invite = str(invite)
         except:
             # If the bot can't create an invite, return None
             log.warning(f"Failed to create invite for guild with ID {guildID}")
@@ -548,6 +550,9 @@ def hex_to_text(message):
         return byte_data.decode()
     except ValueError:
         return None
+    
+
+# Other functions
     
 def log_data_to_csv(bot):
     # Create a csv if one does not exist,
