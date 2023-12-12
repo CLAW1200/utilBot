@@ -898,7 +898,7 @@ def main():
     async def on_ready():
         log.info(f"Bot is now online")
         while True:
-            log.debug(f"Checking time")
+            log.info(f"Checking time")
             now = datetime.datetime.now()
             if now.minute == 0:
                 await ub.log_data_to_csv(bot)
