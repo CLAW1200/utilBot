@@ -62,7 +62,6 @@ def main():
     log.debug(f"Fetched top.gg token: **********")
 
     ########################
-    ub.schedule_track_count()
     ########################
 
 
@@ -80,6 +79,8 @@ def main():
     intents.presences = False  # Disable the presence intent
     bot = discord.Bot(intents=intents)
     log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
+    ub.schedule_track_count(bot)
+
 
     def check_bot_permissions(ctx):
         if ctx.guild == None:
