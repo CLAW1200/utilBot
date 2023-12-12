@@ -16,7 +16,6 @@ import hashlib
 import base64
 import codecs
 import asyncio
-import datetime
 
 # Create a log
 log = logging.getLogger('Utility Belt')
@@ -847,15 +846,14 @@ def main():
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
         embed.add_field(name="encode", value="Encode a message", inline=False)
         embed.add_field(name="decode", value="Decode a message", inline=False)
-        embed.add_field(name="rps", value="Play rock paper scissors with another user", inline=False)
-        embed.add_field(name="cat" , value="Get a random cat gif", inline=False)
+        embed.add_field(name="rps", value="**BETA** Play rock paper scissors with another user", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
         embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)
         embed.add_field(name="units", value="Convert units", inline=False)
-        embed.add_field(name="new-note", value="Create a new note", inline=False)
-        embed.add_field(name="edit-note", value="Edit an existing note", inline=False)
-        embed.add_field(name="my-notes", value="Read your notes", inline=False)
-        embed.add_field(name="delete-note", value="Delete a note", inline=False)
+        embed.add_field(name="notes", value="Read your notes", inline=False)
+        embed.add_field(name="note-new", value="Write a new note", inline=False)
+        embed.add_field(name="note-edit", value="Edit a note", inline=False)
+        embed.add_field(name="note-delete", value="Delete a note", inline=False)
         embed.add_field(name="feedback", value="Send feedback", inline=False)
         embed.add_field(name="help", value="Get help", inline=False)
         embed.add_field(name="invite", value="Invite the bot", inline=False)
