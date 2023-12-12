@@ -244,23 +244,19 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     # is_gif = image.format == 'GIF'
 
     # if is_gif:
+
     frames = []
-    durations = []
     for frame in ImageSequence.Iterator(image):
-        frame = frame.convert("RGBA")
+        new_frame = frame.convert("RGBA").copy()  # Create a new copy of the frame
         bubble_height = int(frame.size[1] * speech_bubble_y_scale)
         speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
-        frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-        frames.append(frame)
-        
-        try:
-            durations.append(frame.info['duration'])  # Store frame duration
-        except KeyError:
-            durations.append(100)  # Default duration if not present
+        new_frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
+        frames.append(new_frame)
 
     output_path = f"{output_path}"
     if frames:
-        frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=durations, loop=0)
+        frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=100, loop=0)
+
     # else:
     #     image = image.convert("RGBA")
     #     bubble_height = int(image.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
