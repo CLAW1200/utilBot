@@ -1,6 +1,6 @@
 import os
 import random
-import logging as log
+import logging
 import time
 import discord
 import toml
@@ -16,7 +16,22 @@ import csv
 remove_char = "'"
 
 # Configure the logger
-log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
+
+# Create a log
+log = logging.getLogger('Utility Belt')
+log.setLevel(logging.DEBUG)
+
+
+# Create a console handler and set the level to INFO
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Create a formatter and set it to the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# Add the console handler to the log
+log.addHandler(console_handler)
 
 def log_guild_message(message):
     # Get the server name and channel name
