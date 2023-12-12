@@ -18,7 +18,7 @@ remove_char = "'"
 # Configure the logger
 
 # Create a log
-log = logging.getLogger('Utility Belt')
+log = logging.getLogger('Utility Belt Lib')
 log.setLevel(logging.DEBUG)
 
 # Create a formatter and set it to the handler
