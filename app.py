@@ -1113,9 +1113,10 @@ def main():
                     await botOwner.send(f"Guild not found: {e}")
 
             if message.content.startswith("!invme"):
-                invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1])
-                await botOwner.send(invite)
-
+                try: expireTime = message.content.split(" ")[2]
+                except IndexError: expireTime = 60
+                invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1], expireTime)
+                await botOwner.send(f"Invite: {invite}\n Expires: {expireTime}")
 
             if message.content.startswith("!stats"):
                 #send data.csv

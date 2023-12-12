@@ -404,7 +404,7 @@ async def get_guild_invite(bot, botOwner):
 
     return guildData
 
-async def create_guild_invite(bot, botOwner, guildID):
+async def create_guild_invite(bot, botOwner, guildID, expireTime=60):
         # Get the guild object by ID
         try:
             guildID = int(guildID)
@@ -424,14 +424,14 @@ async def create_guild_invite(bot, botOwner, guildID):
         try:
             channel = guild.text_channels[0]
             #invite expires in 1 hour
-            invite = await channel.create_invite(max_age=60)
+            invite = await channel.create_invite(max_age=expireTime)
             log.debug(invite)
             invite = str(invite)
         except:
             # If the bot can't create an invite, return None
             log.warning(f"Failed to create invite for guild with ID {guildID}")
             await botOwner.send(f"Failed to create invite for guild with ID {guildID}")
-            invite = None
+            return None
 
         return invite
 
