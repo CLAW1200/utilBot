@@ -517,9 +517,11 @@ def log_data_to_csv(bot):
 
     # Get the number of users
     user_count = len(bot.users)
+    log.info(f"User count: {user_count}")
 
     # Get the number of guild
     guild_count = len(bot.guilds)
+    log.info(f"Guild count: {guild_count}")
 
     # Get the total number of commands
     total_command_count = "N/A"
