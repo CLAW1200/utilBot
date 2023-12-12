@@ -900,7 +900,7 @@ def main():
         while True:
             log.info(f"Checking time")
             now = datetime.datetime.now()
-            if now.minute != 0: # change this back to == !!!!!
+            if now.minute == 0: 
                 await ub.log_data_to_csv(bot)
                 log.info(f"Logged data to CSV")
             await asyncio.sleep(60)  # wait for 60 seconds before checking the time again
