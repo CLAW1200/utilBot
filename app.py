@@ -64,7 +64,6 @@ def main():
     ########################
     # DECLARE VARIABLES HERE
     ########################
-    BOT_READY = False
     keywords = {
         "https://discord",
     }
@@ -90,8 +89,6 @@ def main():
     intents.presences = False  # Disable the presence intent
     bot = discord.Bot(intents=intents)
     log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
-    
-
 
     def check_bot_permissions(ctx):
         if ctx.guild == None:

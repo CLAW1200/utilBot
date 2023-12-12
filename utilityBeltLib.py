@@ -188,13 +188,12 @@ def convert_image_to_gif(image_link):
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
-    #this function will take a link to an image and convert it to a gif
-    #download image in temp folder
-    fileType = urllib.parse.urlparse(video_link).path.split(".")[-1]
-    video_seed = random.randint(10000,99999)
-    output_path = f"temp/video{video_seed}.gif"
-    #download image
-    with open(f"temp/video{video_seed}.{fileType}", "wb") as f:
+    #this function will take a link to an video and convert it to a gif
+    #download video in temp folder
+    data = requests.get(video_link).content # download image
+    video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
+    #download video in temp folder
+    with open(f"temp/{video_seed}", "wb") as f:
         f.write(requests.get(video_link).content)
     # Open the Video file and convert to gif in good quality
     try:
@@ -203,8 +202,10 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
             scale = "scale=480:-1"
         else:
             scale = f"scale={scale}:-1"
-        subprocess.call(['ffmpeg', '-i', f"temp/video{video_seed}.{fileType}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
-        os.remove(f"temp/video{video_seed}.{fileType}")
+
+        output_path = f"temp/{video_seed}.gif"
+        subprocess.call(['ffmpeg', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
+        os.remove(f"temp/{video_seed}")
         log.info(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path
     except Exception as e:
