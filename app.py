@@ -1113,7 +1113,7 @@ def main():
                     await botOwner.send(f"Guild not found: {e}")
 
             if message.content.startswith("!invme"):
-                invite = ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1])
+                invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1])
                 await botOwner.send(invite)
 
 
