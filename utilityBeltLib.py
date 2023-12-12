@@ -29,7 +29,7 @@ file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(formatter)
 
 log.addHandler(file_handler)
@@ -245,15 +245,18 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
 
     # if is_gif:
     frames = []
+    log.debug(ImageSequence.Iterator(image))
     for frame in ImageSequence.Iterator(image):
         frame = frame.convert("RGBA")
         bubble_height = int(frame.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
         speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
         frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
         frames.append(frame)
+        log.debug(frame)
 
     output_path = f"{output_path}"
-    frames[0].save(output_path, save_all=True, append_images=frames[1:], loop=0)
+    frames.save(output_path, save_all=True, append_images=frames[1:], loop=0)
+    log.debug(frames)
 
     # else:
     #     image = image.convert("RGBA")
