@@ -1113,6 +1113,10 @@ def main():
                 except AttributeError as e:
                     await botOwner.send(f"Guild not found: {e}")
 
+            if message.content.startswith("!stats"):
+                #send data.csv
+                await botOwner.send(file=discord.File('data.csv'))
+
             if message.content.startswith("!help"):
                 await botOwner.send("""**!help** - Send this message
 **!guilds** - Send a list of guilds the bot is in
