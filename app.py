@@ -898,10 +898,13 @@ def main():
     async def on_ready():
         log.info(f"Bot is now online")
         while True:
+            log.debug(f"Checking time")
             now = datetime.datetime.now()
             if now.minute == 0:
                 await ub.log_data_to_csv(bot)
+                log.info(f"Logged data to CSV")
             await asyncio.sleep(60)  # wait for 30 seconds before checking the time again
+
 
     @bot.event
     async def on_message(message):
