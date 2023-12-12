@@ -37,6 +37,16 @@ console_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(formatter)
 
+# Create a file handler and set the level to DEBUG
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.DEBUG)
+
+# Set the same formatter for the file handler
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the log
+log.addHandler(file_handler)
+
 # Add the console handler to the log
 log.addHandler(console_handler)
 
