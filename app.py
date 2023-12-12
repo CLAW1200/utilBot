@@ -63,7 +63,7 @@ def main():
     ########################
     # DECLARE VARIABLES HERE
     ########################
-
+    BOT_READY = False
     keywords = {
         "https://discord",
     }
@@ -107,7 +107,8 @@ def main():
             return False
     
     async def command_topper(ctx):
-        ub.log_data_to_csv(bot)
+        if BOT_READY == True:
+            ub.log_data_to_csv(bot)
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
@@ -897,6 +898,7 @@ def main():
     @bot.event
     async def on_ready():
         log.info(f"Bot is now online")
+        BOT_READY = True
 
     @bot.event
     async def on_message(message):
