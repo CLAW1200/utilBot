@@ -29,20 +29,20 @@ log.BOT_REPLY = lambda bot_message: log.log(25, f"BOT REPLY: {bot_message}")
 log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"BOT REPLY SUCCESS: {bot_message}")
 log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"BOT REPLY FAIL: {bot_message}")
 
-# Create a console handler and set the level to INFO
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
 
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Create a console handler and set the level to INFO
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 
 # Create a file handler and set the level to DEBUG
 file_handler = logging.FileHandler('app.log')
-file_handler.setLevel(logging.DEBUG)
-
-# Set the same formatter for the file handler
+file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
+
 
 # Add the file handler to the log
 log.addHandler(file_handler)
@@ -898,7 +898,7 @@ def main():
     async def on_ready():
         log.info(f"Bot is now online")
         while True:
-            log.info(f"Checking time")
+            log.debug(f"Checking time")
             now = datetime.datetime.now()
             if now.minute == 0: 
                 await ub.log_data_to_csv(bot)

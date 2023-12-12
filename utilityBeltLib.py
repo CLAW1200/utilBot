@@ -23,19 +23,17 @@ log.setLevel(logging.DEBUG)
 
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# Create a file handler and set the level to DEBUG
+
 file_handler = logging.FileHandler('app.log')
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-
-# Set the same formatter for the file handler
-file_handler.setFormatter(formatter)
+console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 
-# Add the file handler to the log
 log.addHandler(file_handler)
+log.addHandler(console_handler)
 
 def log_guild_message(message):
     # Get the server name and channel name
@@ -129,7 +127,7 @@ def get_user_data(user, field):
     
 def archive_file(file):
     #move file to /archive/
-    log.debug(f"Archiving file '{time.gmtime}{file}'")
+    log.info(f"Archiving file '{time.gmtime}{file}'")
     try:
         os.rename(file, f"archive/{file}")
     except Exception as e:
@@ -173,7 +171,7 @@ def convert_image_to_gif(image_link):
     image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     # if the image is already in the temp folder, don't download it again
     if os.path.isfile(f"temp/{image_seed}.gif"):
-        log.debug(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
+        log.info(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
         output_path = f"temp/{image_seed}.gif"
         return output_path
     else:
@@ -185,7 +183,7 @@ def convert_image_to_gif(image_link):
             pass
         output_path = f"temp/{image_seed}.gif" # set output path
         os.rename(f"temp/{image_seed}.png", f"temp/{image_seed}.gif") # rename image to gif
-        log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
+        log.info(f"Converted image '{image_link}' to gif '{output_path}'")
         return output_path
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
@@ -207,7 +205,7 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
             scale = f"scale={scale}:-1"
         subprocess.call(['ffmpeg', '-i', f"temp/video{video_seed}.{fileType}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
         os.remove(f"temp/video{video_seed}.{fileType}")
-        log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
+        log.info(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path
     except Exception as e:
         log.error(f"Error converting video '{video_link}' to gif: {e}")
@@ -426,6 +424,7 @@ async def create_guild_invite(bot, botOwner, guildID, expireTime=60):
         
         # Create an invite for the guild
         try:
+            log.info(f"Creating invite for guild with ID {guildID}")
             channel = guild.text_channels[0]
             #invite expires in 1 hour
             invite = await channel.create_invite(max_age=expireTime)
