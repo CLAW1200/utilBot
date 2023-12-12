@@ -423,7 +423,8 @@ async def create_guild_invite(bot, botOwner, guildID):
         # Create an invite for the guild
         try:
             channel = guild.text_channels[0]
-            invite = await channel.create_invite()
+            #invite expires in 1 hour
+            invite = await channel.create_invite(max_age=60)
             log.debug(invite)
             invite = str(invite)
         except:
