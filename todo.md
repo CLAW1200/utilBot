@@ -7,11 +7,10 @@
 - Fix image to gif on Giffy links failing to convert 
 
 # New Features:
-
+- Add embed navigation to the help command
 
 # Improvements:
-- Improve Logging 
 - Allow direct file upload to the commands such as image and speech bubble
-- Dont always get invites when using !guilds, make its own command
-- Track guild and user count over time
-- Make gifs look less shit, for both images and videos
+- (Dont always get invites when using !guilds), make its own command
+- Track guild and user count over time 
+- Make gifs look less shit, for both images and videos - done i think??

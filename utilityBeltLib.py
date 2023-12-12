@@ -11,6 +11,7 @@ import datetime
 import urllib
 import shutil
 import subprocess
+import hashlib
 
 remove_char = "'"
 
@@ -148,17 +149,25 @@ def clean_up_temp_files():
 
 def convert_image_to_gif(image_link):
     clean_up_temp_files()
-    #this function will take a link to an image and convert it to a gif
-    #download image in temp folder
-    image_seed = random.randint(100000000,999999999) # this is bad but it works at the moment
-    output_path = f"temp/image{image_seed}.gif"
-    #download image
-    with open(f"temp/image{image_seed}.png", "wb") as f:
-        f.write(requests.get(image_link).content)
-    #change extension to .gif
-    os.rename(f"temp/image{image_seed}.png", f"temp/image{image_seed}.gif")
-    log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
-    return output_path
+    # this function will take a link to an image and convert it to a gif by simply changing the extension
+    data = requests.get(image_link).content # download image
+    image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
+    # if the image is already in the temp folder, don't download it again
+    if os.path.isfile(f"temp/{image_seed}.gif"):
+        log.debug(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
+        output_path = f"temp/{image_seed}.gif"
+        return output_path
+    else:
+        try:
+            with open(f"temp/{image_seed}.png", "wb") as f: # save image in temp folder
+                f.write(data) # write image data to file
+        except FileExistsError as e:
+            log.error(f"Error saving image '{image_link}' to temp folder: {e}")
+            pass
+        output_path = f"temp/{image_seed}.gif" # set output path
+        os.rename(f"temp/{image_seed}.png", f"temp/{image_seed}.gif") # rename image to gif
+        log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
+        return output_path
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
@@ -494,3 +503,28 @@ def hex_to_text(message):
 def get_date_time_gmt():
     #get the time in GMT
     return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+def track_user_count(bot):
+    return len(bot.users)
+
+def track_guild_count(bot):
+    return len(bot.guilds)
+
+import csv
+import asyncio
+
+async def track_count_to_csv(bot):
+    user_count = track_user_count(bot)
+    guild_count = track_guild_count(bot)
+    date_time_gmt = get_date_time_gmt()
+
+    with open('stats.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([date_time_gmt, user_count, guild_count])
+
+async def schedule_track_count(bot):
+    while True:
+        current_minute = datetime.datetime.now().minute
+        if current_minute == 0 or current_minute == 30:
+            await track_count_to_csv(bot)
+        await asyncio.sleep(60)  # Sleep for 1 minute

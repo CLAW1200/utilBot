@@ -28,7 +28,6 @@ log.BOT_REPLY = lambda bot_message: log.log(25, f"BOT REPLY: {bot_message}")
 log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"BOT REPLY SUCCESS: {bot_message}")
 log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"BOT REPLY FAIL: {bot_message}")
 
-
 # Create a console handler and set the level to INFO
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
@@ -63,6 +62,7 @@ def main():
     log.debug(f"Fetched top.gg token: **********")
 
     ########################
+    ub.schedule_track_count()
     ########################
 
 
@@ -836,7 +836,6 @@ def main():
         embed.add_field(name="decode", value="Decode a message", inline=False)
         embed.add_field(name="rps", value="Play rock paper scissors with another user", inline=False)
         embed.add_field(name="cat" , value="Get a random cat gif", inline=False)
-        embed.add_field(name="impact", value="Add impact text to an image", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
         embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)
         embed.add_field(name="units", value="Convert units", inline=False)
