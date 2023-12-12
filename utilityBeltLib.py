@@ -209,15 +209,20 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
         log.error(f"Error converting video '{video_link}' to gif: {e}")
         return None
 
-def get_file_size(link):
-    #function to check the size of a video or image link
-    response = requests.get(link, stream=True)
-    if 'Content-Length' in response.headers:
-        file_size = int(response.headers['Content-Length']) 
-        return file_size
-    else:
-        return None
 
+def get_file_size(link):
+    # function to check the size of a video or image link
+    try:
+        response = requests.get(link, stream=True)
+        download_start = response.raw.tell()
+        response.raw.read(1024)  # read only 1024 bytes
+        download_end = response.raw.tell()
+        estimated_size = download_end - download_start
+        return estimated_size * 1024  # estimate for the whole file
+    except Exception as e:
+        log.error(f"Error getting file size for '{link}': {e}")
+        return None
+    
 def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     clean_up_temp_files()
     """

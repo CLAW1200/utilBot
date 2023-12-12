@@ -14,3 +14,4 @@
 - (Dont always get invites when using !guilds), make its own command
 - Track guild and user count over time 
 - Make gifs look less shit, for both images and videos - done i think??
+- Fix speech bubble 
