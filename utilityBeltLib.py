@@ -6,21 +6,13 @@ import discord
 import toml
 from PIL import Image, ImageSequence, ImageFont, ImageDraw
 import requests
-import ffmpeg
 import json
 import datetime
 import urllib
 import shutil
+import subprocess
 
-MESSAGE = 25
-DIRECT_MESSAGE = 30
-COMMAND = 35
 remove_char = "'"
-
-# Define custom log level names
-log.addLevelName(MESSAGE, "MESSAGE")
-log.addLevelName(DIRECT_MESSAGE, "DIRECT_MESSAGE")
-log.addLevelName(COMMAND, "COMMAND")
 
 # Configure the logger
 log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode="a", filename="app.log")
@@ -58,27 +50,6 @@ def log_guild_message(message):
         file.write(f"{attachments_info}\n")
         file.write(f"{embeds_info}\n")
         file.write("--------------------------------\n")
-
-def logging_direct_message(message):
-    log.log(DIRECT_MESSAGE, f"DIRECT MESSAGE FROM: '{str(message.author.name).strip(remove_char)}#{message.author.discriminator}'\n    -> {message.content}\n        -> {message.attachments} {message.embeds}")
-
-def logging_command(ctx, *args):
-    if ctx.guild == None:
-        logging_command_direct_message(ctx, *args)
-        return
-
-    print (        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}")
-    log.log(
-        COMMAND,
-        f"SERVER: '{str(ctx.guild.name).strip(remove_char)}' ({ctx.guild.id}) IN CHANNEL: '{str(ctx.channel.name).strip(remove_char)}' ({ctx.channel.id})\n    -> '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}' RAN COMMAND: '{ctx.command}'\n        -> {args}"
-    )
-
-def logging_command_direct_message(ctx, *args):
-    print (        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}")
-    log.log(
-        COMMAND,
-        f"DIRECT MESSAGE FROM: '{str(ctx.author.name).strip(remove_char)}#{ctx.author.discriminator}'\n    -> RAN COMMAND: '{ctx.command}'\n        -> {args}"
-    )
 
 
 def edit_user_data(user, field, data):
@@ -168,7 +139,7 @@ def read_toml_var(var):
 def clean_up_temp_files():
     log.debug("Checking for old files")
     for file in os.listdir("temp"):
-        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60):
+        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60): # 5 minutes
             try:
                 os.remove(f"temp/{file}")
                 log.debug(f"Removed old file '{file}'")
@@ -179,19 +150,13 @@ def convert_image_to_gif(image_link):
     clean_up_temp_files()
     #this function will take a link to an image and convert it to a gif
     #download image in temp folder
-    image_seed = random.randint(10000,99999)
+    image_seed = random.randint(100000000,999999999) # this is bad but it works at the moment
     output_path = f"temp/image{image_seed}.gif"
     #download image
     with open(f"temp/image{image_seed}.png", "wb") as f:
         f.write(requests.get(image_link).content)
-    
-    # Open the PNG image
-    image = Image.open(f"temp/image{image_seed}.png")
-
-    # Convert the image to GIF
-    image.save(output_path, format="GIF", save_all=True)
-    image.close()
-    os.remove(f"temp/image{image_seed}.png")
+    #change extension to .gif
+    os.rename(f"temp/image{image_seed}.png", f"temp/image{image_seed}.gif")
     log.debug(f"Converted image '{image_link}' to gif '{output_path}'")
     return output_path
 
@@ -205,22 +170,20 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     #download image
     with open(f"temp/video{video_seed}.{fileType}", "wb") as f:
         f.write(requests.get(video_link).content)
-    print (fps)
-    print (scale)
     # Open the Video file and convert to gif in good quality
     try:
-        video = ffmpeg.input(f"temp/video{video_seed}.{fileType}")
-        if scale != None:
-            video = ffmpeg.filter(video, 'scale', scale)
-        video = ffmpeg.output(video, output_path, r=fps, pix_fmt='rgb24')
-        ffmpeg.run(video)
+        # ffmpeg -i input.mp4 -filter_complex "[0:v] fps=fps,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" output.gif
+        if scale is None:
+            scale = "scale=480:-1"
+        else:
+            scale = f"scale={scale}:-1"
+        subprocess.call(['ffmpeg', '-i', f"temp/video{video_seed}.{fileType}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
         os.remove(f"temp/video{video_seed}.{fileType}")
         log.debug(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path
     except Exception as e:
         log.error(f"Error converting video '{video_link}' to gif: {e}")
         return None
-
 
 def get_file_size(link):
     #function to check the size of a video or image link
@@ -272,86 +235,6 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     image.close()
     speechBubble.close()
     return output_path
-
-def add_impact_font(image_link, top_text, bottom_text, font_size, font_color=(255, 255, 255), font_outline_color=(0, 0, 0)):
-    # Create a temporary directory if it doesn't exist
-    temp_dir = './temp/'
-    clean_up_temp_files()
-
-    random_seed = random.randint(10000, 99999)
-
-    font_outline_width = font_size // 25
-
-    # Download the image or GIF from the link
-    response = requests.get(image_link)
-    if response.status_code == 200:
-        temp_file_path = os.path.join(temp_dir, f'temp_image{random_seed}')
-        with open(temp_file_path, 'wb') as f:
-            f.write(response.content)
-    else:
-        print('Failed to download the image or GIF.')
-        return
-
-    # Open the image or GIF using Pillow
-    image = Image.open(temp_file_path)
-
-    # Check if the image is a GIF
-    is_gif = image.format == 'GIF'
-
-    # Load the Impact font
-    font_path = f'assets/impact.ttf'
-    font = ImageFont.truetype(font_path, font_size)
-
-    # Create a draw object
-    draw = ImageDraw.Draw(image)
-
-    # Calculate the text dimensions
-    top_text_width, top_text_height = draw.textsize(top_text, font=font)
-    bottom_text_width, bottom_text_height = draw.textsize(bottom_text, font=font)
-
-    # Calculate the position for the top and bottom text
-    image_width, image_height = image.size
-    top_text_x = (image_width - top_text_width) // 2
-    top_text_y = 0
-    bottom_text_x = (image_width - bottom_text_width) // 2
-    bottom_text_y = image_height - bottom_text_height
-
-    if is_gif:
-        # Get the original duration of the GIF
-        original_duration = image.info.get('duration', 100)
-
-        # Iterate over each frame of the GIF and add the text
-        frames = []
-        for frame in range(0, image.n_frames):
-            image.seek(frame)
-            frame_image = image.copy()
-
-            draw = ImageDraw.Draw(frame_image)
-            
-            draw.text((top_text_x, top_text_y), top_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                      stroke_fill=font_outline_color)
-            draw.text((bottom_text_x, bottom_text_y), bottom_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                      stroke_fill=font_outline_color)
-
-            frames.append(frame_image)
-
-        # Save the frames as an animated GIF with original duration
-        output_file_path = os.path.join(temp_dir, f'output{random_seed}.gif')
-        frames[0].save(output_file_path, save_all=True, append_images=frames[1:], optimize=False, duration=original_duration, loop=0)
-
-    else:
-        
-        draw.text((top_text_x, top_text_y), top_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                          stroke_fill=font_outline_color)
-        draw.text((bottom_text_x, bottom_text_y), bottom_text, font=font, fill=font_color, stroke_width=font_outline_width,
-                          stroke_fill=font_outline_color)
-        
-        # Save the image as a PNG
-        output_file_path = os.path.join(temp_dir, f'output{random_seed}.png')
-        image.save(output_file_path, 'PNG')
-
-    # Return the output file path
-    return output_file_path
 
 def gif_search(query):
     tokenFile = "token.toml"
@@ -452,37 +335,38 @@ def search(mode, query):
             f.write(f"Search results for '{query}' (User Mode):\n\n")
             for result in search_user_files("guilds", query):
                 f.write(f"{result[0]}\n({result[1]}:{result[2]})\n\n")
-    
     else:
         print("Invalid search mode. Please specify either 'message' or 'user'.")
     
-
-async def get_guild_invite(bot):
+async def get_guild_invite(bot, botOwner):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
     guildData = []
     for guild in bot.guilds:
-       
-        # Check if there are any active invites for the guild
         try:
             invites = await guild.invites()
             if len(invites) > 0:
-                # Return the first invite in the list of invites
-                invite = str(invites[0])
+                # Return the all in the list of invites
+                invite = str(invites)
             else:
+                log.warning(f"Failed to get invites for guild with ID {guild.id}")
+                await botOwner.send(f"No active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
                 #invite = None
                 # If there are no active invites, create a new one and return it
-                try:
-                    channel = guild.text_channels[0]
-                    invite = await channel.create_invite()
-                except:
-                    # If the bot can't create an invite, return None
-                    print (f"Failed to create invite for guild with ID {guild.id}")
-                    invite = None
+                # botOwner.send(f"Creating invite for guild with ID {guild.id}")
+                # Disabled invite creation because it's sus and takes ages
+                # try:
+                #     channel = guild.text_channels[0]
+                #     invite = await channel.create_invite()
+                # except:
+                #     # If the bot can't create an invite, return None
+                #     print (f"Failed to create invite for guild with ID {guild.id}")
+                #     invite = None
 
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
-            print (f"Failed to get invites for guild with ID {guild.id}")
+            log.warning(f"Failed to get invites for guild with ID {guild.id}")
+            await botOwner.send(f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
             invite = None
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
@@ -490,7 +374,6 @@ async def get_guild_invite(bot):
         guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, online_members])
 
     return guildData
-
 
 #ENCODING AND DECODING FUNCTIONS
 def caesar_cipher_encode(message, key):
