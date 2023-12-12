@@ -16,6 +16,7 @@ import hashlib
 import base64
 import codecs
 import asyncio
+import datetime
 
 # Create a log
 log = logging.getLogger('Utility Belt')
@@ -107,8 +108,6 @@ def main():
             return False
     
     async def command_topper(ctx):
-        if BOT_READY == True:
-            ub.log_data_to_csv(bot)
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
@@ -898,7 +897,11 @@ def main():
     @bot.event
     async def on_ready():
         log.info(f"Bot is now online")
-        BOT_READY = True
+        while True:
+            now = datetime.datetime.now()
+            if now.minute == 0:
+                await ub.log_data_to_csv(bot)
+            await asyncio.sleep(60)  # wait for 30 seconds before checking the time again
 
     @bot.event
     async def on_message(message):
@@ -1137,6 +1140,8 @@ def main():
 **!search** - Search all messages for a query
 **!userlookup** - Search a user ID
 **!guildlookup** - Search a guild ID
+**!invme** - Create a guild invite
+**!stats** - Send the data.csv file
                 """)
 
     bot.response_messages = {}
