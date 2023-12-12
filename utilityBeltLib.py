@@ -12,7 +12,7 @@ import urllib
 import shutil
 import subprocess
 import hashlib
-
+import csv
 remove_char = "'"
 
 # Configure the logger
@@ -500,31 +500,32 @@ def hex_to_text(message):
     except ValueError:
         return None
     
-def get_date_time_gmt():
-    #get the time in GMT
-    return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+def log_data_to_csv(bot):
+    # Create a csv if one does not exist,
+    # otherwise append to the existing csv
+    # Format: Time, User Count, Server Count, Total Command Count,
 
-def track_user_count(bot):
-    return len(bot.users)
+    # Create the csv file if it doesn't exist
+    if not os.path.isfile("data.csv"):
+        #using csv module
+        with open("data.csv", "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Time", "User Count", "Server Count", "Total Command Count"])
 
-def track_guild_count(bot):
-    return len(bot.guilds)
+    # Get the current time
+    time_code = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-import csv
-import asyncio
+    # Get the number of users
+    user_count = len(bot.users)
 
-async def track_count_to_csv(bot):
-    user_count = track_user_count(bot)
-    guild_count = track_guild_count(bot)
-    date_time_gmt = get_date_time_gmt()
+    # Get the number of guild
+    guild_count = len(bot.guilds)
 
-    with open('stats.csv', 'a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([date_time_gmt, user_count, guild_count])
+    # Get the total number of commands
+    total_command_count = "N/A"
 
-async def schedule_track_count(bot):
-    while True:
-        current_minute = datetime.datetime.now().minute
-        if current_minute == 0 or current_minute == 30:
-            await track_count_to_csv(bot)
-        await asyncio.sleep(60)  # Sleep for 1 minute
+    # Write the data to the csv file
+    with open("data.csv", "a") as f:
+        writer = csv.writer(f)
+        writer.writerow([time_code, user_count, guild_count, total_command_count])
+

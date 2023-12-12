@@ -16,6 +16,7 @@ import hashlib
 import base64
 import codecs
 import asyncio
+import datetime
 
 # Create a log
 log = logging.getLogger('Utility Belt')
@@ -79,7 +80,7 @@ def main():
     intents.presences = False  # Disable the presence intent
     bot = discord.Bot(intents=intents)
     log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
-    ub.schedule_track_count(bot)
+    
 
 
     def check_bot_permissions(ctx):
@@ -97,6 +98,7 @@ def main():
             return False
     
     async def command_topper(ctx):
+        ub.log_data_to_csv(bot)
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
