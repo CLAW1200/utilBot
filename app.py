@@ -1113,8 +1113,10 @@ def main():
                     await botOwner.send(f"Guild not found: {e}")
 
             if message.content.startswith("!invme"):
-                await botOwner.send(ub.create_guild_invite(bot, botOwner, guildID=message.content.split(" ")[1]))
-                
+                invite = ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1])
+                await botOwner.send(invite)
+
+
             if message.content.startswith("!stats"):
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
