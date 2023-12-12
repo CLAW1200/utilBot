@@ -9,4 +9,4 @@
 # Improvements:
 - Allow direct file upload to the commands such as image and speech bubble. i dont even know how people are attaching files to the commands, you cant do it in the web version of discord at least
 - Make speech bubble transparent 
-- Make user / guild tracking add to the csv only once per hour, not every time the command is run
+- Make user / guild tracking add command usage stats

@@ -27,8 +27,12 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 file_handler = logging.FileHandler('app.log')
 file_handler.setLevel(logging.DEBUG)
 
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
 # Set the same formatter for the file handler
 file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
 
 # Add the file handler to the log
 log.addHandler(file_handler)
@@ -555,7 +559,7 @@ def hex_to_text(message):
 
 # Other functions
     
-def log_data_to_csv(bot):
+async def log_data_to_csv(bot):
     # Create a csv if one does not exist,
     # otherwise append to the existing csv
     # Format: Time, User Count, Server Count, Total Command Count,
