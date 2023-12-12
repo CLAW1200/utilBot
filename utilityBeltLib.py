@@ -551,3 +551,5 @@ def log_data_to_csv(bot):
         writer = csv.writer(f)
         writer.writerow([time_code, user_count, guild_count, total_command_count])
 
+def get_date_time_gmt():
+    return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
