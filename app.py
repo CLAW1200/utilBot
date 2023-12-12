@@ -1116,7 +1116,7 @@ def main():
                 try: expireTime = message.content.split(" ")[2]
                 except IndexError: expireTime = 60
                 invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1], expireTime)
-                await botOwner.send(f"Invite: {invite}\n Expires: {expireTime}")
+                await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
 
             if message.content.startswith("!stats"):
                 #send data.csv
