@@ -194,7 +194,7 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     #download video in temp folder
     with open(f"temp/{video_seed}", "wb") as f:
-        f.write(requests.get(video_link).content)
+        f.write(data)
     # Open the Video file and convert to gif in good quality
     try:
         # ffmpeg -i input.mp4 -filter_complex "[0:v] fps=fps,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" output.gif
@@ -231,38 +231,39 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     """
     Add a speech bubble to the top of the image or each frame of a GIF.
     """
+    data = requests.get(image_link).content
     speechBubble = Image.open("assets/speechBubble.png").convert("RGBA")
-    image_seed = random.randint(10000, 99999)
-    output_path = f"temp/image{image_seed}"
+    image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
+    output_path = f"temp/{image_seed}.gif"
 
     # Download the image
-    with open(f"{output_path}.temp", "wb") as f:
-        f.write(requests.get(image_link).content)
-    image = Image.open(f"{output_path}.temp")
+    with open(f"{image_seed}", "wb") as f:
+        f.write(data)
+    image = Image.open(f"{image_seed}").convert("RGBA")
     # Check if the image is a GIF
-    is_gif = image.format == 'GIF'
+    # is_gif = image.format == 'GIF'
 
-    if is_gif:
-        frames = []
-        for frame in ImageSequence.Iterator(image):
-            frame = frame.convert("RGBA")
-            bubble_height = int(frame.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
-            speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
-            frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-            frames.append(frame)
+    # if is_gif:
+    frames = []
+    for frame in ImageSequence.Iterator(image):
+        frame = frame.convert("RGBA")
+        bubble_height = int(frame.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
+        speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
+        frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
+        frames.append(frame)
 
-        output_path = f"{output_path}.gif"
-        frames[0].save(output_path, save_all=True, append_images=frames[1:], loop=0)
+    output_path = f"{output_path}"
+    frames[0].save(output_path, save_all=True, append_images=frames[1:], loop=0)
 
-    else:
-        image = image.convert("RGBA")
-        bubble_height = int(image.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
-        speechBubble_resized = speechBubble.resize((image.size[0], bubble_height))
-        image.paste(speechBubble_resized, (0, 0), speechBubble_resized)
+    # else:
+    #     image = image.convert("RGBA")
+    #     bubble_height = int(image.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
+    #     speechBubble_resized = speechBubble.resize((image.size[0], bubble_height))
+    #     image.paste(speechBubble_resized, (0, 0), speechBubble_resized)
 
-        # Save the image as a PNG
-        output_path = f"{output_path}.png"
-        image.save(output_path)
+    #     # Save the image as a PNG
+    #     output_path = f"{output_path}.png"
+    #     image.save(output_path)
 
     image.close()
     speechBubble.close()
