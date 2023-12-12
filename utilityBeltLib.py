@@ -404,6 +404,35 @@ async def get_guild_invite(bot, botOwner):
 
     return guildData
 
+async def create_guild_invite(bot, botOwner, guildID):
+        # Get the guild object by ID
+        try:
+            guildID = int(guildID)
+        except ValueError:
+            log.warning(f"Invalid guild ID: {guildID}")
+            await botOwner.send(f"Invalid guild ID: {guildID}")
+            return None
+        try:
+            guild = bot.get_guild((guildID))
+        except discord.errors.Forbidden:
+            # If the bot failed to get the guild object, it doesn't have access to the guild
+            log.warning(f"Failed to get guild with ID {guildID}")
+            await botOwner.send(f"Failed to get guild with ID {guildID}")
+            return None
+        
+        # Create an invite for the guild
+        try:
+            channel = guild.text_channels[0]
+            invite = await channel.create_invite()
+        except:
+            # If the bot can't create an invite, return None
+            log.warning(f"Failed to create invite for guild with ID {guildID}")
+            await botOwner.send(f"Failed to create invite for guild with ID {guildID}")
+            invite = None
+
+        return invite
+
+
 #ENCODING AND DECODING FUNCTIONS
 def caesar_cipher_encode(message, key):
     encoded_message = ""

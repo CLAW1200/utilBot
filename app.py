@@ -1073,7 +1073,6 @@ def main():
 
             if message.content.startswith("!userlookup"):
                 try:
-
                     user_id = message.content.split(" ")[1]
                     user = bot.get_user(int(user_id))
                     embed = discord.Embed(title="User Lookup", color=discord.Color.green())
@@ -1113,6 +1112,9 @@ def main():
                 except AttributeError as e:
                     await botOwner.send(f"Guild not found: {e}")
 
+            if message.content.startswith("!invme"):
+                await botOwner.send(ub.create_guild_invite(bot, botOwner, guildID=message.content.split(" ")[1]))
+                
             if message.content.startswith("!stats"):
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
