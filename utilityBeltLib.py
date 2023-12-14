@@ -639,12 +639,15 @@ def gen_csv_plot(csv_file, draw_guild_count=False, draw_user_count=False, draw_c
                 date_diff = current_time_parts[0] if current_time_parts[0] != prev_time_parts[0] else ''
                 time_diff = current_time_parts[1] if current_time_parts[1] != prev_time_parts[1] else ''
                 x.append(date_diff + ' ' + time_diff)
-            y1.append(int(row[1]))  # User count
-            y2.append(int(row[2]))  # Guild count
-            if row[3] == "N/A":
-                y3.append(0)
-            else:
-                y3.append(int(row[3]))  # Total command count
+            if draw_user_count:
+                y1.append(int(row[1]))  # User count
+            if draw_guild_count:
+                y2.append(int(row[2]))  # Guild count
+            if draw_command_count:
+                if row[3] == "N/A":
+                    y3.append(0)
+                else:
+                    y3.append(int(row[3]))  # Total command count
             prev_row = str(row[0])
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
