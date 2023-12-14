@@ -596,7 +596,17 @@ async def log_data_to_csv(bot):
     log.info(f"Guild count: {guild_count}")
 
     # Get the total number of commands
-    total_command_count = "N/A"
+    # open users.json and get the total number of commands by adding up all the commandsUsed values
+    try:
+        with open("users.json", "r") as f:
+            users = json.load(f)
+            total_command_count = 0
+            for user_id in users:
+                user_data = users[user_id]
+                total_command_count += user_data.get("commandsUsed", 0)
+    except FileNotFoundError:
+        pass
+    log.info(f"Total command count: {total_command_count}")
 
     # Write the data to the csv file
     with open("data.csv", "a") as f:
@@ -617,15 +627,18 @@ def gen_csv_plot(csv_file):
         x = []
         y1 = []
         y2 = []
+        y3 = []
         for row in reader:
             x.append(str(row[0]))  # Time
             y1.append(int(row[1]))  # User count
             y2.append(int(row[2]))  # Guild count
+            y3.append(int(row[3]))  # Total command count
 
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
         plt.plot(x, y1, label='User count')
         plt.plot(x, y2, label='Guild count')
+        plt.plot(x, y3, label='Total command count')
         plt.legend()
         plt.xticks(rotation=90)  # Rotate x-axis labels
         plt.tight_layout()  # Adjust layout to ensure labels fit

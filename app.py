@@ -793,6 +793,8 @@ def main():
                 await ctx.respond(f"Decoded message: {decoded_message}")
                 log.BOT_REPLY_SUCCESS(f"Sent decoded message to {ctx.author.name}#{ctx.author.discriminator}")
 
+        await command_topper(ctx)
+
     @bot.slash_command(name="feedback", description="Send feedback to the developer")
     async def send_bot_owner_feedback(ctx,
         option: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
