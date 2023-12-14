@@ -1123,6 +1123,7 @@ def main():
             if message.content.startswith("!stats"):
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
+                await botOwner.send(file=discord.File(ub.gen_csv_plot))
 
             if message.content.startswith("!help"):
                 await botOwner.send("""**!help** - Send this message

@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import hashlib
 import csv
+from matplotlib import pyplot as plt
 remove_char = "'"
 
 # Configure the logger
@@ -604,3 +605,23 @@ async def log_data_to_csv(bot):
 
 def get_date_time_gmt():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+# csv image plotter
+
+
+def gen_csv_plot(csv_file):
+    with open(csv_file, 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        x = []
+        y = []
+        for row in reader:
+            # x axis: time
+            x.append(float(row[0]))
+            # y axis: usercount and guildcount
+            y.append(float(row[1]))
+            y.append(float(row[2]))
+        plt.xlabel('Time (s)')
+        plt.ylabel('Usercount')
+        plt.plot(x,y)
+        plt.savefig(csv_file + '.png')
+    return f"{csv_file}.png"
