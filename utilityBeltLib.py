@@ -605,7 +605,8 @@ async def log_data_to_csv(bot):
                 user_data = users[user_id]
                 total_command_count += user_data.get("commandsUsed", 0)
     except FileNotFoundError:
-        pass
+        log.error("users.json not found")
+        total_command_count = 0
     log.info(f"Total command count: {total_command_count}")
 
     # Write the data to the csv file
