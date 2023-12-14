@@ -620,8 +620,6 @@ def get_date_time_gmt():
 
 
 
-import datetime
-
 def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
@@ -630,21 +628,13 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y1 = []
         y2 = []
         y3 = []
-        last_day = None
         for row in reader:
-            current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # Assuming this is your datetime format
-            if last_day is None or current_time.day != last_day:
-                x.append(str(row[0]))  # Time
-            else:
-                x.append('')
-            last_day = current_time.day
             y1.append(int(row[1]))  # User count
             y2.append(int(row[2]))  # Guild count
             if row[3] == "N/A":
                 y3.append(0)
             else:
                 y3.append(int(row[3]))  # Total command count
-
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
 
