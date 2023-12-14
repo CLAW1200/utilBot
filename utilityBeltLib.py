@@ -167,6 +167,7 @@ def clean_up_temp_files():
 def convert_image_to_gif(image_link):
     clean_up_temp_files()
     # this function will take a link to an image and convert it to a gif by simply changing the extension
+    #if image link is sent, download image in temp folder
     data = requests.get(image_link).content # download image
     image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     # if the image is already in the temp folder, don't download it again
@@ -271,7 +272,10 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
                 result.putpixel((x, y), pixel_image)
 
     # Save the result
-    result.save(output_path, "GIF")
+    result.save(output_path, "PNG")
+    # convert to gif via adding .gif extension
+    os.rename(output_path, f"{output_path}.gif")
+    output_path = f"{output_path}.gif"
     log.info(f"Added speech bubble to image '{image_link}'")
     return output_path
 
