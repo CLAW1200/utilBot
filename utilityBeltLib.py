@@ -231,21 +231,20 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     """
     Add a speech bubble to the top of the image or each frame of a GIF.
     """
+    from PIL import Image
     data = requests.get(image_link).content
-    speechBubble = Image.open("assets/speechBubble.png").convert("RGBA")
+    speechBubble = "assets/speechBubble.png"
     image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
-    output_path = f"temp/speech_bubble_output{image_seed}.gif"
-
-    # write data to output path
-    with open(f"temp/speech_bubble_input{image_seed}", "wb") as f:
+    output_path = f"temp/{image_seed}.gif"
+    # save the image to a file
+    with open(output_path, 'wb') as f:
         f.write(data)
-
     # Load both images
     image = Image.open(output_path).convert("RGBA")
     bubble = Image.open(speechBubble).convert("RGBA")
 
     # Calculate 20% of the height of the first image
-    new_height = int(image.height * speech_bubble_y_scale)
+    new_height = int(image.height * 0.2)
 
     # Resize the speech bubble to exactly 20% of the image's height and 100% of the image's width
     bubble = bubble.resize((image.width, new_height))
@@ -272,9 +271,8 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
                 result.putpixel((x, y), pixel_image)
 
     # Save the result
-    image.close()
-    bubble.close()
     result.save(output_path, "GIF")
+    log.info(f"Added speech bubble to image '{image_link}'")
     return output_path
 
 
