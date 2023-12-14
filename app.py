@@ -1123,6 +1123,10 @@ def main():
                 await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
 
             if message.content.startswith("!stats"):
+                draw_users = False
+                draw_guilds = False
+                draw_commands = False
+                
                 if "users" in message.content:
                     draw_users = True
                 if "guilds" in message.content:
