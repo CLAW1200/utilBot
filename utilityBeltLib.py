@@ -620,7 +620,7 @@ def get_date_time_gmt():
 
 
 
-def gen_csv_plot(csv_file, draw_guild_count, draw_user_count, draw_command_count):
+def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
@@ -655,7 +655,7 @@ def gen_csv_plot(csv_file, draw_guild_count, draw_user_count, draw_command_count
             plt.plot(x, y2, label='Guild count')
         if draw_command_count:
             plt.plot(x, y3, label='Total command count')
-            
+
         plt.legend()
         plt.xticks(rotation=90)  # Rotate x-axis labels
         plt.tight_layout()  # Adjust layout to ensure labels fit
