@@ -8,5 +8,4 @@
 
 # Improvements:
 - Allow direct file upload to the commands such as image and speech bubble. i dont even know how people are attaching files to the commands, you cant do it in the web version of discord at least
-- Make speech bubble transparent animated  
-- Command usage stats
+- Make speech bubble transparent animated
