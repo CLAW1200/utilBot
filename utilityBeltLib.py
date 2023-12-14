@@ -236,28 +236,44 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
     output_path = f"temp/{image_seed}.gif"
 
-    # Download the image
-    with open(f"temp/{image_seed}", "wb") as f:
+    # write data to output path
+    with open(output_path, "wb") as f:
         f.write(data)
-    image = Image.open(f"temp/{image_seed}").convert("RGBA")
-    # Check if the image is a GIF
-    # is_gif = image.format == 'GIF'
 
-    # if is_gif:
+    # Load both images
+    image = Image.open(output_path).convert("RGBA")
+    bubble = Image.open(speechBubble).convert("RGBA")
 
-    frames = []
-    for frame in ImageSequence.Iterator(image):
-        new_frame = frame.convert("RGBA").copy()  # Create a new copy of the frame
-        bubble_height = int(frame.size[1] * speech_bubble_y_scale)
-        speechBubble_resized = speechBubble.resize((frame.size[0], bubble_height))
-        new_frame.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-        frames.append(new_frame)
+    # Calculate 20% of the height of the first image
+    new_height = int(image.height * speech_bubble_y_scale)
 
-    output_path = f"{output_path}"
-    if frames:
-        frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=100, loop=0)
+    # Resize the speech bubble to exactly 20% of the image's height and 100% of the image's width
+    bubble = bubble.resize((image.width, new_height))
 
+    # Create a new image with the same size as the original image
+    result = Image.new("RGBA", image.size)
 
+    # Paste the resized speech bubble onto the new image at the top left corner (0,0)
+    result.paste(bubble, (0,0), bubble)
+
+    # Iterate over each pixel in the images
+    for x in range(image.width):
+        for y in range(image.height):
+            # Get the current pixel
+            pixel_image = image.getpixel((x, y))
+            pixel_result = result.getpixel((x, y))
+
+            # If the pixel in the result image is not completely transparent
+            if pixel_result[3] > 0:  # Alpha value is not 0
+                # Make the corresponding pixel in the first image completely transparent
+                result.putpixel((x, y), (pixel_image[0], pixel_image[1], pixel_image[2], 0))
+            else:
+                # Otherwise, keep the original pixel
+                result.putpixel((x, y), pixel_image)
+
+    # Save the result
+    result.save(output_path)
+    return output_path
 def gif_search(query):
     tokenFile = "token.toml"
     with open(tokenFile) as toml_file:
