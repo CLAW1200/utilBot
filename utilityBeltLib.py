@@ -237,9 +237,9 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     output_path = f"temp/{image_seed}.gif"
 
     # Download the image
-    with open(f"{image_seed}", "wb") as f:
+    with open(f"temp/{image_seed}", "wb") as f:
         f.write(data)
-    image = Image.open(f"{image_seed}").convert("RGBA")
+    image = Image.open(f"temp/{image_seed}").convert("RGBA")
     # Check if the image is a GIF
     # is_gif = image.format == 'GIF'
 
@@ -257,19 +257,6 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     if frames:
         frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=100, loop=0)
 
-    # else:
-    #     image = image.convert("RGBA")
-    #     bubble_height = int(image.size[1] * speech_bubble_y_scale)  # Calculate bubble height as 20% of the image height
-    #     speechBubble_resized = speechBubble.resize((image.size[0], bubble_height))
-    #     image.paste(speechBubble_resized, (0, 0), speechBubble_resized)
-
-    #     # Save the image as a PNG
-    #     output_path = f"{output_path}.png"
-    #     image.save(output_path)
-
-    image.close()
-    speechBubble.close()
-    return output_path
 
 def gif_search(query):
     tokenFile = "token.toml"
