@@ -620,7 +620,7 @@ def get_date_time_gmt():
 
 
 
-def gen_csv_plot(csv_file):
+def gen_csv_plot(csv_file, draw_guild_count=False, draw_user_count=False, draw_command_count=False):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header

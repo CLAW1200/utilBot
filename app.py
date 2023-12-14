@@ -1123,7 +1123,13 @@ def main():
                 await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
 
             if message.content.startswith("!stats"):
-                plot = ub.gen_csv_plot("data.csv")
+                if "users" in message.content:
+                    draw_users = True
+                if "guilds" in message.content:
+                    draw_guilds = True
+                if "commands" in message.content:
+                    draw_commands = True
+                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands)
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
                 await botOwner.send(file=discord.File(plot))
