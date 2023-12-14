@@ -620,6 +620,8 @@ def get_date_time_gmt():
 
 
 
+import datetime
+
 def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
@@ -628,24 +630,21 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y1 = []
         y2 = []
         y3 = []
-        prev_row = None
+        last_day = None
         for row in reader:
-            if prev_row is None:
+            current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # Assuming this is your datetime format
+            if last_day is None or current_time.day != last_day:
                 x.append(str(row[0]))  # Time
             else:
-                current_time_parts = str(row[0]).split(' ')
-                prev_time_parts = prev_row.split(' ')
-                # Compare date and time separately
-                date_diff = current_time_parts[0] if current_time_parts[0] != prev_time_parts[0] else ''
-                time_diff = current_time_parts[1] if current_time_parts[1] != prev_time_parts[1] else ''
-                x.append(date_diff + ' ' + time_diff)
+                x.append('')
+            last_day = current_time.day
             y1.append(int(row[1]))  # User count
             y2.append(int(row[2]))  # Guild count
             if row[3] == "N/A":
                 y3.append(0)
             else:
                 y3.append(int(row[3]))  # Total command count
-            prev_row = str(row[0])
+
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
 
