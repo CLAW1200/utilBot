@@ -620,7 +620,7 @@ def get_date_time_gmt():
 
 
 
-def gen_csv_plot(csv_file, draw_guild_count=False, draw_user_count=False, draw_command_count=False):
+def gen_csv_plot(csv_file, draw_guild_count, draw_user_count, draw_command_count):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
@@ -639,21 +639,23 @@ def gen_csv_plot(csv_file, draw_guild_count=False, draw_user_count=False, draw_c
                 date_diff = current_time_parts[0] if current_time_parts[0] != prev_time_parts[0] else ''
                 time_diff = current_time_parts[1] if current_time_parts[1] != prev_time_parts[1] else ''
                 x.append(date_diff + ' ' + time_diff)
-            if draw_user_count:
-                y1.append(int(row[1]))  # User count
-            if draw_guild_count:
-                y2.append(int(row[2]))  # Guild count
-            if draw_command_count:
-                if row[3] == "N/A":
-                    y3.append(0)
-                else:
-                    y3.append(int(row[3]))  # Total command count
+            y1.append(int(row[1]))  # User count
+            y2.append(int(row[2]))  # Guild count
+            if row[3] == "N/A":
+                y3.append(0)
+            else:
+                y3.append(int(row[3]))  # Total command count
             prev_row = str(row[0])
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
-        plt.plot(x, y1, label='User count')
-        plt.plot(x, y2, label='Guild count')
-        plt.plot(x, y3, label='Total command count')
+
+        if draw_user_count:
+            plt.plot(x, y1, label='User count')
+        if draw_guild_count:
+            plt.plot(x, y2, label='Guild count')
+        if draw_command_count:
+            plt.plot(x, y3, label='Total command count')
+            
         plt.legend()
         plt.xticks(rotation=90)  # Rotate x-axis labels
         plt.tight_layout()  # Adjust layout to ensure labels fit
