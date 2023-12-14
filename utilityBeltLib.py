@@ -234,10 +234,10 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     data = requests.get(image_link).content
     speechBubble = Image.open("assets/speechBubble.png").convert("RGBA")
     image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
-    output_path = f"temp/{image_seed}.gif"
+    output_path = f"temp/speech_bubble_output{image_seed}.gif"
 
     # write data to output path
-    with open(output_path, "wb") as f:
+    with open(f"temp/speech_bubble_input{image_seed}", "wb") as f:
         f.write(data)
 
     # Load both images
@@ -272,8 +272,11 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
                 result.putpixel((x, y), pixel_image)
 
     # Save the result
+    image.close()
+    bubble.close()
     result.save(output_path)
     return output_path
+
 def gif_search(query):
     tokenFile = "token.toml"
     with open(tokenFile) as toml_file:
