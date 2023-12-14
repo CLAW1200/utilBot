@@ -627,7 +627,7 @@ def gen_csv_plot(csv_file):
         plt.plot(x, y1, label='User count')
         plt.plot(x, y2, label='Guild count')
         plt.legend()
-        plt.xticks(rotation=45)  # Rotate x-axis labels
+        plt.xticks(rotation=90)  # Rotate x-axis labels
         plt.tight_layout()  # Adjust layout to ensure labels fit
         plt.savefig(csv_file + '.png')
 
