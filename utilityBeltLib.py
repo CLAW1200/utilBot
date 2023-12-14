@@ -632,8 +632,11 @@ def gen_csv_plot(csv_file):
             x.append(str(row[0]))  # Time
             y1.append(int(row[1]))  # User count
             y2.append(int(row[2]))  # Guild count
-            y3.append(int(row[3]))  # Total command count
-
+            if row[3] == "N/A":
+                y3.append(0)
+            else:
+                y3.append(int(row[3]))  # Total command count
+                
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
         plt.plot(x, y1, label='User count')
