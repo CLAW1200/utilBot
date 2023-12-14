@@ -630,5 +630,5 @@ def gen_csv_plot(csv_file):
         plt.xticks(rotation=90)  # Rotate x-axis labels
         plt.tight_layout()  # Adjust layout to ensure labels fit
         plt.savefig(csv_file + '.png')
-
-    return f"{csv_file}.png"
+        plt.close()
+        return f"{csv_file}.png"

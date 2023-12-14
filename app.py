@@ -1121,10 +1121,11 @@ def main():
                 await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
 
             if message.content.startswith("!stats"):
+                plot = ub.gen_csv_plot("data.csv")
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
-                plot = ub.gen_csv_plot("data.csv")
                 await botOwner.send(file=discord.File(plot))
+
             if message.content.startswith("!help"):
                 await botOwner.send("""**!help** - Send this message
 **!guilds** - Send a list of guilds the bot is in
