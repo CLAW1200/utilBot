@@ -4,7 +4,7 @@ import logging
 import time
 import discord
 import toml
-from PIL import Image, ImageSequence, ImageFont, ImageDraw
+from PIL import Image
 import requests
 import json
 import datetime
@@ -274,8 +274,9 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     # Save the result
     image.close()
     bubble.close()
-    result.save(output_path)
+    result.save(output_path, "GIF")
     return output_path
+
 
 def gif_search(query):
     tokenFile = "token.toml"
