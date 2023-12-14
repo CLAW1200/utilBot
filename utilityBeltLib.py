@@ -616,10 +616,10 @@ def gen_csv_plot(csv_file):
         y = []
         for row in reader:
             # x axis: time
-            x.append((row[0]))
+            x.append(str(row[0]))
             # y axis: usercount and guildcount
-            y.append((row[1]))
-            y.append((row[2]))
+            y.append(int(row[1]))
+            y.append(int(row[2]))
         plt.xlabel('Time (s)')
         plt.ylabel('Usercount')
         plt.plot(x,y)
