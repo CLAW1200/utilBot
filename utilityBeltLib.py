@@ -625,12 +625,14 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
+        data = sorted(reader, key=lambda row: datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
+
         x = []
         y1 = []
         y2 = []
         y3 = []
         last_day = None
-        for row in reader:
+        for row in data:
             current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # Assuming this is your datetime format
             if last_day is None or current_time.day != last_day:
                 x.append(str(row[0]))  # Time
