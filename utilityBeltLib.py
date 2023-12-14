@@ -609,19 +609,24 @@ def get_date_time_gmt():
 # csv image plotter
 
 
+
 def gen_csv_plot(csv_file):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
+        next(reader, None)  # Skip the header
         x = []
-        y = []
+        y1 = []
+        y2 = []
         for row in reader:
-            # x axis: time
-            x.append(str(row[0]))
-            # y axis: usercount and guildcount
-            y.append(int(row[1]))
-            y.append(int(row[2]))
+            x.append(str(row[0]))  # Time
+            y1.append(int(row[1]))  # User count
+            y2.append(int(row[2]))  # Guild count
+
         plt.xlabel('Time (s)')
-        plt.ylabel('Usercount')
-        plt.plot(x,y)
+        plt.ylabel('Count')
+        plt.plot(x, y1, label='User count')
+        plt.plot(x, y2, label='Guild count')
+        plt.legend()
         plt.savefig(csv_file + '.png')
+
     return f"{csv_file}.png"
