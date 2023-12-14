@@ -630,7 +630,9 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y3 = []
         for row in reader:
             y1.append(int(row[1]))  # User count
+            print (row[1])
             y2.append(int(row[2]))  # Guild count
+            print (row[2])
             if row[3] == "N/A":
                 y3.append(0)
             else:
