@@ -1126,12 +1126,12 @@ def main():
                 draw_users = False
                 draw_guilds = False
                 draw_commands = False
-                
-                if "users" in message.content:
+
+                if "user" in message.content:
                     draw_users = True
-                if "guilds" in message.content:
+                if "guild" in message.content:
                     draw_guilds = True
-                if "commands" in message.content:
+                if "command" in message.content:
                     draw_commands = True
                 plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands)
                 #send data.csv
