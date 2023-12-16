@@ -1135,7 +1135,8 @@ def main():
 
                 if "-t " in message.content:
                     time = message.content.split("-t ")[1]
-                    ub.log_data_to_csv(bot, time)
+                else:
+                    time = None
                 plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, time)
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
