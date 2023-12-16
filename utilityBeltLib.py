@@ -641,16 +641,20 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y2 = []
         y3 = []
         for row in data:
-            current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # Assuming this is your datetime format
+            current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
             # Skip this row if it's not within the time frame
+            print (time_delta)
+            print (current_time)
+            print (now - time_delta)
             if time_delta is not None and current_time < now - time_delta:
-                x.append(current_time)  # Time
-                y1.append(int(row[1]))  # User count
-                y2.append(int(row[2]))  # Guild count
-                if row[3] == "N/A":
-                    y3.append(0)
-                else:
-                    y3.append(int(row[3]))  # Total command count
+                continue
+            x.append(current_time)  # Time
+            y1.append(int(row[1]))  # User count
+            y2.append(int(row[2]))  # Guild count
+            if row[3] == "N/A":
+                y3.append(0)
+            else:
+                y3.append(int(row[3]))  # Total command count
 
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
