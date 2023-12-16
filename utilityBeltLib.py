@@ -617,16 +617,22 @@ async def log_data_to_csv(bot):
 def get_date_time_gmt():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-# csv image plotter
-
-
-
-
-def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count):
+def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count, time_frame):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
         data = sorted(reader, key=lambda row: datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
+
+        # Determine the time delta based on the time frame
+        time_delta = None
+        if time_frame == "last week":
+            time_delta = datetime.timedelta(weeks=1)
+        elif time_frame == "last month":
+            time_delta = datetime.timedelta(days=30)
+        elif time_frame == "last year":
+            time_delta = datetime.timedelta(days=365)
+        # Get the current time
+        now = datetime.datetime.now()
 
         x = []
         y1 = []
@@ -634,6 +640,10 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y3 = []
         for row in data:
             current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")  # Assuming this is your datetime format
+            # Skip this row if it's not within the time frame
+            if time_delta is not None and current_time < now - time_delta:
+                continue
+
             x.append(current_time)  # Time
             y1.append(int(row[1]))  # User count
             y2.append(int(row[2]))  # Guild count

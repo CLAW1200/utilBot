@@ -1126,14 +1126,17 @@ def main():
                 draw_users = False
                 draw_guilds = False
                 draw_commands = False
-
                 if "user" in message.content:
                     draw_users = True
                 if "guild" in message.content:
                     draw_guilds = True
                 if "command" in message.content:
                     draw_commands = True
-                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands)
+
+                if "-t " in message.content:
+                    time = message.content.split("-t ")[1]
+                    ub.log_data_to_csv(bot, time)
+                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, time)
                 #send data.csv
                 await botOwner.send(file=discord.File('data.csv'))
                 await botOwner.send(file=discord.File(plot))
