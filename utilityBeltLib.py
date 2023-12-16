@@ -628,6 +628,7 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         print (time_frame)
         if type(time_frame) == int:
             time_delta = datetime.timedelta(days=time_frame)
+            print (time_delta)
         elif time_frame == "week":
             time_delta = datetime.timedelta(weeks=1)
         elif time_frame == "month":
