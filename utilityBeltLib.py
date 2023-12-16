@@ -625,11 +625,13 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
 
         # Determine the time delta based on the time frame
         time_delta = None
-        if time_frame == "last week":
+        if type(time_frame) == int:
+            time_delta = datetime.timedelta(days=time_frame)
+        elif time_frame == "week":
             time_delta = datetime.timedelta(weeks=1)
-        elif time_frame == "last month":
+        elif time_frame == "month":
             time_delta = datetime.timedelta(days=30)
-        elif time_frame == "last year":
+        elif time_frame == "year":
             time_delta = datetime.timedelta(days=365)
         # Get the current time
         now = datetime.datetime.now()
