@@ -1134,6 +1134,7 @@ def main():
                     draw_commands = True
 
                 if "-t " in message.content:
+                    # get everything after -t 
                     time = message.content.split("-t ")[1]
                 else:
                     time = None

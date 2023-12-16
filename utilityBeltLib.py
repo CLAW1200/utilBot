@@ -617,24 +617,14 @@ async def log_data_to_csv(bot):
 def get_date_time_gmt():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count, time_frame):
+def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count, time_frame=None):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
         data = sorted(reader, key=lambda row: datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
 
         # Determine the time delta based on the time frame
-        time_delta = None
-        print (time_frame)
-        if time_frame == "day":
-            time_delta = datetime.timedelta(days=1)
-            print (time_delta)
-        elif time_frame == "week":
-            time_delta = datetime.timedelta(weeks=1)
-        elif time_frame == "month":
-            time_delta = datetime.timedelta(days=30)
-        elif time_frame == "year":
-            time_delta = datetime.timedelta(days=365)
+        time_delta = datetime.timedelta(days=time_frame)
         # Get the current time
         now = datetime.datetime.now()
         x = []
