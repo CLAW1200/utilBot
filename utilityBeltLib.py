@@ -624,7 +624,10 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         data = sorted(reader, key=lambda row: datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S"))
 
         # Determine the time delta based on the time frame
-        time_delta = datetime.timedelta(days=time_frame)
+        if time_frame is not None:
+            time_delta = datetime.timedelta(days=int(time_frame))
+        else:
+            time_delta = None 
         # Get the current time
         now = datetime.datetime.now()
         x = []
