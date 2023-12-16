@@ -625,6 +625,7 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
 
         # Determine the time delta based on the time frame
         time_delta = None
+        print (time_frame)
         if type(time_frame) == int:
             time_delta = datetime.timedelta(days=time_frame)
         elif time_frame == "week":
