@@ -577,21 +577,25 @@ async def log_data_to_csv(bot):
     # otherwise append to the existing csv
     # Format: Time, User Count, Server Count, Total Command Count,
 
-    # Create the csv file if it doesn't exist
-    if not os.path.isfile("data.csv"):
-        #using csv module
-        with open("data.csv", "w") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Time", "User Count", "Server Count", "Total Command Count"])
-
     # Get the current time
-    time_code = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    current_time = datetime.datetime.utcnow()
+    time_code = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    current_hour = current_time.strftime("%Y-%m-%d %H")
+
+    # Check if a log was already created in the current hour
+    if os.path.isfile("data.csv"):
+        with open("data.csv", "r") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0].startswith(current_hour):
+                    log.info("Log already created in the current hour. Skipping logging.")
+                    return
 
     # Get the number of users
     user_count = len(bot.users)
     log.info(f"User count: {user_count}")
 
-    # Get the number of guild
+    # Get the number of guilds
     guild_count = len(bot.guilds)
     log.info(f"Guild count: {guild_count}")
 
