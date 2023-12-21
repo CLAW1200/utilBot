@@ -17,7 +17,7 @@ import base64
 import codecs
 import asyncio
 import datetime
-
+import clean_data
 # Create a log
 log = logging.getLogger('Utility Belt')
 log.setLevel(logging.DEBUG)
@@ -89,6 +89,9 @@ def main():
     intents.presences = False  # Disable the presence intent
     bot = discord.Bot(intents=intents)
     log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
+
+    # clean data
+    clean_data.remove_duplicates("data.csv")
 
     def check_bot_permissions(ctx):
         if ctx.guild == None:

@@ -3,6 +3,7 @@ app.log
 notes.json
 users.json
 /__pycache__/
+/gcp-vscode-ssh/
 /guilds/
 token.toml
 users.csv
