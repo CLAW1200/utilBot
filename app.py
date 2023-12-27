@@ -1132,11 +1132,10 @@ def main():
                     draw_guilds = True
                 if "command" in message.content:
                     draw_commands = True
-                if "all" in message.content:
+                if "user" not in message.content and "guild" not in message.content and "command" not in message.content:
                     draw_users = True
                     draw_guilds = True
                     draw_commands = True
-
                 if "-t " in message.content:
                     # get everything after -t 
                     time = message.content.split("-t ")[1]
