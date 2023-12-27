@@ -1141,10 +1141,12 @@ def main():
                     time = message.content.split("-t ")[1]
                 else:
                     time = None
-                print (f"{draw_users} {draw_guilds} {draw_commands} {time}")
+
+                    
                 plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, time)
                 #send data.csv
-                await botOwner.send(file=discord.File('data.csv'))
+                if "file" in message.content:
+                    await botOwner.send(file=discord.File('data.csv'))
                 await botOwner.send(file=discord.File(plot))
 
             if message.content.startswith("!help"):
