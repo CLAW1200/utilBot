@@ -169,7 +169,8 @@ def convert_image_to_gif(image_link):
     clean_up_temp_files()
     # this function will take a link to an image and convert it to a gif by simply changing the extension
     #if image link is sent, download image in temp folder
-    data = requests.get(image_link).content # download image
+    if download_check:
+        data = requests.get(image_link).content # download image
     image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     # if the image is already in the temp folder, don't download it again
     if os.path.isfile(f"temp/{image_seed}.gif"):
@@ -192,7 +193,10 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     clean_up_temp_files()
     #this function will take a link to an video and convert it to a gif
     #download video in temp folder
-    data = requests.get(video_link).content # download image
+    #check file size
+    # make sure file size is less than max
+    if download_check:
+        data = requests.get(video_link).content # download image
     video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     #download video in temp folder
     with open(f"temp/{video_seed}", "wb") as f:
@@ -227,14 +231,30 @@ def get_file_size(link):
     except Exception as e:
         log.error(f"Error getting file size for '{link}': {e}")
         return None
-    
+
+def download_check(link, max_size=read_toml_var("maxFileSize")):
+    # function to check if a file is too large to download
+    # if the file is too large, return false
+    # if the file is small enough, return true
+    # if the file size cannot be determined, return true
+    file_size = get_file_size(link)
+    if file_size is None:
+        return False
+    else:
+        if file_size > max_size:
+            log.warning(f"File '{link}' is too large to download ({file_size} > {max_size})")
+            return False
+        else:
+            return True
+
 def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     clean_up_temp_files()
     """
     Add a speech bubble to the top of the image or each frame of a GIF.
     """
     from PIL import Image
-    data = requests.get(image_link).content
+    if download_check:
+        data = requests.get(image_link).content
     speechBubble = "assets/speechBubble.png"
     image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
     output_path = f"temp/{image_seed}.gif"
