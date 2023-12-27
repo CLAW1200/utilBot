@@ -535,7 +535,6 @@ def vigenere_cipher_decode(message, key):
         decoded_message += decoded_char
     return decoded_message
 
-
 def atbash_cipher_decode(message):
     decoded_message = ""
     for char in message:
@@ -549,7 +548,6 @@ def atbash_cipher_decode(message):
         decoded_message += decoded_char
     return decoded_message
 
-
 def binary_to_text(message):
     # Remove spaces and convert binary string to bytes
     binary_string = ''.join(message.split())
@@ -559,7 +557,6 @@ def binary_to_text(message):
     except ValueError:
         return None
 
-
 def hex_to_text(message):
     # Remove spaces and convert hex string to bytes
     hex_string = ''.join(message.split())
@@ -568,34 +565,28 @@ def hex_to_text(message):
         return byte_data.decode()
     except ValueError:
         return None
-    
 
 # Other functions
-    
 async def log_data_to_csv(bot):
     # Create a csv if one does not exist,
     # otherwise append to the existing csv
     # Format: Time, User Count, Server Count, Total Command Count,
 
-    # Get the current time
-    current_time = datetime.datetime.utcnow()
-    time_code = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    current_hour = current_time.strftime("%Y-%m-%d %H")
+    # Create the csv file if it doesn't exist
+    if not os.path.isfile("data.csv"):
+        #using csv module
+        with open("data.csv", "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Time", "User Count", "Server Count", "Total Command Count"])
 
-    # Check if a log was already created in the current hour
-    if os.path.isfile("data.csv"):
-        with open("data.csv", "r") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if row[0].startswith(current_hour):
-                    log.info("Log already created in the current hour. Skipping logging.")
-                    return
+    # Get the current time
+    time_code = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     # Get the number of users
     user_count = len(bot.users)
     log.info(f"User count: {user_count}")
 
-    # Get the number of guilds
+    # Get the number of guild
     guild_count = len(bot.guilds)
     log.info(f"Guild count: {guild_count}")
 
