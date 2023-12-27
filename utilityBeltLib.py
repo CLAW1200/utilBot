@@ -210,7 +210,7 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
             scale = f"scale={scale}:-1"
 
         output_path = f"temp/{video_seed}.gif"
-        subprocess.call(['ffmpeg', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
+        subprocess.call(['ffmpeg', '-n', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
         os.remove(f"temp/{video_seed}")
         log.info(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path
