@@ -1132,7 +1132,7 @@ def main():
                     draw_guilds = True
                 if "command" in message.content:
                     draw_commands = True
-                if "command" and "user" and "guild" not in message.content:
+                if "command" or "user" or "guild" not in message.content:
                     draw_users = True
                     draw_guilds = True
                     draw_commands = True
