@@ -1142,12 +1142,22 @@ def main():
                 else:
                     time = None
 
-                    
                 plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, time)
                 #send data.csv
                 if "file" in message.content:
                     await botOwner.send(file=discord.File('data.csv'))
                 await botOwner.send(file=discord.File(plot))
+
+            if message.content.startswith("!ban"):
+                try:
+                    user_id = message.content.split(" ")[1]
+                    user = bot.get_user(int(user_id))
+                    await user.ban()
+                    await botOwner.send(f"Banned {user.name}#{user.discriminator}")
+                except IndexError:
+                    await botOwner.send("No user ID provided")
+                except AttributeError:
+                    await botOwner.send("User not found")
 
             if message.content.startswith("!help"):
                 await botOwner.send("""**!help** - Send this message
