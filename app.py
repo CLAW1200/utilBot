@@ -104,7 +104,7 @@ def main():
         else:
             return False
     
-    async def command_ban_check(ctx):
+    def command_ban_check(ctx):
         # Check banned users file, If user is banned, return True
         try:
             with open("banned_users.json", "r") as f:
@@ -112,8 +112,6 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             log.error("Failed to load banned users file")
             banned_users = []
-        print (banned_users)
-        print (str(ctx.author.id))
         if str(ctx.author.id) in banned_users:
             log.BOT_REPLY_FAIL(f"Blocked command from {ctx.author.name}#{ctx.author.discriminator} due to being BANNED")
             return True
@@ -135,7 +133,7 @@ def main():
 
     @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         try:
@@ -167,7 +165,7 @@ def main():
         fps: discord.Option(int, "The FPS of the gif", required=False, default=25),
         scale: discord.Option(int, "The scale of the gif", required=False),
     ):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         #do not download videos larger than maxFileSize
@@ -209,7 +207,7 @@ def main():
         image_link: str,
         speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
     ):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
         #do not download videos larger than maxFileSize
@@ -283,7 +281,7 @@ def main():
         word: str,
         random_result: discord.Option(bool, "Whether to get a random result", required=False, default=False),
         ):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Fetches the definition of a word from Urban Dictionary."""
         log.BOT_GOT_COMMAND(f"Received command /urban from {ctx.author.name}#{ctx.author.discriminator}")
@@ -322,7 +320,7 @@ def main():
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
     async def random_word_command(ctx):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Gets a random word from Urban Dictionary."""
         log.BOT_GOT_COMMAND(f"Received command /urban-random-word from {ctx.author.name}#{ctx.author.discriminator}")
@@ -350,7 +348,7 @@ def main():
 
     @bot.slash_command(name="units", description="Convert units")
     async def convert(ctx, value: float, unit_from: str, unit_to: str):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /units from {ctx.author.name}#{ctx.author.discriminator}")
         try:
@@ -379,7 +377,7 @@ def main():
 
     @bot.slash_command(name="note-new", description="Write a new note")
     async def new_note_command(ctx, note: str):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Create a new note for the user"""
         log.BOT_GOT_COMMAND(f"Received command /note-new from {ctx.author.name}#{ctx.author.discriminator}")
@@ -409,7 +407,7 @@ def main():
 
     @bot.slash_command(name="edit-note", description="Edit a note")
     async def edit_note_command(ctx, index: int, note: str):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Edit an existing note for the user"""
         log.BOT_GOT_COMMAND(f"Received command /edit-note from {ctx.author.name}#{ctx.author.discriminator}")
@@ -453,7 +451,7 @@ def main():
 
     @bot.slash_command(name="notes", description="Read your notes")
     async def my_notes_command(ctx):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Read the user's notes"""
         log.BOT_GOT_COMMAND(f"Received command /notes from {ctx.author.name}#{ctx.author.discriminator}")
@@ -484,7 +482,7 @@ def main():
 
     @bot.slash_command(name="note-delete", description="Delete a note or leave index blank to delete all")
     async def delete_note_command(ctx, index: int = None):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Delete a note, or all for the user"""
         log.BOT_GOT_COMMAND(f"Received command /note-delete from {ctx.author.name}#{ctx.author.discriminator}")
@@ -538,7 +536,7 @@ def main():
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user") #renamed from dox to find-a-friend for obvious reasons
     async def dox_command(ctx):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /find-a-friend from {ctx.author.name}#{ctx.author.discriminator}")
         try:
@@ -558,7 +556,7 @@ def main():
 
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Get your peepee size"""
         log.BOT_GOT_COMMAND(f"Received command /peepee from {ctx.author.name}#{ctx.author.discriminator}")
@@ -576,7 +574,7 @@ def main():
     ongoing_games = {}
     @bot.slash_command(name="rps", description="Play rock paper scissors with another user")
     async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Play rock paper scissors with another user"""
         log.BOT_GOT_COMMAND(f"Received command /rps from {ctx.author.name}#{ctx.author.discriminator}")
@@ -727,7 +725,7 @@ def main():
                             mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Encode mode") = None,
                             key: discord.Option(str, description="Key to encode with") = None,
                             hide: discord.Option(bool, description="Hide the message") = False):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
 
         """Encode a message"""
@@ -784,7 +782,7 @@ def main():
                             mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Decode mode") = None,
                             key: discord.Option(str, description="Key to decode with") = None,
                             hide: discord.Option(bool, description="Hide the message") = False):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         
         """Decode a message"""
@@ -847,7 +845,7 @@ def main():
         feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
         description: discord.Option(str, description="Describe the issue / change") = None
     ):
-            if await command_ban_check(ctx):
+            if command_ban_check(ctx):
                 return
             log.BOT_GOT_COMMAND(f"Received command /feedback from {ctx.author.name}#{ctx.author.discriminator}")
             #make post in feedback channel in support server
@@ -885,7 +883,7 @@ def main():
 
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         """Get help"""
         log.BOT_GOT_COMMAND(f"Received command /help from {ctx.author.name}#{ctx.author.discriminator}")
@@ -913,7 +911,7 @@ def main():
         
     @bot.slash_command(name="vote", description="Vote for the bot and claim a reward")
     async def vote(ctx):
-        if await command_ban_check(ctx):
+        if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /vote from {ctx.author.name}#{ctx.author.discriminator}")
         topggID=1098280039486849174
