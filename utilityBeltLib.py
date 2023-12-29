@@ -169,7 +169,7 @@ def convert_image_to_gif(image_link):
     clean_up_temp_files()
     # this function will take a link to an image and convert it to a gif by simply changing the extension
     #if image link is sent, download image in temp folder
-    if download_check:
+    if download_check(image_link):
         data = requests.get(image_link).content # download image
     image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     # if the image is already in the temp folder, don't download it again
@@ -195,7 +195,7 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
     #download video in temp folder
     #check file size
     # make sure file size is less than max
-    if download_check:
+    if download_check(video_link):
         data = requests.get(video_link).content # download image
     video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     #download video in temp folder
@@ -253,7 +253,7 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     Add a speech bubble to the top of the image or each frame of a GIF.
     """
     from PIL import Image
-    if download_check:
+    if download_check(image_link):
         data = requests.get(image_link).content
     speechBubble = "assets/speechBubble.png"
     image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
