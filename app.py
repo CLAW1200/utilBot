@@ -1201,18 +1201,20 @@ def main():
                     user_id = message.content.split(" ")[1]
                     user = bot.get_user(int(user_id))
 
-                    # append user to banned_users.json
-                    # if file doesn't exist, create it
+                    # append user to banned_users.json if not already banned
                     try:
                         with open('banned_users.json', 'r') as f:
                             banned_users = json.load(f)
                     except FileNotFoundError:
                         banned_users = []
-                    banned_users.append(user.id)
-                    with open('banned_users.json', 'w') as f:
-                        json.dump(banned_users, f)
 
-                    await botOwner.send(f"Banned {user.name}#{user.discriminator}")
+                    if user.id not in banned_users:
+                        banned_users.append(user.id)
+                        with open('banned_users.json', 'w') as f:
+                            json.dump(banned_users, f)
+                        await botOwner.send(f"Banned {user.name}#{user.discriminator}")
+                    else:
+                        await botOwner.send(f"{user.name}#{user.discriminator} is already banned")
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
@@ -1245,6 +1247,9 @@ def main():
 **!guildcount** - Send the number of guilds the bot is in
 **!userdata** - Send the users.json file
 **!status** - Set the bot status
+**!streamstatus** - Set the bot stream status
+**!ban** - Ban a user from using the bot
+**!unban** - Unban a user from using the bot
 **!guilds.zip** - Send a zip file of all guilds the bot is in
 **!notes** - Send the notes.json file
 **!search** - Search all messages for a query
