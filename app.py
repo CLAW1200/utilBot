@@ -112,6 +112,8 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             log.error("Failed to load banned users file")
             banned_users = []
+        print (banned_users)
+        print (str(ctx.author.id))
         if str(ctx.author.id) in banned_users:
             log.BOT_REPLY_FAIL(f"Blocked command from {ctx.author.name}#{ctx.author.discriminator} due to being BANNED")
             return True
