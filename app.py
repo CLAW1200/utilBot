@@ -1152,8 +1152,38 @@ def main():
                 try:
                     user_id = message.content.split(" ")[1]
                     user = bot.get_user(int(user_id))
-                    await user.ban()
+
+                    # append user to banned_users.json
+                    # if file doesn't exist, create it
+                    try:
+                        with open('banned_users.json', 'r') as f:
+                            banned_users = json.load(f)
+                    except FileNotFoundError:
+                        banned_users = []
+                    banned_users.append(user.id)
+                    with open('banned_users.json', 'w') as f:
+                        json.dump(banned_users, f)
+
                     await botOwner.send(f"Banned {user.name}#{user.discriminator}")
+                except IndexError:
+                    await botOwner.send("No user ID provided")
+
+            if message.content.startswith("!unban"):
+                try:
+                    user_id = message.content.split(" ")[1]
+                    user = bot.get_user(int(user_id))
+
+                    # remove user from banned_users.json
+                    try:
+                        with open('banned_users.json', 'r') as f:
+                            banned_users = json.load(f)
+                    except FileNotFoundError:
+                        banned_users = []
+                    banned_users.remove(user.id)
+                    with open('banned_users.json', 'w') as f:
+                        json.dump(banned_users, f)
+
+                    await botOwner.send(f"Unbanned {user.name}#{user.discriminator}")
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
