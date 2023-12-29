@@ -112,11 +112,9 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             log.error("Failed to load banned users file")
             banned_users = []
-        if str(ctx.author.id) in banned_users:
+        if ctx.author.id in banned_users:
             log.BOT_REPLY_FAIL(f"Blocked command from {ctx.author.name}#{ctx.author.discriminator} due to being BANNED")
             return True
-        else:
-            return False
 
     async def command_topper(ctx):
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
