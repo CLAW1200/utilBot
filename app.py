@@ -123,7 +123,7 @@ def main():
         try:
             imageFileSize = ub.get_file_size(image_link)
             if imageFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                 return
         except Exception as e:
@@ -162,12 +162,12 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
             log.error(e)
             return
-        if fps > 40:
+        if fps > 20:
             await ctx.respond(f"Sorry, but the max FPS is 40!", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
             return
         if scale != None:
-            if scale > 800:
+            if scale > 500:
                 await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
                 return
