@@ -1156,8 +1156,6 @@ def main():
                     await botOwner.send(f"Banned {user.name}#{user.discriminator}")
                 except IndexError:
                     await botOwner.send("No user ID provided")
-                except AttributeError:
-                    await botOwner.send("User not found")
 
             if message.content.startswith("!help"):
                 await botOwner.send("""**!help** - Send this message
