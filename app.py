@@ -163,7 +163,7 @@ def main():
             log.error(e)
             return
         if fps > 20:
-            await ctx.respond(f"Sorry, but the max FPS is 40!", ephemeral=True)
+            await ctx.respond(f"Sorry, but the max FPS is 20!", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
             return
         if scale != None:
