@@ -203,7 +203,7 @@ def main():
             log.error(e)
         await command_topper(ctx)
 
-    @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image")
+    @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image or gif")
     async def speech_bubble_command(
         ctx: discord.ApplicationContext,
         image_link: str,

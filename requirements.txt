@@ -6,3 +6,4 @@ pint
 toml
 ffmpeg-python
 matplotlib
+bs4

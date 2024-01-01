@@ -4,11 +4,11 @@ import logging
 import time
 import discord
 import toml
-from PIL import Image
+from PIL import Image, ImageSequence, ImageChops
 import requests
 import json
 import datetime
-import urllib
+from bs4 import BeautifulSoup
 import shutil
 import subprocess
 import hashlib
@@ -165,60 +165,6 @@ def clean_up_temp_files():
             except Exception as e:
                 log.error(f"Error removing old file '{file}': {e}")
 
-def convert_image_to_gif(image_link):
-    clean_up_temp_files()
-    # this function will take a link to an image and convert it to a gif by simply changing the extension
-    #if image link is sent, download image in temp folder
-    if download_check(image_link):
-        data = requests.get(image_link).content # download image
-    image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
-    # if the image is already in the temp folder, don't download it again
-    if os.path.isfile(f"temp/{image_seed}.gif"):
-        log.info(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
-        output_path = f"temp/{image_seed}.gif"
-        return output_path
-    else:
-        try:
-            with open(f"temp/{image_seed}.png", "wb") as f: # save image in temp folder
-                f.write(data) # write image data to file
-        except FileExistsError as e:
-            log.error(f"Error saving image '{image_link}' to temp folder: {e}")
-            pass
-        output_path = f"temp/{image_seed}.gif" # set output path
-        os.rename(f"temp/{image_seed}.png", f"temp/{image_seed}.gif") # rename image to gif
-        log.info(f"Converted image '{image_link}' to gif '{output_path}'")
-        return output_path
-
-def convert_video_to_gif(video_link, fps=25, scale = None):
-    clean_up_temp_files()
-    #this function will take a link to an video and convert it to a gif
-    #download video in temp folder
-    #check file size
-    # make sure file size is less than max
-    if download_check(video_link):
-        data = requests.get(video_link).content # download image
-    video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
-    #download video in temp folder
-    with open(f"temp/{video_seed}", "wb") as f:
-        f.write(data)
-    # Open the Video file and convert to gif in good quality
-    try:
-        # ffmpeg -i input.mp4 -filter_complex "[0:v] fps=fps,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" output.gif
-        if scale is None:
-            scale = "scale=480:-1"
-        else:
-            scale = f"scale={scale}:-1"
-
-        output_path = f"temp/{video_seed}.gif"
-        subprocess.call(['ffmpeg', '-n', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
-        os.remove(f"temp/{video_seed}")
-        log.info(f"Converted video '{video_link}' to gif '{output_path}'")
-        return output_path
-    except Exception as e:
-        log.error(f"Error converting video '{video_link}' to gif: {e}")
-        return None
-
-
 def get_file_size(link):
     # function to check the size of a video or image link
     try:
@@ -247,60 +193,127 @@ def download_check(link, max_size=read_toml_var("maxFileSize")):
         else:
             return True
 
-from PIL import Image, ImageSequence
+def split_gif_frames(gif_path):
+    gif = Image.open(gif_path)
+    frames = []
+    for frame in ImageSequence.Iterator(gif):
+        frame = frame.convert('RGBA')
+        frames.append(frame.copy())
+    return frames
 
-def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
+def link_processor(link):
+    response = requests.get(link)
+    if response.status_code == 200:
+        page_content = response.content
+        soup = BeautifulSoup(page_content, 'html.parser')
+        meta_tag = soup.find('meta', attrs={'property': 'og:image'})
+        if meta_tag:
+            return meta_tag['content']
+        else:
+            return link
+    else:
+        return link
+    
+def convert_image_to_gif(image_link):
+    image_link = link_processor(image_link)
+    clean_up_temp_files()
+    # this function will take a link to an image and convert it to a gif by simply changing the extension
+    #if image link is sent, download image in temp folder
+    if download_check(image_link):
+        data = requests.get(image_link).content # download image
+    image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
+    # if the image is already in the temp folder, don't download it again
+    if os.path.isfile(f"temp/{image_seed}.gif"):
+        log.info(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
+        output_path = f"temp/{image_seed}.gif"
+        return output_path
+    else:
+        try:
+            with open(f"temp/{image_seed}.png", "wb") as f: # save image in temp folder
+                f.write(data) # write image data to file
+        except FileExistsError as e:
+            log.error(f"Error saving image '{image_link}' to temp folder: {e}")
+            pass
+        output_path = f"temp/{image_seed}.gif" # set output path
+        os.rename(f"temp/{image_seed}.png", f"temp/{image_seed}.gif") # rename image to gif
+        log.info(f"Converted image '{image_link}' to gif '{output_path}'")
+        return output_path
+
+def convert_video_to_gif(video_link, fps=25, scale = None):
+    image_link = link_processor(image_link)
+    clean_up_temp_files()
+    #this function will take a link to an video and convert it to a gif
+    #download video in temp folder
+    #check file size
+    # make sure file size is less than max
+    if download_check(video_link):
+        data = requests.get(video_link).content # download image
+    video_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
+    #download video in temp folder
+    with open(f"temp/{video_seed}", "wb") as f:
+        f.write(data)
+    # Open the Video file and convert to gif in good quality
+    try:
+        # ffmpeg -i input.mp4 -filter_complex "[0:v] fps=fps,scale=480:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" output.gif
+        if scale is None:
+            scale = "scale=480:-1"
+        else:
+            scale = f"scale={scale}:-1"
+
+        output_path = f"temp/{video_seed}.gif"
+        subprocess.call(['ffmpeg', '-n', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
+        os.remove(f"temp/{video_seed}")
+        log.info(f"Converted video '{video_link}' to gif '{output_path}'")
+        return output_path
+    except Exception as e:
+        log.error(f"Error converting video '{video_link}' to gif: {e}")
+        return None
+
+def add_speech_bubble(image_link, speech_bubble_y_scale):
+    image_link = link_processor(image_link)
     clean_up_temp_files()
     """
     Add a speech bubble to the top of the image or each frame of a GIF.
     """
-    from PIL import Image
     if download_check(image_link):
         data = requests.get(image_link).content
+
+    image_seed = hashlib.md5(data).hexdigest()
     speechBubble = "assets/speechBubble.png"
-    image_seed = hashlib.md5(requests.get(image_link).content).hexdigest()
     output_path = f"temp/{image_seed}.gif"
-    # save the image to a file
-    with open(output_path, 'wb') as f:
+
+    with open(output_path, "wb") as f:
         f.write(data)
-    # Load both images
+        
+    # Load the gif and speech bubble
     image = Image.open(output_path).convert("RGBA")
     bubble = Image.open(speechBubble).convert("RGBA")
 
     # Calculate 20% of the height of the first image
-    new_height = int(image.height * 0.2)
+    new_height = int(image.height * speech_bubble_y_scale)
 
     # Resize the speech bubble to exactly 20% of the image's height and 100% of the image's width
     bubble = bubble.resize((image.width, new_height))
 
-    frames = []
-    for frame in ImageSequence.Iterator(image):
+    # Create a new GIF with the speech bubble on top of each frame
+    input_frames = split_gif_frames(output_path)
+    output_frames = []
+    for input_frame in input_frames:
         # Create a new image with the same size as the original image
-        result = Image.new("RGBA", frame.size)
-
+        result = Image.new("RGBA", input_frame.size) # A blank image with the same size as the original
         # Paste the resized speech bubble onto the new image at the top left corner (0,0)
-        result.paste(bubble, (0,0), bubble)
+        result.paste(bubble, (0,0), bubble) # Paste the bubble onto the blank image
 
-        # Iterate over each pixel in the images
-        for x in range(frame.width):
-            for y in range(frame.height):
-                # Get the current pixel
-                pixel_image = frame.getpixel((x, y))
-                pixel_result = result.getpixel((x, y))
-
-                # If the pixel in the result image is not completely transparent
-                if pixel_result[3] > 0:  # Alpha value is not 0
-                    # Make the corresponding pixel in the first image completely transparent
-                    result.putpixel((x, y), (pixel_image[0], pixel_image[1], pixel_image[2], 0))
-                else:
-                    # Otherwise, keep the original pixel
-                    result.putpixel((x, y), pixel_image)
-
-        frames.append(result)
+        # Result now contains the speech bubble on top of the blank image
+        # Frame now contains the original frame
+        frame = ImageChops.composite(result, input_frame, result)
+        # Now remove the speech bubble from the original frame and make it transparent
+        frame = ImageChops.subtract(input_frame, result)
+        output_frames.append(frame)
 
     # Save the result
-    frames[0].save(output_path, "GIF", save_all=True, append_images=frames[1:], loop=0)
-    log.info(f"Added speech bubble to image '{image_link}'")
+    output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:], duration=image.info['duration'], loop=0)
+
     return output_path
 
 
