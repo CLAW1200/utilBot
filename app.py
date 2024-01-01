@@ -1239,7 +1239,8 @@ def main():
 
             if message.content.startswith("!help"):
                 # https://cdn.discordapp.com/emojis/1191381954453586061.gif?size=96&quality=lossless
-                custom_emoji = '<:loading:1191381954453586061>'
+                # https://discord.com/channels/1170496731872493739/1178817154620067851/1191382117972717649
+                custom_emoji = '<:loading:1191382117972717649>'
                 await botOwner.send(f"""**!help** - Send this message
 **!guilds** - Send a list of guilds the bot is in
 **!log** - Send the log file
