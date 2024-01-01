@@ -247,6 +247,8 @@ def download_check(link, max_size=read_toml_var("maxFileSize")):
         else:
             return True
 
+from PIL import Image, ImageSequence
+
 def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     clean_up_temp_files()
     """
@@ -271,32 +273,33 @@ def add_speech_bubble(image_link, speech_bubble_y_scale=0.2):
     # Resize the speech bubble to exactly 20% of the image's height and 100% of the image's width
     bubble = bubble.resize((image.width, new_height))
 
-    # Create a new image with the same size as the original image
-    result = Image.new("RGBA", image.size)
+    frames = []
+    for frame in ImageSequence.Iterator(image):
+        # Create a new image with the same size as the original image
+        result = Image.new("RGBA", frame.size)
 
-    # Paste the resized speech bubble onto the new image at the top left corner (0,0)
-    result.paste(bubble, (0,0), bubble)
+        # Paste the resized speech bubble onto the new image at the top left corner (0,0)
+        result.paste(bubble, (0,0), bubble)
 
-    # Iterate over each pixel in the images
-    for x in range(image.width):
-        for y in range(image.height):
-            # Get the current pixel
-            pixel_image = image.getpixel((x, y))
-            pixel_result = result.getpixel((x, y))
+        # Iterate over each pixel in the images
+        for x in range(frame.width):
+            for y in range(frame.height):
+                # Get the current pixel
+                pixel_image = frame.getpixel((x, y))
+                pixel_result = result.getpixel((x, y))
 
-            # If the pixel in the result image is not completely transparent
-            if pixel_result[3] > 0:  # Alpha value is not 0
-                # Make the corresponding pixel in the first image completely transparent
-                result.putpixel((x, y), (pixel_image[0], pixel_image[1], pixel_image[2], 0))
-            else:
-                # Otherwise, keep the original pixel
-                result.putpixel((x, y), pixel_image)
+                # If the pixel in the result image is not completely transparent
+                if pixel_result[3] > 0:  # Alpha value is not 0
+                    # Make the corresponding pixel in the first image completely transparent
+                    result.putpixel((x, y), (pixel_image[0], pixel_image[1], pixel_image[2], 0))
+                else:
+                    # Otherwise, keep the original pixel
+                    result.putpixel((x, y), pixel_image)
+
+        frames.append(result)
 
     # Save the result
-    result.save(output_path, "PNG")
-    # convert to gif via adding .gif extension
-    os.rename(output_path, f"{output_path}.gif")
-    output_path = f"{output_path}.gif"
+    frames[0].save(output_path, "GIF", save_all=True, append_images=frames[1:], loop=0)
     log.info(f"Added speech bubble to image '{image_link}'")
     return output_path
 
