@@ -71,8 +71,9 @@ def main():
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
 
-    loading_emoji = '<a:loading:1191381954453586061>'
-
+    loading_emoji = ub.read_toml_var("loading_emoji")
+    success_emoji = ub.read_toml_var("success_emoji")
+    error_emoji = ub.read_toml_var("error_emoji")
 
     ########################
     ########################
@@ -140,11 +141,11 @@ def main():
         try:
             imageFileSize = ub.get_file_size(image_link)
             if imageFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                 return
         except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid!\nMake sure your using an image link, not a message link.", ephemeral=True)
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
             log.error(e)
             return
@@ -152,10 +153,10 @@ def main():
         log.info(f"Converting image {image_link} to gif")
         try:
             newGif = ub.convert_image_to_gif(image_link)
-            await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
+            await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
             log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
         except Image.UnidentifiedImageError as e:
-            await ctx.edit(content = f"Sorry, but that image link is invalid!")
+            await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
             log.error(e)
         await command_topper(ctx)
 
@@ -173,32 +174,32 @@ def main():
         try:
             videoFileSize = ub.get_file_size(video_link)
             if videoFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
                 return
         except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid!\nMake sure your using an image link not a message link.", ephemeral=True)
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
             log.error(e)
             return
         if fps > 30:
-            await ctx.respond(f"Sorry, but the max FPS is 30!", ephemeral=True)
+            await ctx.respond(f"Sorry, but the max FPS is 30! {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
             return
         if scale != None:
             if scale > 500:
-                await ctx.respond(f"Sorry, but the max scale is 500px!", ephemeral=True)
+                await ctx.respond(f"Sorry, but the max scale is 500px! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
                 return
         
-        await ctx.respond(f"Converting video to gif {loading_emoji} ")
+        await ctx.respond(f"Converting video to gif... {loading_emoji}")
         log.info(f"Converting video {video_link} to gif")
         try:
             newGif = ub.convert_video_to_gif(video_link, fps, scale)
-            await ctx.edit(content = f"Here is your gif!" , file=discord.File(newGif))
+            await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
             log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
         except Exception as e:
-            await ctx.edit(content = f"Sorry, but that video link is invalid!")
+            await ctx.edit(content = f"Sorry, but that video link is invalid! {error_emoji}")
             log.error(e)
         await command_topper(ctx)
 
@@ -215,17 +216,17 @@ def main():
         try:
             imageFileSize = ub.get_file_size(image_link)
             if imageFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB!", ephemeral=True)
+                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                 return
         except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid!\nMake sure your using an image link not a message link.", ephemeral=True)
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
             log.error(e)
             return
         
         if speech_bubble_size > 1 or speech_bubble_size < 0:
-            await ctx.respond(f"Sorry, values between 0 and 1 only!", ephemeral=True)
+            await ctx.respond(f"Sorry, values between 0 and 1 only! {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to speech bubble size of {speech_bubble_size}")
             return
         
@@ -233,10 +234,10 @@ def main():
         log.info(f"Adding speech bubble to image {image_link}")
         try:
             newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
-            await ctx.edit(content = (f"Here is your image!") , file=discord.File(newImage))
+            await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
             log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
         except Exception as e:
-            await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image!")
+            await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
             log.BOT_REPLY_FAIL(f"Failed to add speech bubble to image {image_link}")
             log.error(e)
         try:

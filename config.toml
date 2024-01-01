@@ -3,3 +3,6 @@ maxFileSize = 8000000
 botOwner = 640575556462706698
 suportServer = 1170496731872493739
 feedbackChannel = 1172257536968249487
+loading_emoji = "<a:loading2:1191387482076491889>"
+success_emoji = "<:success:1191390057916022786>"
+error_emoji = "<:error:1191389811039277236>"
