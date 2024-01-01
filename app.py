@@ -71,6 +71,9 @@ def main():
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
 
+    loading_emoji = '<a:loading:1191381954453586061>'
+
+
     ########################
     ########################
 
@@ -145,7 +148,7 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
             log.error(e)
             return
-        await ctx.respond(f"Converting image to gif... ") # this message will be edited when the gif is sent
+        await ctx.respond(f"Converting image to gif {loading_emoji}") # this message will be edited when the gif is sent
         log.info(f"Converting image {image_link} to gif")
         try:
             newGif = ub.convert_image_to_gif(image_link)
@@ -188,7 +191,7 @@ def main():
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
                 return
         
-        await ctx.respond(f"Converting video to gif... ")
+        await ctx.respond(f"Converting video to gif {loading_emoji} ")
         log.info(f"Converting video {video_link} to gif")
         try:
             newGif = ub.convert_video_to_gif(video_link, fps, scale)
@@ -226,7 +229,7 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to speech bubble size of {speech_bubble_size}")
             return
         
-        await ctx.respond(f"Adding speech bubble to image... ")
+        await ctx.respond(f"Adding speech bubble to image {loading_emoji}")
         log.info(f"Adding speech bubble to image {image_link}")
         try:
             newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
@@ -1240,7 +1243,6 @@ def main():
             if message.content.startswith("!help"):
                 # https://cdn.discordapp.com/emojis/1191381954453586061.gif?size=96&quality=lossless
                 # https://discord.com/channels/1170496731872493739/1178817154620067851/1191382117972717649
-                loading_emoji = '<a:loading:1191381954453586061> '
                 await botOwner.send(f"""**!help** - Send this message
 **!guilds** - Send a list of guilds the bot is in
 **!log** - Send the log file
@@ -1260,7 +1262,6 @@ def main():
 **!guildlookup** - Search a guild ID
 **!invme** - Create a guild invite
 **!stats** - Send the data.csv file
-{loading_emoji}
                 """)
 
     bot.response_messages = {}
