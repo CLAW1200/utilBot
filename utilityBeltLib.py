@@ -312,8 +312,11 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
         output_frames.append(frame)
 
     # Save the result
-    output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:], duration=image.info['duration'], loop=0)
-
+    try:
+        output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:], duration=image.info['duration'], loop=0)
+    # except for GIFs with no duration
+    except KeyError:
+        output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:])
     return output_path
 
 
