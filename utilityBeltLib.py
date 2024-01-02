@@ -655,19 +655,19 @@ def timecode_convert(datetime, format):
         return None
     format = format.strip(" ").lower()
     if format == "relative":
-        return f"<t:{int(unix_time)}:R>"
+        return f"<t:{int(unix_time)}:R>\n`<t:{int(unix_time)}:R>`"
     if format == "shorttime":
-        return f"<t:{int(unix_time)}:t>"
+        return f"<t:{int(unix_time)}:t>\n`<t:{int(unix_time)}:t>`"
     if format == "longtime":
-        return f"<t:{int(unix_time)}:T>"
+        return f"<t:{int(unix_time)}:T>\n`<t:{int(unix_time)}:T>`"
     if format == "shortdate":
-        return f"<t:{int(unix_time)}:d>"
+        return f"<t:{int(unix_time)}:d>\n`<t:{int(unix_time)}:d>`"
     if format == "longdate":
-        return f"<t:{int(unix_time)}:D>"
+        return f"<t:{int(unix_time)}:D>\n`<t:{int(unix_time)}:D>`"
     if format == "longdatewithshorttime":
-        return f"<t:{int(unix_time)}:f>"
+        return f"<t:{int(unix_time)}:f>\n`<t:{int(unix_time)}:f>`"
     if format == "longdatewithdayoftheweek":
-        return f"<t:{int(unix_time)}:F>"
+        return f"<t:{int(unix_time)}:F>\n`<t:{int(unix_time)}:F>`"
     else:
         return None
 
