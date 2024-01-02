@@ -2,7 +2,6 @@ import os
 import random
 import logging
 import time
-import discord
 import toml
 from PIL import Image, ImageSequence, ImageChops
 import requests
@@ -422,7 +421,7 @@ def search(mode, query):
     else:
         print("Invalid search mode. Please specify either 'message' or 'user'.")
     
-async def get_guild_invite(bot, botOwner):
+async def get_guild_data(bot, botOwner, discord):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
     guildData = []
@@ -459,7 +458,7 @@ async def get_guild_invite(bot, botOwner):
 
     return guildData
 
-async def create_guild_invite(bot, botOwner, guildID, expireTime=60):
+async def create_guild_invite(bot, botOwner, guildID, discord, expireTime=60):
         # Get the guild object by ID
         try:
             guildID = int(guildID)
@@ -618,16 +617,21 @@ def convert_str_to_unix_time(string):
     # Convert the time object to a Unix timestamp and return it
     return int(time.mktime(dt.timetuple()))
 
-def call_api_holidays(country_code, year):
-    print ("Switching to API")
+def get_api_ninjas_key():
     with open("token.toml") as toml_file:
         data = toml.load(toml_file)
         key = data["api-ninjas-key"]
-    # Look up string to see if it's a holiday
+    return key
 
-    holiday_type = 'public_holiday'
-    api_url = "https://api.api-ninjas.com/v1/holidays?country={}&year={}&type={}".format(country_code, year, holiday_type)
-    response = requests.get(api_url, headers={'X-Api-Key': key})
+
+def call_api_holidays(country_code, year):
+    print ("Switching to API")
+
+    # Look up string to see if it's a holiday
+    
+    # holiday_type = 'public_holiday'
+    api_url = "https://api.api-ninjas.com/v1/holidays?country={}&year={}".format(country_code, year)
+    response = requests.get(api_url, headers={'X-Api-Key': get_api_ninjas_key()})
     if response.status_code == requests.codes.ok:
         data = response.json()
     return data
@@ -650,7 +654,7 @@ def timecode_convert(time_string, format):
         if unix_time is None:
             possible_holidays = call_api_holidays("CA", datetime.datetime.now().year)
             possible_holidays.extend(call_api_holidays("CA", datetime.datetime.now().year + 1))
-
+            
             unique_holidays = {}
             today = datetime.datetime.now()
 
@@ -792,3 +796,22 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         plt.savefig(csv_file + '.png')
         plt.close()
         return f"{csv_file}.png"
+    
+def get_phone_number_info(number, discord):
+    # Get the phone number info from the API
+    api_url = 'https://api.api-ninjas.com/v1/validatephone?number={}'.format(number)
+    response = requests.get(api_url, headers={'X-Api-Key': get_api_ninjas_key()})
+    if response.status_code == requests.codes.ok:
+        data = response.json()
+        if data["valid"]:
+            embed = discord.Embed(title=f"Phone Number Info", color=discord.Color.green())
+            for key in data:
+                embed.add_field(name=key, value=data[key], inline=False)
+            return embed
+        else:
+            pass
+    else:
+        embed = discord.Embed(title=f"Phone Number Info", color=discord.Color.red())
+        embed.add_field(name="Error", value="Invalid phone number", inline=False)
+        return embed
+        
