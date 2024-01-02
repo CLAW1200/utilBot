@@ -643,39 +643,42 @@ def timecode_convert(time_string, format):
     # <t:1704206040:F>
 
     # Convert it to Unix time
-    unix_time = convert_str_to_unix_time(time_string)
-    if unix_time is None:
-        possible_holidays = call_api_holidays("CA", datetime.datetime.now().year)
-        possible_holidays.extend(call_api_holidays("CA", datetime.datetime.now().year + 1))
-
-        unique_holidays = {}
-        today = datetime.datetime.now()
-
-        for holiday in possible_holidays:
-            name = holiday["name"].lower()
-            date = datetime.datetime.strptime(holiday['date'], "%Y-%m-%d")  # assuming date is in this format
-
-            if name not in unique_holidays:
-                unique_holidays[name] = date
-            else:
-                if date > today:
-                    if unique_holidays[name] < today or date < unique_holidays[name]:
-                        unique_holidays[name] = date
-                # if date is before today, ignore it
-
-        # replace possible_holidays with the unique ones
-        possible_holidays = [{'name': name, 'date': date.strftime("%Y-%m-%d")} for name, date in unique_holidays.items()]
-                 
-        max_similarity = 0
-        for holiday in possible_holidays:
-            similarity = similar(holiday["name"].lower(), time_string.lower())
-            if similarity > max_similarity:
-                max_similarity = similarity
-                most_similar_name = holiday["name"].lower()
-                date = holiday['date']
-                unix_time = convert_str_to_unix_time(date)
+    if time_string == None:
+        unix_time = time.time()
+    else:
+        unix_time = convert_str_to_unix_time(time_string)
         if unix_time is None:
-            return None
+            possible_holidays = call_api_holidays("CA", datetime.datetime.now().year)
+            possible_holidays.extend(call_api_holidays("CA", datetime.datetime.now().year + 1))
+
+            unique_holidays = {}
+            today = datetime.datetime.now()
+
+            for holiday in possible_holidays:
+                name = holiday["name"].lower()
+                date = datetime.datetime.strptime(holiday['date'], "%Y-%m-%d")  # assuming date is in this format
+
+                if name not in unique_holidays:
+                    unique_holidays[name] = date
+                else:
+                    if date > today:
+                        if unique_holidays[name] < today or date < unique_holidays[name]:
+                            unique_holidays[name] = date
+                    # if date is before today, ignore it
+
+            # replace possible_holidays with the unique ones
+            possible_holidays = [{'name': name, 'date': date.strftime("%Y-%m-%d")} for name, date in unique_holidays.items()]
+                    
+            max_similarity = 0
+            for holiday in possible_holidays:
+                similarity = similar(holiday["name"].lower(), time_string.lower())
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    most_similar_name = holiday["name"].lower()
+                    date = holiday['date']
+                    unix_time = convert_str_to_unix_time(date)
+            if unix_time is None:
+                return None
     format = format.lower()
     if format == "relative":
         return f"<t:{int(unix_time)}:R>\n`<t:{int(unix_time)}:R>`"
