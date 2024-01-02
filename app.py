@@ -556,7 +556,7 @@ def main():
             log.error(f"{e}")
         await command_topper(ctx)
 
-    @bot.slash_command(name="phone-number-info", description="Get info about a phone number")
+    @bot.slash_command(name="pnl", description="Get info about a phone number")
     async def phone_number_info_command(ctx, phone_number: str):
         if command_ban_check(ctx):
             return
