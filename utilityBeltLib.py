@@ -15,8 +15,7 @@ import hashlib
 import csv
 import dateutil.parser
 from matplotlib import pyplot as plt
-remove_char = "'"
-
+from difflib import SequenceMatcher
 # Configure the logger
 
 # Create a log
@@ -606,17 +605,34 @@ def hex_to_text(message):
     except ValueError:
         return None
     
+def similar(a, b):
+    """Return a similarity score between 0 and 1 for two strings"""
+    return SequenceMatcher(None, a, b).ratio()
 
-
-def convert_str_to_datetime(string):
-    """Smart datetime converter"""
-    # Parse the string into a datetime object
-    dt = dateutil.parser.parse(string)
-    # Convert the datetime object to a Unix timestamp and return it
+def convert_str_to_unix_time(string):
+    # Parse the string into a time
+    try:
+        dt = dateutil.parser.parse(string)
+    except dateutil.parser._parser.ParserError:
+        return None
+    # Convert the time object to a Unix timestamp and return it
     return int(time.mktime(dt.timetuple()))
 
+def call_api_holidays(country_code, year):
+    print ("Switching to API")
+    with open("token.toml") as toml_file:
+        data = toml.load(toml_file)
+        key = data["api-ninjas-key"]
+    # Look up string to see if it's a holiday
 
-def timecode_convert(datetime, format):
+    holiday_type = 'public_holiday'
+    api_url = "https://api.api-ninjas.com/v1/holidays?country={}&year={}&type={}".format(country_code, year, holiday_type)
+    response = requests.get(api_url, headers={'X-Api-Key': key})
+    if response.status_code == requests.codes.ok:
+        data = response.json()
+    return data
+
+def timecode_convert(time_string, format):
     # Examples:
     # <t:1704206040:R>
     # <t:1704206040:t>
@@ -626,49 +642,63 @@ def timecode_convert(datetime, format):
     # <t:1704206040:f>
     # <t:1704206040:F>
 
-    pre_selected_dates = {
-        "Christmas": "12/25",
-        "Halloween": "10/31",
-        "April Fools": "04/01",
-        "St Patricks": "03/17",
-        "Easter": "04/04",
-        "New Years": "01/01",
-        "Valentines Day": "02/14",
-        "Thanksgiving": "11/25",
-        "Independence Day": "07/04",
-        "Canada Day": "07/01",
-        "Boxing Day": "12/26",
-        "Black Friday": "11/26",
-        "Labor Day": "09/06",
-        "Memorial Day": "05/31",
-        "Columbus Day": "10/11",
-        "Veterans Day": "11/11",
-        "Groundhog Day": "02/02",
-        "Christmas Eve": "12/24",
-        "New Years Eve": "12/31",
-    }
-
-
     # Convert it to Unix time
-    unix_time = convert_str_to_datetime(datetime)
-    if unix_time < 0:
-        return None
-    format = format.strip(" ").lower()
+    unix_time = convert_str_to_unix_time(time_string)
+    if unix_time is None:
+        possible_holidays = call_api_holidays("CA", datetime.datetime.now().year)
+        possible_holidays.extend(call_api_holidays("CA", datetime.datetime.now().year + 1))
+
+        unique_holidays = {}
+        today = datetime.datetime.now()
+
+        for holiday in possible_holidays:
+            name = holiday["name"].lower()
+            date = datetime.datetime.strptime(holiday['date'], "%Y-%m-%d")  # assuming date is in this format
+
+            if name not in unique_holidays:
+                unique_holidays[name] = date
+            else:
+                if date > today:
+                    if unique_holidays[name] < today or date < unique_holidays[name]:
+                        unique_holidays[name] = date
+                # if date is before today, ignore it
+
+        # replace possible_holidays with the unique ones
+        possible_holidays = [{'name': name, 'date': date.strftime("%Y-%m-%d")} for name, date in unique_holidays.items()]
+                 
+        max_similarity = 0
+        for holiday in possible_holidays:
+            print (holiday)
+            similarity = similar(holiday["name"].lower(), time_string.lower())
+            if similarity > max_similarity:
+                max_similarity = similarity
+                most_similar_name = holiday["name"].lower()
+                date = holiday['date']
+                unix_time = convert_str_to_unix_time(date)
+        if unix_time is None:
+            return None
+        else:
+            print (f"Most similar holiday: {most_similar_name} ({max_similarity})")
+            print (unix_time)
+
+    format = format.lower()
+    print (format)
     if format == "relative":
         return f"<t:{int(unix_time)}:R>\n`<t:{int(unix_time)}:R>`"
-    if format == "shorttime":
+    if format == "short time":
         return f"<t:{int(unix_time)}:t>\n`<t:{int(unix_time)}:t>`"
-    if format == "longtime":
+    if format == "long time":
         return f"<t:{int(unix_time)}:T>\n`<t:{int(unix_time)}:T>`"
-    if format == "shortdate":
+    if format == "short date":
         return f"<t:{int(unix_time)}:d>\n`<t:{int(unix_time)}:d>`"
-    if format == "longdate":
+    if format == "long date":
         return f"<t:{int(unix_time)}:D>\n`<t:{int(unix_time)}:D>`"
-    if format == "longdatewithshorttime":
+    if format == "long date with short time":
         return f"<t:{int(unix_time)}:f>\n`<t:{int(unix_time)}:f>`"
-    if format == "longdatewithdayoftheweek":
+    if format == "long date with day of the week":
         return f"<t:{int(unix_time)}:F>\n`<t:{int(unix_time)}:F>`"
     else:
+        print ("Invalid format")
         return None
 
 # Other functions

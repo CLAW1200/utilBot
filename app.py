@@ -558,26 +558,24 @@ def main():
 
     @bot.slash_command(name="timestamp", description="Convert a time to a timestamp")
     async def timestamp_command(ctx, 
-                                time: discord.Option(str, 
-                                    description="Enter a Date or Time after 1/1/1970 or a holiday") = None,
+                                search_string: discord.Option(str, 
+                                    description="Enter a Holiday or DateTime after 1/1/1970") = None,
                                 format: discord.Option(str,
-                                    choices=["Relative", "Short Time", "Long Time", "Short Date", "Long Date", "Long Date with Short Time", "Long Data with Day of the Week"], 
+                                    choices=["Relative", "Short Time", "Long Time", "Short Date", "Long Date", "Long Date with Short Time", "Long Date with Day of the Week"], 
                                     description="The format of the timestamp", required=False, default="Relative") = "Relative"):
-        
         if command_ban_check(ctx):
             return
         """Convert a time to a timestamp"""
         log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
-        timestamp = ub.timecode_convert(time, format)
+        timestamp = ub.timecode_convert(search_string, format)
         if timestamp == None:
             await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to convert time {time} to timestamp")
+            log.BOT_REPLY_FAIL(f"Failed to convert time {search_string} to timestamp")
             return
         await ctx.respond(f"Your timestamp is {timestamp}")
-        log.BOT_REPLY_SUCCESS(f"Converted time {time} to timestamp")
+        log.BOT_REPLY_SUCCESS(f"Converted time {search_string} to timestamp")
         await command_topper(ctx)
         
-
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
         if command_ban_check(ctx):
