@@ -648,8 +648,6 @@ def timecode_convert(datetime, format):
         "New Years Eve": "12/31",
     }
 
-    if datetime.lower.strip(" ").strip("'").strip("s") in pre_selected_dates.lower.strip(" ").strip("'").strip("s"):
-        datetime = pre_selected_dates[time]
 
     # Convert it to Unix time
     unix_time = convert_str_to_datetime(datetime)
