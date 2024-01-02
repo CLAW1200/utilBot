@@ -548,7 +548,7 @@ def main():
                     return get_random_user()
                 else:
                     return randomUser
-            await ctx.respond(f"Your new friend is {get_random_user()}!")
+            await ctx.respond(f"Your new friend is `{get_random_user()}`")
             log.BOT_REPLY_SUCCESS(f"Sent random user to {ctx.author.name}#{ctx.author.discriminator}")
         except Exception as e:
             await ctx.respond(f"Failed to send a user!", ephemeral=True)
@@ -567,7 +567,7 @@ def main():
                 await ctx.respond(f"Sorry, but that phone number is invalid! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to get info about phone number {phone_number}")
                 return
-            
+                        
             await ctx.respond(embed=embed)
             log.BOT_REPLY_SUCCESS(f"Sent info about phone number {phone_number}")
         except Exception as e:
