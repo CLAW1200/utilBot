@@ -668,7 +668,6 @@ def timecode_convert(time_string, format):
                  
         max_similarity = 0
         for holiday in possible_holidays:
-            print (holiday)
             similarity = similar(holiday["name"].lower(), time_string.lower())
             if similarity > max_similarity:
                 max_similarity = similarity
@@ -677,12 +676,7 @@ def timecode_convert(time_string, format):
                 unix_time = convert_str_to_unix_time(date)
         if unix_time is None:
             return None
-        else:
-            print (f"Most similar holiday: {most_similar_name} ({max_similarity})")
-            print (unix_time)
-
     format = format.lower()
-    print (format)
     if format == "relative":
         return f"<t:{int(unix_time)}:R>\n`<t:{int(unix_time)}:R>`"
     if format == "short time":
@@ -698,7 +692,6 @@ def timecode_convert(time_string, format):
     if format == "long date with day of the week":
         return f"<t:{int(unix_time)}:F>\n`<t:{int(unix_time)}:F>`"
     else:
-        print ("Invalid format")
         return None
 
 # Other functions
