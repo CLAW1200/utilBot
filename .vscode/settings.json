@@ -1,12 +1,16 @@
 {
     "cSpell.words": [
+        "aiohttp",
         "atbash",
         "bestaudio",
+        "clearlog",
+        "csvfile",
         "danceability",
         "getlogin",
         "Giffy",
         "giphy",
         "gmtime",
+        "guildcount",
         "instrumentalness",
         "levelname",
         "nocheckcertificate",
@@ -14,13 +18,19 @@
         "outtmpl",
         "palettegen",
         "paletteuse",
+        "peepee",
         "speechiness",
         "spotipy",
         "startfile",
         "textsize",
+        "timecode",
         "tomlfile",
+        "topgg",
         "ublib",
+        "usercount",
+        "userdata",
         "vigenere",
+        "Vigenère",
         "ytsearch"
     ]
 }

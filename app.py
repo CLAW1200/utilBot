@@ -555,6 +555,29 @@ def main():
             log.BOT_REPLY_FAIL(f"Failed to send random user to {ctx.author.name}#{ctx.author.discriminator}")
             log.error(f"{e}")
         await command_topper(ctx)
+    
+    @bot.slash_command(name="timestamp", description="Convert a time to a timestamp")
+    async def timestamp_command(ctx, 
+                                time: discord.Option(str, 
+                                    choices=["April Fools Day", "Christmas", "Easter", "Halloween", "New Years", "St Patricks Day", "Thanksgiving", "Valentines Day"],
+                                    description="Enter a Date or Time after 1/1/1970") = None,
+                                format: discord.Option(str,
+                                    choices=["Relative", "Short Time", "Long Time", "Short Date", "Long Date", "Long Date with Short Time", "Long Data with Day of the Week"], 
+                                    description="The format of the timestamp", required=False, default="Relative") = "Relative"):
+
+        if command_ban_check(ctx):
+            return
+        """Convert a time to a timestamp"""
+        log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
+        timestamp = ub.timecode_convert(time, format)
+        if timestamp == None:
+            await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to convert time {time} to timestamp")
+            return
+        await ctx.respond(f"Your timestamp is {timestamp}")
+        log.BOT_REPLY_SUCCESS(f"Converted time {time} to timestamp")
+        await command_topper(ctx)
+        
 
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
@@ -895,6 +918,7 @@ def main():
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
         embed.add_field(name="encode", value="Encode a message", inline=False)
         embed.add_field(name="decode", value="Decode a message", inline=False)
+        embed.add_field(name="timestamp", value="Convert a time to a timestamp", inline=False)
         embed.add_field(name="rps", value="**BETA** Play rock paper scissors with another user", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
         embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)

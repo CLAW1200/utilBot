@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import hashlib
 import csv
+import dateutil.parser
 from matplotlib import pyplot as plt
 remove_char = "'"
 
@@ -603,6 +604,49 @@ def hex_to_text(message):
         byte_data = bytes.fromhex(hex_string)
         return byte_data.decode()
     except ValueError:
+        return None
+    
+
+
+def convert_str_to_datetime(string):
+    """Smart datetime converter"""
+    # Parse the string into a datetime object
+    dt = dateutil.parser.parse(string)
+    # Convert the datetime object to a Unix timestamp and return it
+    return int(time.mktime(dt.timetuple()))
+
+
+def timecode_convert(datetime, format):
+    # Examples:
+    # <t:1704206040:R>
+    # <t:1704206040:t>
+    # <t:1704206040:T>
+    # <t:1704206040:d>
+    # <t:1704206040:D>
+    # <t:1704206040:f>
+    # <t:1704206040:F>
+
+
+    # Convert it to Unix time
+    unix_time = convert_str_to_datetime(datetime)
+    if unix_time < 0:
+        return None
+    format = format.strip(" ").lower()
+    if format == "relative":
+        return f"<t:{int(unix_time)}:R>"
+    if format == "shorttime":
+        return f"<t:{int(unix_time)}:t>"
+    if format == "longtime":
+        return f"<t:{int(unix_time)}:T>"
+    if format == "shortdate":
+        return f"<t:{int(unix_time)}:d>"
+    if format == "longdate":
+        return f"<t:{int(unix_time)}:D>"
+    if format == "longdatewithshorttime":
+        return f"<t:{int(unix_time)}:f>"
+    if format == "longdatewithdayoftheweek":
+        return f"<t:{int(unix_time)}:F>"
+    else:
         return None
 
 # Other functions
