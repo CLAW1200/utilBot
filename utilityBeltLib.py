@@ -626,6 +626,30 @@ def timecode_convert(datetime, format):
     # <t:1704206040:f>
     # <t:1704206040:F>
 
+    pre_selected_dates = {
+        "Christmas": "12/25",
+        "Halloween": "10/31",
+        "April Fools": "04/01",
+        "St Patricks": "03/17",
+        "Easter": "04/04",
+        "New Years": "01/01",
+        "Valentines Day": "02/14",
+        "Thanksgiving": "11/25",
+        "Independence Day": "07/04",
+        "Canada Day": "07/01",
+        "Boxing Day": "12/26",
+        "Black Friday": "11/26",
+        "Labor Day": "09/06",
+        "Memorial Day": "05/31",
+        "Columbus Day": "10/11",
+        "Veterans Day": "11/11",
+        "Groundhog Day": "02/02",
+        "Christmas Eve": "12/24",
+        "New Years Eve": "12/31",
+    }
+
+    if time.lower.strip(" ").strip("'").strip("s") in pre_selected_dates.lower.strip(" ").strip("'").strip("s"):
+        time = pre_selected_dates[time]
 
     # Convert it to Unix time
     unix_time = convert_str_to_datetime(datetime)
