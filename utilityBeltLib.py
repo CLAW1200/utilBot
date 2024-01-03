@@ -168,12 +168,9 @@ def clean_up_temp_files():
 def get_file_size(link):
     # function to check the size of a video or image link
     try:
-        response = requests.get(link, stream=True)
-        download_start = response.raw.tell()
-        response.raw.read(1024)  # read only 1024 bytes
-        download_end = response.raw.tell()
-        estimated_size = download_end - download_start
-        return estimated_size * 1024  # estimate for the whole file
+        response = requests.head(link)
+        file_size = int(response.headers.get('content-length', 0))
+        return file_size
     except Exception as e:
         log.error(f"Error getting file size for '{link}': {e}")
         return None
