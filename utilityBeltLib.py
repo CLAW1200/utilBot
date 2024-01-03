@@ -796,22 +796,3 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         plt.savefig(csv_file + '.png')
         plt.close()
         return f"{csv_file}.png"
-    
-def get_phone_number_info(number, discord):
-    # Get the phone number info from the API
-    api_url = 'https://api.api-ninjas.com/v1/validatephone?number={}'.format(number)
-    response = requests.get(api_url, headers={'X-Api-Key': get_api_ninjas_key()})
-    if response.status_code == requests.codes.ok:
-        data = response.json()
-        if data["valid"]:
-            embed = discord.Embed(title=f"Phone Number Info", color=discord.Color.green())
-            for key in data:
-                embed.add_field(name=key, value=data[key], inline=False)
-            return embed
-        else:
-            pass
-    else:
-        embed = discord.Embed(title=f"Phone Number Info", color=discord.Color.red())
-        embed.add_field(name="Error", value="Invalid phone number", inline=False)
-        return embed
-        

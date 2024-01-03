@@ -556,21 +556,6 @@ def main():
             log.error(f"{e}")
         await command_topper(ctx)
 
-    @bot.slash_command(name="phone-number-info", description="Get info about a number")
-    async def phone_number_info_command(ctx, number: str):
-        if command_ban_check(ctx):
-            return
-        log.BOT_GOT_COMMAND(f"Received command /phone-number-info from {ctx.author.name}#{ctx.author.discriminator}")
-        try:
-            embed = ub.get_phone_number_info(number, discord)                      
-            await ctx.respond(embed=embed)
-            log.BOT_REPLY_SUCCESS(f"Sent info about phone number {number}")
-        except Exception as e:
-            await ctx.respond(f"Failed to get info about phone number {number}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to get info about phone number {number}")
-            log.error(f"{e}")
-        await command_topper(ctx)
-
     @bot.slash_command(name="timestamp", description="Convert a time to a timestamp")
     async def timestamp_command(ctx, 
                                 date_time: discord.Option(str,
