@@ -945,6 +945,7 @@ def main():
         embed.add_field(name="encode", value="Encode a message", inline=False)
         embed.add_field(name="decode", value="Decode a message", inline=False)
         embed.add_field(name="timestamp", value="Convert a time to a timestamp", inline=False)
+        embed.add_field(name="qr-code", value="Generate a qr code", inline=False)
         embed.add_field(name="rps", value="**BETA** Play rock paper scissors with another user", inline=False)
         embed.add_field(name="urban", value="Search urban dictionary", inline=False)
         embed.add_field(name="urban-random-word", value="Get a random word from urban dictionary", inline=False)
