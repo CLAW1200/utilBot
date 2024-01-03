@@ -575,6 +575,35 @@ def main():
         await ctx.respond(f"Your timestamp is {timestamp}")
         log.BOT_REPLY_SUCCESS(f"Converted time {date_time} to timestamp")
         await command_topper(ctx)
+
+    @bot.slash_command(name="qr-code", description="Generate a qr code") # Text input. Then choose from image output or text output
+    async def qr_code_command(ctx, 
+                              text: discord.Option(str, 
+                              description="Enter text to convert to a QR code") = None,
+                              output: discord.Option(str, 
+                              choices=["Image", "Text"], 
+                              description="The output of the QR code", required=False, default="Image") = "Image"):
+        if command_ban_check(ctx):
+            return
+        """Generate a qr code"""
+        log.BOT_GOT_COMMAND(f"Received command /qr-code from {ctx.author.name}#{ctx.author.discriminator}")
+        if text == None:
+            await ctx.respond(f"Sorry, but you need to enter some text! {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate QR code due to no text")
+            return
+        if output == "Image":
+            try:
+                qrCode = ub.qr_code_image_generator(text)
+                await ctx.respond(f"Here is your QR code! {success_emoji}", file=discord.File(qrCode))
+                log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
+            except Exception as e:
+                await ctx.respond(f"Sorry, but I could not generate a QR code! {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate QR code for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"{e}")
+        elif output == "Text":
+            await ctx.respond(f"Here is your QR code! {success_emoji}\n`{ub.qr_code_text_generator(input=text)}`")
+            log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
+        await command_topper(ctx)    
         
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):

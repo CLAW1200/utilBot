@@ -15,7 +15,8 @@ import csv
 import dateutil.parser
 from matplotlib import pyplot as plt
 from difflib import SequenceMatcher
-# Configure the logger
+from qrcode import QRCode, constants
+from numpy import array
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -796,3 +797,99 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         plt.savefig(csv_file + '.png')
         plt.close()
         return f"{csv_file}.png"
+
+def qr_code_image_generator(text):
+    qr = QRCode(
+        version=1,
+        error_correction=constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(text)
+    qr.make(fit=True)
+    image_seed = hashlib.md5(text.encode()).hexdigest()
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(f"temp/qr{image_seed}.png")
+    return f"temp/qr{image_seed}.png"
+
+def qr_code_text_generator(input=None, invert=False, white='█', black=' ', version=1, border=1, correction='M'):
+    """Converts a QR code to ASCII art."""
+    # generate/load image
+    if input is None or not os.path.isfile(input):
+        if input:
+            data = input
+        else:
+            data = input('Enter data to encode: ')
+
+        # parse error correction
+        if correction == 'L':
+            ecc = constants.ERROR_CORRECT_L
+        elif correction == 'Q':
+            ecc = constants.ERROR_CORRECT_Q
+        elif correction == 'H':
+            ecc = constants.ERROR_CORRECT_H
+        else: # default M
+            ecc = constants.ERROR_CORRECT_M
+
+        qr = QRCode(version=version, box_size=1, border=border, error_correction=ecc)
+        qr.add_data(data)
+        qr.make(fit=True)
+        image = qr.make_image(fill_color=(0, 0, 0), back_color=(255, 255, 255))
+    else:
+        try:
+            image = Image.open(input)
+        except:
+            raise ValueError("unable to open file")
+
+    image_array = array(image.getdata())
+
+    width = image.size[0]
+    height = image.size[1]
+
+    # get offset
+    offset = 0
+    while image_array[offset * width + offset][0] == 255:
+        offset += 1
+
+    # get scale
+    scale = 1
+    while image_array[(offset + scale) * width + (offset + scale)][0] == 0:
+        scale += 1
+
+    # resize
+    image = image.resize((width // scale, height // scale), Image.Resampling.NEAREST)
+    image_array = array(image.getdata())
+    width = image.size[0]
+    height = image.size[1]
+
+    # inverted colors
+    if invert:
+        image_array = 255 - image_array
+
+    qr_string = ''
+    for i in range(0, height, 2):
+        for j in range(width):
+            if i + 1 < height:
+                upper_pixel = image_array[i * width + j][0] < 128
+                lower_pixel = image_array[(i + 1) * width + j][0] < 128
+                if upper_pixel and lower_pixel:
+                    qr_string += white
+                elif upper_pixel:
+                    qr_string += '▀'
+                elif lower_pixel:
+                    qr_string += '▄'
+                else:
+                    qr_string += black
+            else:
+                if image_array[i * width + j][0] < 128:
+                    qr_string += '▀'
+                else:
+                    qr_string += black
+        qr_string += '\n'
+    # remove first space from each line
+    if qr_string.startswith(' '):
+        qr_string = qr_string[1:]
+        qr_string = '\n' + qr_string
+    qr_string = qr_string.replace(' \n', '\n')
+    qr_string = qr_string.replace('\n ', '\n')
+    return qr_string
