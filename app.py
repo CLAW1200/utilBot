@@ -556,23 +556,18 @@ def main():
             log.error(f"{e}")
         await command_topper(ctx)
 
-    @bot.slash_command(name="pnl", description="Get info about a phone number")
-    async def phone_number_info_command(ctx, phone_number: str):
+    @bot.slash_command(name="phone-number-info", description="Get info about a number")
+    async def phone_number_info_command(ctx, number: str):
         if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /phone-number-info from {ctx.author.name}#{ctx.author.discriminator}")
         try:
-            phone_number_info, embed = ub.get_phone_number_info(phone_number, discord)
-            if phone_number_info == None:
-                await ctx.respond(f"Sorry, but that phone number is invalid! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to get info about phone number {phone_number}")
-                return
-                        
+            embed = ub.get_phone_number_info(number, discord)                      
             await ctx.respond(embed=embed)
-            log.BOT_REPLY_SUCCESS(f"Sent info about phone number {phone_number}")
+            log.BOT_REPLY_SUCCESS(f"Sent info about phone number {number}")
         except Exception as e:
-            await ctx.respond(f"Failed to get info about phone number {phone_number}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to get info about phone number {phone_number}")
+            await ctx.respond(f"Failed to get info about phone number {number}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to get info about phone number {number}")
             log.error(f"{e}")
         await command_topper(ctx)
 
