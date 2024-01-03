@@ -240,7 +240,7 @@ def convert_image_to_gif(image_link):
         return output_path
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
-    image_link = link_processor(image_link)
+    video_link = link_processor(video_link)
     clean_up_temp_files()
     #this function will take a link to an video and convert it to a gif
     #download video in temp folder

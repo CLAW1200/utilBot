@@ -5,6 +5,6 @@
 - Embed gif grabbing gets a lower quality version
 - !stats command and !stats user showing all
 # Improvements:
-
+add new line to stats graph with rolling avg of command usage or difference over prev hour
 # New Features:
 - Add embed navigation to the help command  
