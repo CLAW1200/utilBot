@@ -8,9 +8,10 @@ from selenium.webdriver.firefox.service import Service
 
 options = FirefoxOptions()
 options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
+# set path to geckodriver ubuntu
+service = Service('/usr/local/bin/geckodriver')
 # Set up the Selenium webdriver
-driver = webdriver.Firefox(service=Service('//usr/local/bin/geckodriver'), options=options)
+driver = webdriver.Firefox(options=options, service=service)
 # Navigate to the website
 driver.get("https://sdxlturbo.ai/")
 input_box = driver.find_element("name", "prompt")
