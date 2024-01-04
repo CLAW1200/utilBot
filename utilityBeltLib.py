@@ -135,11 +135,8 @@ def get_user_id(username):
     with open("users.json", "r") as f:
         users = json.load(f)
         for user_id in users:
-            print (user_id)
             user_data = users[user_id]
-            print (user_data)
             if user_data["username"] == username:
-                print (user_data["username"])
                 return user_id
             
 
