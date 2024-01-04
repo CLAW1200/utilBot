@@ -22,6 +22,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import urllib.request
+import aiohttp
+import aiofiles
+from playwright.async_api import async_playwright
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -897,32 +900,34 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
     return qr_string
 
 
-def ai_image_gen(prompt):
+
+
+async def ai_image_gen(prompt):
     # read wordblacklist.json
-    with open("wordblacklist.json", "r") as f:
-        banned_words = json.load(f)
-        banned_words = banned_words["words"]
+    async with aiofiles.open("wordblacklist.json", "r") as f:
+        banned_words = await f.read()
+        banned_words = json.loads(banned_words)["words"]
     for word in banned_words:
         if word in prompt.lower():
             return None
-    # Initialize the Chrome WebDriver
-    seed = hashlib.md5(prompt.encode()).hexdigest()
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    # options.add_argument('--disable-dev-shm-usage')
-    # options.add_argument('--remote-debugging-port=9222') 
 
-    driver = webdriver.Chrome(options=options)
-    driver.get("https://sdxlturbo.ai/")
-    input_box = driver.find_element("name", "prompt")
-    input_box.send_keys(prompt)
-    # Wait until the image has loaded
-    wait = WebDriverWait(driver, 15)  # wait for maximum time   
-    image_class = wait.until(EC.presence_of_element_located((By.XPATH, '//img[@alt="Generated"]')))
-    image_url = image_class.get_attribute("src")
-    # Download the image
-    urllib.request.urlretrieve(image_url, f"temp/sdturbo{seed}.jpg")
-    # Close the browser
-    driver.quit()
+    # Initialize the Playwright
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto("https://sdxlturbo.ai/")
+        await page.fill('input[name="prompt"]', prompt, timeout=150000)
+        # Wait until the image has loaded
+        await page.wait_for_selector('//img[@alt="Generated"]')
+        image_url = await page.get_attribute('//img[@alt="Generated"]', "src")
+        # Download the image
+        async with aiohttp.ClientSession() as session:
+            async with session.get(image_url) as resp:
+                if resp.status == 200:
+                    seed = hashlib.md5(prompt.encode()).hexdigest()
+                    async with aiofiles.open(f"temp/sdturbo{seed}.jpg", 'wb') as f:
+                        await f.write(await resp.read())
+        # Close the browser
+        await browser.close()
     return f"temp/sdturbo{seed}.jpg"

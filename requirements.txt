@@ -8,3 +8,5 @@ ffmpeg-python
 matplotlib
 bs4
 qrcode
+playwright
+selinium

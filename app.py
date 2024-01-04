@@ -631,7 +631,7 @@ def main():
         try:
             await ctx.respond(f"Generating image... {loading_emoji}")
             log.info(f"Generating image from prompt {prompt}")
-            image = ub.ai_image_gen(prompt)
+            image = await ub.ai_image_gen(prompt)
             await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
             log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
         except Exception as e:
