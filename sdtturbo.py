@@ -1,26 +1,14 @@
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-import urllib.request
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.service import Service
 
-options = FirefoxOptions()
-options.add_argument("--headless")
-# set path to geckodriver ubuntu
-service = Service('/usr/local/bin/geckodriver')
-# Set up the Selenium webdriver
-driver = webdriver.Firefox(options=options, service=service)
-# Navigate to the website
-driver.get("https://sdxlturbo.ai/")
-input_box = driver.find_element("name", "prompt")
-input_box.send_keys("A cat wearing a hat")
-# Wait until the image has loaded
-wait = WebDriverWait(driver, 15)  # wait for maximum time
-image_class = wait.until(EC.presence_of_element_located((By.XPATH, '//img[@alt="Generated"]')))
-image_url = image_class.get_attribute("src")
-# Download the image
-urllib.request.urlretrieve(image_url, "image.jpg")
-# Close the browser
-driver.quit()
+try:
+    fireFoxOptions = webdriver.FirefoxOptions()
+    fireFoxOptions.set_headless()
+    brower = webdriver.Firefox(firefox_options=fireFoxOptions)
+
+    brower.get('https://pythonbasics.org')
+    print(brower.page_source)
+finally:
+    try:
+        brower.close()
+    except:
+        pass
