@@ -1,29 +1,25 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 
-# Path to your ChromeDriver executable
-chrome_driver_path = '/path/to/chromedriver'
+# Initialize the Chrome WebDriver
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+# options.add_argument('--disable-dev-shm-usage')
+# options.add_argument('--remote-debugging-port=9222') 
 
-# Optional: Add any additional options for the Chrome browser
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")  # Run in headless mode (without opening a browser window)
 
-# Create a service object
-service = Service(chrome_driver_path)
+driver = webdriver.Chrome(options=options)
 
-# Start the ChromeDriver server
-service.start()
+# Retrieve the capabilities
+capabilities = driver.capabilities
 
-# Create a new instance of the Chrome driver
-driver = webdriver.Chrome(service=service, options=chrome_options)
+# For Chrome:
+if 'browserName' in capabilities and capabilities['browserName'] == 'chrome':
+    browser_version = capabilities.get('browserVersion', 'Unknown')
+    chromedriver_version = capabilities.get('chrome', {}).get('chromedriverVersion', 'Unknown').split(' ')[0]
+    print(f"Browser Name: Chrome")
+    print(f"Browser Version: {browser_version}")
+    print(f"ChromeDriver Version: {chromedriver_version}")
 
-# Open a website
-driver.get("https://www.example.com")
-
-# Perform any desired actions or tests here
-
-# Close the browser window
+# Close the driver
 driver.quit()
-
-# Stop the ChromeDriver server
-service.stop()
