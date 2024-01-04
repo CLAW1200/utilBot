@@ -898,10 +898,10 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
 
 
 def ai_image_gen(prompt):
-    banned_words = {
-        "porn",
-        "cp",
-    }
+    # read wordblacklist.json
+    with open("wordblacklist.json", "r") as f:
+        banned_words = json.load(f)
+        banned_words = banned_words["words"]
     for word in banned_words:
         if word in prompt.lower():
             return None
