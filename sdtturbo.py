@@ -1,5 +1,8 @@
 from selenium import webdriver
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+import urllib.request
 # Initialize the Chrome WebDriver
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
@@ -9,17 +12,14 @@ options.add_argument('--no-sandbox')
 
 
 driver = webdriver.Chrome(options=options)
-
-# Retrieve the capabilities
-capabilities = driver.capabilities
-
-# For Chrome:
-if 'browserName' in capabilities and capabilities['browserName'] == 'chrome':
-    browser_version = capabilities.get('browserVersion', 'Unknown')
-    chromedriver_version = capabilities.get('chrome', {}).get('chromedriverVersion', 'Unknown').split(' ')[0]
-    print(f"Browser Name: Chrome")
-    print(f"Browser Version: {browser_version}")
-    print(f"ChromeDriver Version: {chromedriver_version}")
-
-# Close the driver
+driver.get("https://sdxlturbo.ai/")
+input_box = driver.find_element("name", "prompt")
+input_box.send_keys("A cat wearing a hat")
+# Wait until the image has loaded
+wait = WebDriverWait(driver, 15)  # wait for maximum time   
+image_class = wait.until(EC.presence_of_element_located((By.XPATH, '//img[@alt="Generated"]')))
+image_url = image_class.get_attribute("src")
+# Download the image
+urllib.request.urlretrieve(image_url, "image.jpg")
+# Close the browser
 driver.quit()
