@@ -5,4 +5,6 @@ opts = FirefoxOptions()
 opts.add_argument("--headless")
 browser = webdriver.Firefox(options=opts)
 
-browser.get('http://example.com')
+browser.get('http://google.com')
+
+print(browser.page_source)
