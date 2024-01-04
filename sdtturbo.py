@@ -1,15 +1,12 @@
+import time
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver import FirefoxOptions
+from selenium.webdriver.common.keys import Keys
 
-try:
-    options = FirefoxOptions()
-    options.add_argument("--headless")
-    brower = webdriver.Firefox(options=options)
-
-    brower.get('https://pythonbasics.org')
-    print(brower.page_source)
-finally:
-    try:
-        brower.close()
-    except:
-        pass
+opts = FirefoxOptions()
+opts.add_argument("--headless")
+browser = webdriver.Firefox(options=opts)
+browser.get('https://google.com/')
+print('Title: %s' % browser.title)
+time.sleep(2)
+browser.quit()
