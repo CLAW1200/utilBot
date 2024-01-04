@@ -6,5 +6,6 @@
 - !stats command and !stats user showing all
 # Improvements:
 add new line to stats graph with rolling avg of command usage or difference over prev hour
+add optional input to /help that will provide a explanation on a command
 # New Features:
 - Add embed navigation to the help command  

@@ -138,6 +138,7 @@ def main():
         if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With image link: {image_link}")
         try:
             imageFileSize = ub.get_file_size(image_link)
             if imageFileSize > ub.read_toml_var("maxFileSize"):
@@ -170,6 +171,7 @@ def main():
         if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With image link: {video_link}")
         #do not download videos larger than maxFileSize
         try:
             videoFileSize = ub.get_file_size(video_link)
@@ -212,6 +214,7 @@ def main():
         if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With image link: {image_link}")
         #do not download videos larger than maxFileSize
         try:
             imageFileSize = ub.get_file_size(image_link)
@@ -287,6 +290,7 @@ def main():
             return
         """Fetches the definition of a word from Urban Dictionary."""
         log.BOT_GOT_COMMAND(f"Received command /urban from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {word}, {random_result}")
         try:
             async with aiohttp.ClientSession() as session:
                 word_encoded = urllib.parse.quote_plus(word)
@@ -353,6 +357,7 @@ def main():
         if command_ban_check(ctx):
             return
         log.BOT_GOT_COMMAND(f"Received command /units from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {value}, {unit_from}, {unit_to}")
         try:
             # Parse the units
             unit_from = ureg(unit_from)
@@ -383,6 +388,7 @@ def main():
             return
         """Create a new note for the user"""
         log.BOT_GOT_COMMAND(f"Received command /note-new from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {note}")
         try:
             notes = {}
 
@@ -413,6 +419,7 @@ def main():
             return
         """Edit an existing note for the user"""
         log.BOT_GOT_COMMAND(f"Received command /edit-note from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {index}, {note}")
         try:
             notes = {}
 
@@ -488,6 +495,7 @@ def main():
             return
         """Delete a note, or all for the user"""
         log.BOT_GOT_COMMAND(f"Received command /note-delete from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {index}")
         try:
             notes = {}
 
@@ -567,6 +575,7 @@ def main():
             return
         """Convert a time to a timestamp"""
         log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {date_time}, {format}")
         timestamp = ub.timecode_convert(date_time, format)
         if timestamp == None:
             await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
@@ -587,6 +596,7 @@ def main():
             return
         """Generate a qr code"""
         log.BOT_GOT_COMMAND(f"Received command /qr-code from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {text}, {output}")
         if text == None:
             await ctx.respond(f"Sorry, but you need to enter some text! {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate QR code due to no text")
@@ -611,6 +621,7 @@ def main():
             return
         """Get your peepee size"""
         log.BOT_GOT_COMMAND(f"Received command /peepee from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {user}")
         #hash the user id to get a random number
         if user == None:
             user = ctx.author
@@ -629,6 +640,7 @@ def main():
             return
         """Play rock paper scissors with another user"""
         log.BOT_GOT_COMMAND(f"Received command /rps from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {user}")
         log.warning(f"A game of RPS is staring. Prepare for headaches")
         if user is None:
             await ctx.respond("Please mention a user to play with.", ephemeral=True)
@@ -781,6 +793,7 @@ def main():
 
         """Encode a message"""
         log.BOT_GOT_COMMAND(f"Received command /encode from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
         if message is None:
             await ctx.respond("Please enter a message to encode.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
@@ -838,6 +851,7 @@ def main():
         
         """Decode a message"""
         log.BOT_GOT_COMMAND(f"Received command /decode from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
         if message is None:
             await ctx.respond("Please enter a message to decode.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
@@ -899,6 +913,7 @@ def main():
             if command_ban_check(ctx):
                 return
             log.BOT_GOT_COMMAND(f"Received command /feedback from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {option}, {feature}, {description}")
             #make post in feedback channel in support server
             feedbackID = str(f"{ctx.author.id}{ub.get_date_time_gmt()}")
             feedbackID = int(hashlib.sha256(str(feedbackID).encode()).hexdigest(), 16) % 100001
