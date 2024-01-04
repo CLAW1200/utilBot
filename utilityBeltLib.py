@@ -898,6 +898,13 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
 
 
 def ai_image_gen(prompt):
+    banned_words = {
+        "porn",
+        "cp",
+    }
+    for word in banned_words:
+        if word in prompt.lower():
+            return None
     # Initialize the Chrome WebDriver
     seed = hashlib.md5(prompt.encode()).hexdigest()
     options = webdriver.ChromeOptions()
