@@ -1,12 +1,25 @@
-import time
 from selenium import webdriver
-from selenium.webdriver import FirefoxOptions
-from selenium.webdriver.common.keys import Keys
 
-opts = FirefoxOptions()
-opts.add_argument("--headless")
-browser = webdriver.Firefox(options=opts)
-browser.get('https://google.com/')
-print('Title: %s' % browser.title)
-time.sleep(2)
-browser.quit()
+# Initialize the Chrome WebDriver
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+# options.add_argument('--disable-dev-shm-usage')
+# options.add_argument('--remote-debugging-port=9222') 
+
+
+driver = webdriver.Chrome(options=options)
+
+# Retrieve the capabilities
+capabilities = driver.capabilities
+
+# For Chrome:
+if 'browserName' in capabilities and capabilities['browserName'] == 'chrome':
+    browser_version = capabilities.get('browserVersion', 'Unknown')
+    chromedriver_version = capabilities.get('chrome', {}).get('chromedriverVersion', 'Unknown').split(' ')[0]
+    print(f"Browser Name: Chrome")
+    print(f"Browser Version: {browser_version}")
+    print(f"ChromeDriver Version: {chromedriver_version}")
+
+# Close the driver
+driver.quit()
