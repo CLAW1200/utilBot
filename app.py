@@ -1222,6 +1222,9 @@ def main():
             if message.content.startswith("!userlookup"):
                 try:
                     user_id = message.content.split(" ")[1]
+                    #if input is not an int convert username to id
+                    if not user_id.isdigit():
+                        user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
                     embed = discord.Embed(title="User Lookup", color=discord.Color.green())
                     embed.set_thumbnail(url=user.avatar.url)

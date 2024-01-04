@@ -17,11 +17,6 @@ from matplotlib import pyplot as plt
 from difflib import SequenceMatcher
 from qrcode import QRCode, constants
 from numpy import array
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-import urllib.request
 import aiohttp
 import aiofiles
 from playwright.async_api import async_playwright
@@ -134,6 +129,21 @@ def get_user_data(user, field):
     except FileNotFoundError:
         return 0
     
+def get_user_id(username):
+    # get a user id from a username and discriminator
+    # lookup username and discriminator in users.json
+    with open("users.json", "r") as f:
+        users = json.load(f)
+        for user_id in users:
+            print (user_id)
+            user_data = users[user_id]
+            print (user_data)
+            if user_data["username"] == username:
+                print (user_data["username"])
+                return user_id
+            
+
+
 def archive_file(file):
     #move file to /archive/
     log.info(f"Archiving file '{time.gmtime}{file}'")
@@ -899,9 +909,6 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
     qr_string = qr_string.replace('\n ', '\n')
     return qr_string
 
-
-
-
 async def ai_image_gen(prompt):
     # read wordblacklist.json
     async with aiofiles.open("wordblacklist.json", "r") as f:
@@ -917,7 +924,7 @@ async def ai_image_gen(prompt):
         context = await browser.new_context()
         page = await context.new_page()
         await page.goto("https://sdxlturbo.ai/")
-        await page.fill('input[name="prompt"]', prompt, timeout=150000)
+        await page.fill('input[name="prompt"]', prompt, timeout=15000)
         # Wait until the image has loaded
         await page.wait_for_selector('//img[@alt="Generated"]')
         image_url = await page.get_attribute('//img[@alt="Generated"]', "src")
@@ -931,3 +938,4 @@ async def ai_image_gen(prompt):
         # Close the browser
         await browser.close()
     return f"temp/sdturbo{seed}.jpg"
+
