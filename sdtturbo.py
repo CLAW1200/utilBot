@@ -10,7 +10,7 @@ options = Options()
 options.headless = True
 
 # Set up the Selenium webdriver
-driver = webdriver.Firefox(service=Service('/usr/local/bin/geckodriver'), options=options)
+driver = webdriver.Firefox(service=Service('\\usr\\local\\bin\\geckodriver'), options=options)
 # Navigate to the website
 driver.get("https://sdxlturbo.ai/")
 input_box = driver.find_element("name", "prompt")
