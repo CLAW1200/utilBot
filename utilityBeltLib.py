@@ -17,6 +17,11 @@ from matplotlib import pyplot as plt
 from difflib import SequenceMatcher
 from qrcode import QRCode, constants
 from numpy import array
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+import urllib.request
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -890,3 +895,27 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
     qr_string = qr_string.replace(' \n', '\n')
     qr_string = qr_string.replace('\n ', '\n')
     return qr_string
+
+
+def ai_image_gen(prompt):
+    # Initialize the Chrome WebDriver
+    seed = hashlib.md5(prompt.encode()).hexdigest()
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument('--remote-debugging-port=9222') 
+
+    driver = webdriver.Chrome(options=options)
+    driver.get("https://sdxlturbo.ai/")
+    input_box = driver.find_element("name", "prompt")
+    input_box.send_keys(prompt)
+    # Wait until the image has loaded
+    wait = WebDriverWait(driver, 15)  # wait for maximum time   
+    image_class = wait.until(EC.presence_of_element_located((By.XPATH, '//img[@alt="Generated"]')))
+    image_url = image_class.get_attribute("src")
+    # Download the image
+    urllib.request.urlretrieve(image_url, f"temp/sdturbo{seed}.jpg")
+    # Close the browser
+    driver.quit()
+    return f"temp/sdturbo{seed}.jpg"

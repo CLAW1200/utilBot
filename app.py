@@ -614,6 +614,31 @@ def main():
             await ctx.respond(f"Here is your QR code! {success_emoji}\n`{ub.qr_code_text_generator(input=text)}`")
             log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)    
+
+    @bot.slash_command(name="quick-imagine", description="AI Generate an image quickly")
+    async def quick_imagine_command(ctx, 
+                                    prompt: discord.Option(str, 
+                                    description="Enter a prompt to generate an image from") = None):
+        if command_ban_check(ctx):
+            return
+        """AI Generate an image quickly"""
+        log.BOT_GOT_COMMAND(f"Received command /quick-imagine from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"With input {prompt}")
+        if prompt == None:
+            await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
+            return
+        try:
+            await ctx.respond(f"Generating image... {loading_emoji}")
+            log.info(f"Generating image from prompt {prompt}")
+            image = ub.ai_image_gen(prompt)
+            await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
+            log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
+        except Exception as e:
+            await ctx.edit(content = f"Sorry, but I could not generate an image! {error_emoji}")
+            log.BOT_REPLY_FAIL(f"Failed to generate image for {ctx.author.name}#{ctx.author.discriminator}")
+            log.error(f"{e}")
+        await command_topper(ctx)
         
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
@@ -954,6 +979,7 @@ def main():
         """Get help"""
         log.BOT_GOT_COMMAND(f"Received command /help from {ctx.author.name}#{ctx.author.discriminator}")
         embed = discord.Embed(title="Help", color=discord.Color.green())
+        embed.add_field(name="quick-imagine", value="AI Generate an image quickly", inline=False)
         embed.add_field(name="image-to-gif", value="Convert an image to a gif", inline=False)
         embed.add_field(name="video-to-gif", value="Convert a video to a gif", inline=False)
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
