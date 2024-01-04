@@ -1,14 +1,14 @@
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import urllib.request
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
 
-options = Options()
-options.headless = True
-
+options = FirefoxOptions()
+options.add_argument("--headless")
+driver = webdriver.Firefox(options=options)
 # Set up the Selenium webdriver
 driver = webdriver.Firefox(service=Service('//usr/local/bin/geckodriver'), options=options)
 # Navigate to the website
