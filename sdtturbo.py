@@ -1,25 +1,26 @@
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+import urllib.request
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.service import Service
 
-# Initialize the Chrome WebDriver
-options = webdriver.ChromeOptions()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-# options.add_argument('--disable-dev-shm-usage')
-# options.add_argument('--remote-debugging-port=9222') 
-
-
-driver = webdriver.Chrome(options=options)
-
-# Retrieve the capabilities
-capabilities = driver.capabilities
-
-# For Chrome:
-if 'browserName' in capabilities and capabilities['browserName'] == 'chrome':
-    browser_version = capabilities.get('browserVersion', 'Unknown')
-    chromedriver_version = capabilities.get('chrome', {}).get('chromedriverVersion', 'Unknown').split(' ')[0]
-    print(f"Browser Name: Chrome")
-    print(f"Browser Version: {browser_version}")
-    print(f"ChromeDriver Version: {chromedriver_version}")
-
-# Close the driver
+options = FirefoxOptions()
+options.add_argument("--headless")
+# set path to geckodriver ubuntu
+service = Service('/usr/local/bin/geckodriver')
+# Set up the Selenium webdriver
+driver = webdriver.Firefox(options=options, service=service)
+# Navigate to the website
+driver.get("https://sdxlturbo.ai/")
+input_box = driver.find_element("name", "prompt")
+input_box.send_keys("A cat wearing a hat")
+# Wait until the image has loaded
+wait = WebDriverWait(driver, 15)  # wait for maximum time
+image_class = wait.until(EC.presence_of_element_located((By.XPATH, '//img[@alt="Generated"]')))
+image_url = image_class.get_attribute("src")
+# Download the image
+urllib.request.urlretrieve(image_url, "image.jpg")
+# Close the browser
 driver.quit()
