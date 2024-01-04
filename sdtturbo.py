@@ -4,7 +4,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 try:
     options = FirefoxOptions()
     options.add_argument("--headless")
-    brower = webdriver.Firefox(firefox_options=options)
+    brower = webdriver.Firefox(options=options)
 
     brower.get('https://pythonbasics.org')
     print(brower.page_source)
