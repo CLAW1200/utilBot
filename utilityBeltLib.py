@@ -138,8 +138,6 @@ def get_user_id(username):
             user_data = users[user_id]
             if user_data["username"] == username:
                 return user_id
-            
-
 
 def archive_file(file):
     #move file to /archive/
@@ -906,7 +904,7 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
     qr_string = qr_string.replace('\n ', '\n')
     return qr_string
 
-async def ai_image_gen(prompt):
+async def ai_image_gen(prompt, enhancer):
     # read wordblacklist.json
     async with aiofiles.open("wordblacklist.json", "r") as f:
         banned_words = await f.read()
@@ -914,7 +912,31 @@ async def ai_image_gen(prompt):
     for word in banned_words:
         if word in prompt.lower():
             return None
+        
+    enhancer_prompts = {
+    "none": f"{prompt}",
 
+    "digital painting": f"{prompt}, glow effects, godrays, Hand drawn, render, 8k, octane render, cinema 4d, blender, dark, atmospheric 4k ultra detailed, cinematic, Sharp focus, big depth of field, Masterpiece, colors, 3d octane render, 4k, concept art, trending on artstation, hyperrealistic, Vivid colors, extremely detailed CG unity 8k wallpaper, trending on CGSociety, Intricate, High Detail, dramatic",
+    
+    "indie game": f"{prompt}, Indie game art, Vector Art, Borderlands style, Arcane style, Cartoon style, Line art, Disctinct features, Hand drawn, Technical illustration, Graphic design, Vector graphics, High contrast, Precision artwork, Linear compositions, Scalable artwork, Digital art, cinematic sensual, Sharp focus, humorous illustration, big depth of field, Masterpiece, trending on artstation, Vivid colors, trending on ArtStation, trending on CGSociety, Intricate, Low Detail, dramatic",
+    
+    "photo": f"{prompt}, Photorealistic, Hyperrealistic, Hyperdetailed, analog style, soft lighting, subsurface scattering, realistic, heavy shadow, masterpiece, best quality, ultra realistic, 8k, golden ratio, Intricate, High Detail, film photography, soft focus",
+    
+    "film noir": f"{prompt}, (b&w, Monochromatic, Film Photography:1.3),  Photorealistic, Hyperrealistic, Hyperdetailed, film noir, analog style, soft lighting, subsurface scattering, realistic, heavy shadow, masterpiece, best quality, ultra realistic, 8k, golden ratio, Intricate, High Detail, film photography, soft focus",
+    
+    "isometric room": f"{prompt}, Tiny cute isometric in a cutaway box, soft smooth lighting, soft colors, 100mm lens, 3d blender render",
+    
+    "space hologram": f"{prompt}, hologram floating in space, a vibrant digital illustration, dribbble, quantum wavetracing, black background, behance hd",
+    
+    "cute creature": f"{prompt}, 3d fluffy, closeup cute and adorable, cute big circular reflective eyes, long fuzzy fur, Pixar render, unreal engine cinematic smooth, intricate detail, cinematic",
+    
+    "realistic portrait": f"{prompt}, RAW candid cinema, 16mm, color graded portra 400 film, remarkable color, ultra realistic, textured skin, remarkable detailed pupils, realistic dull skin noise, visible skin detail, skin fuzz, dry skin, shot with cinematic camera",
+    
+    "realistic landscape": f"long shot scenic professional photograph of {prompt}, perfect viewpoint, highly detailed, wide-angle lens, hyper realistic, with dramatic sky, polarizing filter, natural lighting, vivid colors, everything in sharp focus, HDR, UHD, 64K",
+}
+
+    prompt = enhancer_prompts.get(enhancer.lower(), prompt)
+    
     # Initialize the Playwright
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)

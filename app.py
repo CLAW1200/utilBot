@@ -618,7 +618,13 @@ def main():
     @bot.slash_command(name="quick-imagine", description="AI Generate an image quickly")
     async def quick_imagine_command(ctx, 
                                     prompt: discord.Option(str, 
-                                    description="Enter a prompt to generate an image from") = None):
+                                    description="Enter a prompt to generate an image from") = None,
+                                    enhancer: discord.Option(str,
+                                    choices=["None", "Digital Painting", "Indie Game", "Photo", "Film Noir", "Isometric Room", "Space Hologram", "Cute Creature", "Realistic Portrait", "Realistic Landscape"],
+                                    description="The enhancer to use on the image", required=False, default="None") = "None",
+                                    gif: discord.Option(bool,
+                                    description="Whether to generate a gif or not", required=False, default=False) = False
+                                    ):
         if command_ban_check(ctx):
             return
         """AI Generate an image quickly"""
@@ -631,9 +637,22 @@ def main():
         try:
             await ctx.respond(f"Generating image... {loading_emoji}")
             log.info(f"Generating image from prompt {prompt}")
-            image = await ub.ai_image_gen(prompt)
+            image = await ub.ai_image_gen(prompt, enhancer)
+            if gif == True:
+                #rename image to gif
+                os.rename(image, image.replace(".jpg", ".gif"))
+                image = image.replace(".jpg", ".gif")
+                
             await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
             log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
+            # get link to the image that was just sent by the bot
+            # async for message in ctx.channel.history(limit=1):
+            #     imageLink = message.attachments[0].url
+            #     # append url to txt file
+            #     with open("SDXL-Images.txt", "a") as f:
+            #         line = f"{datetime.datetime.now()}{ctx.author.name}#{ctx.author.discriminator} - {imageLink}\n"
+            #         f.write(line)
+
         except Exception as e:
             await ctx.edit(content = f"Sorry, but I could not generate an image! {error_emoji}")
             log.BOT_REPLY_FAIL(f"Failed to generate image for {ctx.author.name}#{ctx.author.discriminator}")
