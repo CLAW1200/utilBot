@@ -1292,23 +1292,27 @@ def main():
                 draw_users = False
                 draw_guilds = False
                 draw_commands = False
+                draw_diff = False
                 if "user" in message.content:
                     draw_users = True
                 if "guild" in message.content:
                     draw_guilds = True
                 if "command" in message.content:
                     draw_commands = True
-                if "user" not in message.content and "guild" not in message.content and "command" not in message.content:
+                if "diff" in message.content:
+                    draw_diff = True
+                if "user" not in message.content and "guild" not in message.content and "command" not in message.content and "diff" not in message.content:
                     draw_users = True
                     draw_guilds = True
                     draw_commands = True
+                    draw_diff = True
                 if "-t " in message.content:
                     # get everything after -t 
                     time = message.content.split("-t ")[1]
                 else:
                     time = None
 
-                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, time)
+                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, draw_diff, time)
                 #send data.csv
                 if "file" in message.content:
                     await botOwner.send(file=discord.File('data.csv'))

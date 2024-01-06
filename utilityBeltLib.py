@@ -758,7 +758,7 @@ async def log_data_to_csv(bot):
 def get_date_time_gmt():
     return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count, time_frame=None):
+def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count, draw_diff_count, time_frame=None):
     with open(csv_file, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         next(reader, None)  # Skip the header
@@ -775,6 +775,7 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
         y1 = []
         y2 = []
         y3 = []
+        y4 = []
         for row in data:
             current_time = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
             # Skip this row if it's not within the time frame
@@ -791,6 +792,16 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
             else:
                 y3.append(int(row[3]))  # Total command count
 
+            try:
+                if row[4] == None:
+                    y4.append(0)
+                else:
+                    y4.append(int(row[4]))
+            except IndexError:
+                y4.append(0)
+
+
+
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
 
@@ -800,6 +811,8 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
             plt.plot(x, y2, label='Guild count')
         if draw_command_count:
             plt.plot(x, y3, label='Total command count')
+        if draw_diff_count:
+            plt.plot(x, y4, label='Command count difference')
 
         plt.legend()
         plt.xticks(rotation=90)  # Rotate x-axis labels
