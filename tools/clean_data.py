@@ -67,7 +67,10 @@ def add_col_to_csv(filename):
 
     header.append('Command Difference')
     for i in range(1, len(rows)):
-        current_command_count = int(rows[i][command_count_index])
+        try:
+            current_command_count = int(rows[i][command_count_index])
+        except:
+            continue
         try:
             previous_command_count = int(rows[i-1][command_count_index])
         except:
