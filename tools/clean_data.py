@@ -38,5 +38,46 @@ def remove_duplicates(filename):
         writer = csv.writer(f)
         writer.writerows(output_rows)
 
+
+
+# Time,User Count,Server Count,Total Command Count
+# 2024-01-02 17:00:18,22,2,53,
+# 2024-01-02 18:00:09,22,2,62,
+# 2024-01-02 18:00:55,22,2,62,
+# 2024-01-02 19:00:36,22,2,70,
+# 2024-01-02 21:00:11,22,2,80,
+# 2024-01-03 09:00:19,22,2,85,
+# 2024-01-03 11:00:04,22,2,87,
+# 2024-01-04 20:00:46,21,2,106,
+# 2024-01-04 21:00:56,21,2,111,
+
+
+
+def add_col_to_csv(filename):
+    # Add a column to the csv file called command difference
+    # This column is the difference between the current command count and the previous command count
+    command_count_index = None
+    rows = []
+
+    with open(filename, 'r') as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+        header = rows[0]
+        command_count_index = header.index('Total Command Count')
+
+    header.append('Command Difference')
+    for i in range(1, len(rows)):
+        current_command_count = int(rows[i][command_count_index])
+        try:
+            previous_command_count = int(rows[i-1][command_count_index])
+        except:
+            continue
+        command_difference = current_command_count - previous_command_count
+        rows[i].append(command_difference)
+
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(rows)
+
 if __name__ == '__main__':
-    remove_duplicates('data.csv')
+    add_col_to_csv('data.csv')
