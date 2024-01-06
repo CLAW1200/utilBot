@@ -54,18 +54,13 @@ def remove_duplicates(filename):
 
 
 def add_col_to_csv(filename):
-    # Add a column to the csv file called command difference
-    # This column is the difference between the current command count and the previous command count
-    command_count_index = None
+    command_count_index = 3
     rows = []
 
     with open(filename, 'r') as f:
         reader = csv.reader(f)
         rows = list(reader)
-        header = rows[0]
-        command_count_index = header.index('Total Command Count')
 
-    header.append('Command Difference')
     for i in range(1, len(rows)):
         try:
             current_command_count = int(rows[i][command_count_index])
