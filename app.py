@@ -670,8 +670,8 @@ def main():
         if user == None:
             user = ctx.author
         peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
-        # if user.id == ub.read_toml_var("botOwner"):
-        #     peepeeSize = 5 
+        if user.id == ub.read_toml_var("botOwner"):
+            peepeeSize = 500
         peepee = "8" + "=" * peepeeSize + "D"
         await ctx.respond(f"{user.mention} peepee size is {peepee}")
         log.BOT_REPLY_SUCCESS(f"Sent peepee size of {peepeeSize} to {ctx.author.name}#{ctx.author.discriminator}")
