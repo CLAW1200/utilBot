@@ -28,7 +28,7 @@ log.setLevel(logging.DEBUG)
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-file_handler = logging.FileHandler('app.log')
+file_handler = logging.FileHandler('data/app.log')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
@@ -75,10 +75,10 @@ def log_guild_message(message):
 
 
 def edit_user_data(user, field, data):
-    # Edit users.json, add data to key
+    # Edit data/users.json, add data to key
     user_id = str(user.id)
     try:
-        with open("users.json", "r+") as f:
+        with open("data/users.json", "r+") as f:
             users = json.load(f)
             if user_id in users:
                 user_data = users[user_id]
@@ -91,14 +91,14 @@ def edit_user_data(user, field, data):
             f.truncate()
     except FileNotFoundError:
         users = {user_id: {field: data}}
-        with open("users.json", "w") as f:
+        with open("data/users.json", "w") as f:
             json.dump(users, f, indent=4)
 
 def add_user_data(user, field, data):
-    # Edit users.json, add data to key if it doesn't exist
+    # Edit data/users.json, add data to key if it doesn't exist
     user_id = str(user.id)
     try:
-        with open("users.json", "r+") as f:
+        with open("data/users.json", "r+") as f:
             users = json.load(f)
             if user_id in users:
                 user_data = users[user_id]
@@ -112,14 +112,14 @@ def add_user_data(user, field, data):
             f.truncate()
     except FileNotFoundError:
         users = {user_id: {field: data}}
-        with open("users.json", "w") as f:
+        with open("data/users.json", "w") as f:
             json.dump(users, f, indent=4)
 
 def get_user_data(user, field):
-    # Get data from users.json
+    # Get data from data/users.json
     user_id = str(user.id)
     try:
-        with open("users.json", "r") as f:
+        with open("data/users.json", "r") as f:
             users = json.load(f)
             if user_id in users:
                 user_data = users[user_id]
@@ -131,8 +131,8 @@ def get_user_data(user, field):
     
 def get_user_id(username):
     # get a user id from a username and discriminator
-    # lookup username and discriminator in users.json
-    with open("users.json", "r") as f:
+    # lookup username and discriminator in data/users.json
+    with open("data/users.json", "r") as f:
         users = json.load(f)
         for user_id in users:
             user_data = users[user_id]
@@ -153,16 +153,16 @@ def zip_archive_folder(folder):
    
 def read_log():
     log.debug("Reading log")
-    with open("app.log", "r") as f:
+    with open("data/app.log", "r") as f:
         return f.read()
     
 def clear_log():
-    open("app.log", "w").close()
+    open("data/app.log", "w").close()
     log.debug("Log cleared")
 
 def read_toml_var(var):
     log.debug(f"Reading variable '{var}' from config")
-    configFile = "config.toml"
+    configFile = "config/config.toml"
     with open(configFile) as toml_file:
         data = toml.load(toml_file)
         log.debug(f"Variable '{var}' read from '{configFile}'")
@@ -331,7 +331,7 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
 
 
 def gif_search(query):
-    tokenFile = "token.toml"
+    tokenFile = "config/token.toml"
     with open(tokenFile) as toml_file:
         data = toml.load(toml_file)
         GIPHY_API_KEY = data["giphy-api-key"]
@@ -360,7 +360,7 @@ def gif_search(query):
 
 def status(status):
     #open config toml and set status to string
-    configFile = "config.toml"
+    configFile = "config/config.toml"
     with open(configFile) as toml_file:
         data = toml.load(toml_file)
         data["status"] = status
@@ -629,7 +629,7 @@ def convert_str_to_unix_time(string):
     return int(time.mktime(dt.timetuple()))
 
 def get_api_ninjas_key():
-    with open("token.toml") as toml_file:
+    with open("config/token.toml") as toml_file:
         data = toml.load(toml_file)
         key = data["api-ninjas-key"]
     return key
@@ -719,9 +719,9 @@ async def log_data_to_csv(bot):
     # Format: Time, User Count, Server Count, Total Command Count,
 
     # Create the csv file if it doesn't exist
-    if not os.path.isfile("data.csv"):
+    if not os.path.isfile("data/data.csv"):
         #using csv module
-        with open("data.csv", "w") as f:
+        with open("data/data.csv", "w") as f:
             writer = csv.writer(f)
             writer.writerow(["Time", "User Count", "Server Count", "Total Command Count"])
 
@@ -737,21 +737,21 @@ async def log_data_to_csv(bot):
     log.info(f"Guild count: {guild_count}")
 
     # Get the total number of commands
-    # open users.json and get the total number of commands by adding up all the commandsUsed values
+    # open data/users.json and get the total number of commands by adding up all the commandsUsed values
     try:
-        with open("users.json", "r") as f:
+        with open("data/users.json", "r") as f:
             users = json.load(f)
             total_command_count = 0
             for user_id in users:
                 user_data = users[user_id]
                 total_command_count += user_data.get("commandsUsed", 0)
     except FileNotFoundError:
-        log.error("users.json not found")
+        log.error("data/users.json not found")
         total_command_count = 0
     log.info(f"Total command count: {total_command_count}")
 
     # Write the data to the csv file
-    with open("data.csv", "a") as f:
+    with open("data/data.csv", "a") as f:
         writer = csv.writer(f)
         writer.writerow([time_code, user_count, guild_count, total_command_count])
 
@@ -919,7 +919,7 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
 
 async def ai_image_gen(prompt, enhancer):
     # read wordblacklist.json
-    async with aiofiles.open("wordblacklist.json", "r") as f:
+    async with aiofiles.open("config/wordblacklist.json", "r") as f:
         banned_words = await f.read()
         banned_words = json.loads(banned_words)["words"]
     for word in banned_words:

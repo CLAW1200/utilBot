@@ -39,7 +39,7 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 
 # Create a file handler and set the level to DEBUG
-file_handler = logging.FileHandler('app.log')
+file_handler = logging.FileHandler('data/app.log')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
@@ -1144,11 +1144,11 @@ def main():
 
             if message.content == ("!log"):
                 # print (f"{message.author} requested log")
-                await botOwner.send(file=discord.File('app.log'))
+                await botOwner.send(file=discord.File('data/app.log'))
 
             if message.content == ("!clearlog"):
                 # print (f"{message.author} cleared log")
-                with open('app.log', 'w') as f:
+                with open('data/app.log', 'w') as f:
                     f.write('')
                 await botOwner.send("Log cleared")
             
@@ -1160,7 +1160,7 @@ def main():
                 # print (f"{message.author} requested user list")
                 # Write all users to a CSV file
                 # username, discriminator, id, account created, name of Guilds found in, id of Guilds found in, date joined Guilds found in, user description
-                with open('users.csv', 'w', newline='', encoding='utf-8') as csvfile:
+                with open('data/users.csv', 'w', newline='', encoding='utf-8') as csvfile:
                     writer = csv.writer(csvfile)
                     writer.writerow(["Username", "Discriminator", "ID", "Account Created", "Guilds", "Guild IDs", "Date Joined Guilds", "User Description"])
                     
@@ -1185,13 +1185,13 @@ def main():
                         writer.writerow([user.name, user.discriminator, str(user.id), str(user.created_at), guilds_str, guild_ids_str, joined_dates_str])
                 
                 # Send the CSV file to the bot owner
-                await botOwner.send(file=discord.File('users.csv'))
+                await botOwner.send(file=discord.File('data/users.csv'))
             
             if message.content == ("!guildcount"):
                 await botOwner.send(f"Guilds: {len(bot.guilds)}")
             
             if message.content == ("!userdata"):
-                await botOwner.send(file=discord.File('users.json'))
+                await botOwner.send(file=discord.File('data/users.json'))
 
             if message.content.startswith("!status"):
                 try:
@@ -1312,10 +1312,10 @@ def main():
                 else:
                     time = None
 
-                plot = ub.gen_csv_plot("data.csv", draw_users, draw_guilds, draw_commands, draw_diff, time)
-                #send data.csv
+                plot = ub.gen_csv_plot("data/data.csv", draw_users, draw_guilds, draw_commands, draw_diff, time)
+                #send data/data.csv
                 if "file" in message.content:
-                    await botOwner.send(file=discord.File('data.csv'))
+                    await botOwner.send(file=discord.File('data/data.csv'))
                 await botOwner.send(file=discord.File(plot))
 
             if message.content.startswith("!ban"):
@@ -1369,7 +1369,7 @@ def main():
 **!usercount** - Send the number of users the bot can see
 **!userlist** - Send a CSV file of all users the bot can see
 **!guildcount** - Send the number of guilds the bot is in
-**!userdata** - Send the users.json file
+**!userdata** - Send the data/users.json file
 **!status** - Set the bot status
 **!streamstatus** - Set the bot stream status
 **!ban** - Ban a user from using the bot
@@ -1380,7 +1380,7 @@ def main():
 **!userlookup** - Search a user ID
 **!guildlookup** - Search a guild ID
 **!invme** - Create a guild invite
-**!stats** - Send the data.csv file
+**!stats** - Send the data/data.csv file
                 """)
 
     bot.response_messages = {}
