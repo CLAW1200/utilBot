@@ -61,7 +61,7 @@ def main():
     keywords = {
         "https://discord",
     }
-    BOT_TOKEN, TOP_GG_TOKEN = ub.get_tokens("token.toml")
+    BOT_TOKEN, TOP_GG_TOKEN = ub.get_tokens("config/token.toml")
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
 
