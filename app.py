@@ -407,12 +407,12 @@ def main():
             log.error(f"This is not ideal\n{e}")
         await command_topper(ctx)
 
-    @bot.slash_command(name="edit-note", description="Edit a note")
+    @bot.slash_command(name="note-edit", description="Edit a note")
     async def edit_note_command(ctx, index: int, note: str):
         if command_ban_check(ctx):
             return
         """Edit an existing note for the user"""
-        log.BOT_GOT_COMMAND(f"Received command /edit-note from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"Received command /note-edit from {ctx.author.name}#{ctx.author.discriminator}")
         log.BOT_GOT_COMMAND(f"With input {index}, {note}")
         try:
             notes = {}
