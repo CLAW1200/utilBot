@@ -6,19 +6,18 @@
 
  - /image-to-gif - Converts an image to a gif
  - /video-to-gif - Converts a video to a gif
+ - /quick-imagine - AI generates an image based on a text prompt
  - /speech-bubble - Adds a speech bubble to an image
  - /encode - Encodes a message
  - /decode - Decodes a message
  - /rps - Play rock paper scissors
- - /cat - Sends a random cat image
- - /impact - Adds impact font to an image
  - /urban - Gets the definition of a word from urban dictionary
  - /urban-random-word - Gets the definition of a random word from urban dictionary
  - /units - Converts units
- - /new-note - Creates a new note
- - /edit-note - Edits a note
- - /my-notes - Gets all your notes
- - /delete-note - Deletes a note
+ - /notes - Gets all your notes
+ - /note-new - Creates a new note
+ - /note-edit - Edits a note
+ - /note-delete - Deletes a note
  - /feedback - Sends feedback to the developers
  - /help - Shows this message
  - /invite - Sends the bot invite link
