@@ -50,12 +50,6 @@ log.addHandler(file_handler)
 # Add the console handler to the log
 log.addHandler(console_handler)
 
-def get_tokens(tokenFile):
-    with open(tokenFile) as toml_file:
-        data = toml.load(toml_file)
-        bot_token = data["tokenLive"]
-        top_gg_token = data["top-gg-token"]
-        return bot_token, top_gg_token
 
 def main():
     ureg = UnitRegistry()
@@ -67,7 +61,7 @@ def main():
     keywords = {
         "https://discord",
     }
-    BOT_TOKEN, TOP_GG_TOKEN = get_tokens("token.toml")
+    BOT_TOKEN, TOP_GG_TOKEN = ub.get_tokens("token.toml")
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
 
@@ -107,7 +101,7 @@ def main():
             return True
         else:
             return False
-    
+
     def command_ban_check(ctx):
         # Check banned users file, If user is banned, return True
         try:
@@ -393,7 +387,7 @@ def main():
             notes = {}
 
             try:
-                with open("notes.json", "r") as f:
+                with open("data/notes.json", "r") as f:
                     notes = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 pass
@@ -402,7 +396,7 @@ def main():
             user_notes.append(note)
             notes[str(ctx.author.id)] = user_notes
 
-            with open("notes.json", "w") as f:
+            with open("data/notes.json", "w") as f:
                 json.dump(notes, f, indent=4)
 
             await ctx.respond("New note added!\nSee your new note with /notes.", ephemeral=True)
@@ -424,7 +418,7 @@ def main():
             notes = {}
 
             try:
-                with open("notes.json", "r") as f:
+                with open("data/notes.json", "r") as f:
                     notes = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 pass
@@ -440,7 +434,7 @@ def main():
                     user_notes[user_notes.index(edited_note)] = note
                     notes[str(ctx.author.id)] = user_notes
 
-                    with open("notes.json", "w") as f:
+                    with open("data/notes.json", "w") as f:
                         json.dump(notes, f, indent=4)
 
                     await ctx.respond(f"Note {index} updated!", ephemeral=True)
@@ -467,7 +461,7 @@ def main():
         try:
             notes = {}
             try:
-                with open("notes.json", "r") as f:
+                with open("data/notes.json", "r") as f:
                     notes = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 pass
@@ -500,7 +494,7 @@ def main():
             notes = {}
 
             try:
-                with open("notes.json", "r") as f:
+                with open("data/notes.json", "r") as f:
                     notes = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 pass
@@ -532,7 +526,7 @@ def main():
                     log.BOT_REPLY_FAIL(f"Failed to delete note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
                     return
 
-                with open("notes.json", "w") as f:
+                with open("data/notes.json", "w") as f:
                     json.dump(notes, f, indent=4)
             else:
                 await ctx.respond("You have no notes!", ephemeral=True)
@@ -1139,9 +1133,6 @@ def main():
                 with open("guilds.txt", "rb") as file:
                     await botOwner.send(file=discord.File(file, "guilds.txt"))
 
-                # Delete the temporary file
-                # ub.archive_file("guilds.txt")
-
             if message.content == ("!log"):
                 # print (f"{message.author} requested log")
                 await botOwner.send(file=discord.File('data/app.log'))
@@ -1220,11 +1211,11 @@ def main():
             if message.content == ("!guilds.zip"):
                 guildsZip = ub.zip_archive_folder('guilds')
                 await botOwner.send(file=discord.File(guildsZip))
-                ub.archive_file(guildsZip)
+                os.remove(guildsZip)
 
             if message.content.startswith("!notes"):
                 try:
-                    await botOwner.send(file=discord.File('notes.json'))
+                    await botOwner.send(file=discord.File('data/notes.json'))
                 except FileNotFoundError:
                     await botOwner.send("No notes file found")
 
@@ -1234,7 +1225,6 @@ def main():
                     query = message.content.split(" ")[2]
                     ub.search(mode, query)
                     await botOwner.send(file=discord.File("temp/search.txt"))
-                    # ub.archive_file("temp/search.txt")
                 except IndexError:
                     await botOwner.send("No search term provided")
 
@@ -1375,7 +1365,7 @@ def main():
 **!ban** - Ban a user from using the bot
 **!unban** - Unban a user from using the bot
 **!guilds.zip** - Send a zip file of all guilds the bot is in
-**!notes** - Send the notes.json file
+**!notes** - Send the data/notes.json file
 **!search** - Search all messages for a query
 **!userlookup** - Search a user ID
 **!guildlookup** - Search a guild ID

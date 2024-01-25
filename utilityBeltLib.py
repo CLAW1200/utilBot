@@ -74,6 +74,13 @@ def log_guild_message(message):
         file.write("--------------------------------\n")
 
 
+def get_tokens(tokenFile):
+    with open(tokenFile) as toml_file:
+        data = toml.load(toml_file)
+        bot_token = data["tokenLive"]
+        top_gg_token = data["top-gg-token"]
+        return bot_token, top_gg_token
+
 def edit_user_data(user, field, data):
     # Edit data/users.json, add data to key
     user_id = str(user.id)
@@ -138,14 +145,6 @@ def get_user_id(username):
             user_data = users[user_id]
             if user_data["username"] == username:
                 return user_id
-
-def archive_file(file):
-    #move file to /archive/
-    log.info(f"Archiving file '{time.gmtime}{file}'")
-    try:
-        os.rename(file, f"archive/{file}")
-    except Exception as e:
-        log.error(f"Error archiving file '{file}': {e}")
 
 def zip_archive_folder(folder):
     shutil.make_archive('guilds', 'zip', 'guilds')
