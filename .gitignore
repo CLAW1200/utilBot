@@ -5,12 +5,10 @@ users.json
 /__pycache__/
 /gcp-vscode-ssh/
 /guilds/
-token.toml
+/config/token.toml
+/config/wordblacklist.json
 users.csv
-messages.zip
 guilds.zip
-Utility Belt.md
 test.py
 data.csv
 data.csv.png
-image.jpg
