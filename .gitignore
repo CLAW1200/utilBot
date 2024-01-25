@@ -1,14 +1,7 @@
-/temp/
-app.log
-notes.json
-users.json
 /__pycache__/
 /gcp-vscode-ssh/
+/temp/
 /guilds/
+/data/
 /config/token.toml
 /config/wordblacklist.json
-users.csv
-guilds.zip
-test.py
-data.csv
-data.csv.png
