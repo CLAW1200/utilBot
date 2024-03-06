@@ -73,7 +73,6 @@ def log_guild_message(message):
         file.write(f"{embeds_info}\n")
         file.write("--------------------------------\n")
 
-
 def get_tokens(tokenFile):
     with open(tokenFile) as toml_file:
         data = toml.load(toml_file)
@@ -190,8 +189,9 @@ def get_file_size(link):
 def download_check(link, max_size=read_toml_var("maxFileSize")):
     # function to check if a file is too large to download
     # if the file is too large, return false
+    # if the file size cannot be determined, return false
     # if the file is small enough, return true
-    # if the file size cannot be determined, return true
+    
     file_size = get_file_size(link)
     if file_size is None:
         return False
@@ -799,8 +799,6 @@ def gen_csv_plot(csv_file, draw_user_count, draw_guild_count, draw_command_count
             except IndexError:
                 y4.append(0)
 
-
-
         plt.xlabel('Time (s)')
         plt.ylabel('Count')
 
@@ -969,4 +967,3 @@ async def ai_image_gen(prompt, enhancer):
         # Close the browser
         await browser.close()
     return f"temp/sdturbo{seed}.jpg"
-

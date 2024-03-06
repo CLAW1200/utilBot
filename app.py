@@ -133,6 +133,12 @@ def main():
             return
         log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         log.BOT_GOT_COMMAND(f"With image link: {image_link}")
+
+        if "https://discord.com/channels/" in image_link:
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+            return
+        
         try:
             imageFileSize = ub.get_file_size(image_link)
             if imageFileSize > ub.read_toml_var("maxFileSize"):
@@ -144,6 +150,8 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
             log.error(e)
             return
+
+
         await ctx.respond(f"Converting image to gif {loading_emoji}") # this message will be edited when the gif is sent
         log.info(f"Converting image {image_link} to gif")
         try:
