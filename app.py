@@ -174,6 +174,13 @@ def main():
             return
         log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
         log.BOT_GOT_COMMAND(f"With image link: {video_link}")
+
+        if "https://discord.com/channels/" in image_link:
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+            return
+
+
         #do not download videos larger than maxFileSize
         try:
             videoFileSize = ub.get_file_size(video_link)
@@ -217,6 +224,13 @@ def main():
             return
         log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
         log.BOT_GOT_COMMAND(f"With image link: {image_link}")
+
+        if "https://discord.com/channels/" in image_link:
+            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+            return
+
+            
         #do not download videos larger than maxFileSize
         try:
             imageFileSize = ub.get_file_size(image_link)
