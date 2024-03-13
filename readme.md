@@ -24,4 +24,4 @@
  - /help - Shows this message
  - /invite - Sends the bot invite link
  - /vote - Sends the bot vote link
-)
+
