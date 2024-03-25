@@ -105,7 +105,7 @@ def main():
     def command_ban_check(ctx):
         # Check banned users file, If user is banned, return True
         try:
-            with open("banned_users.json", "r") as f:
+            with open("config/banned_users.json", "r") as f:
                 banned_users = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             log.error("Failed to load banned users file")
@@ -1255,6 +1255,7 @@ def main():
                     user_id = message.content.split(" ")[1]
                     #if input is not an int convert username to id
                     if not user_id.isdigit():
+                        log.info(f"Converting username to user ID")
                         user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
                     embed = discord.Embed(title="User Lookup", color=discord.Color.green())
@@ -1337,14 +1338,14 @@ def main():
 
                     # append user to banned_users.json if not already banned
                     try:
-                        with open('banned_users.json', 'r') as f:
+                        with open('config/banned_users.json', 'r') as f:
                             banned_users = json.load(f)
                     except FileNotFoundError:
                         banned_users = []
 
                     if user.id not in banned_users:
                         banned_users.append(user.id)
-                        with open('banned_users.json', 'w') as f:
+                        with open('config/banned_users.json', 'w') as f:
                             json.dump(banned_users, f)
                         await botOwner.send(f"Banned {user.name}#{user.discriminator}")
                     else:
@@ -1359,12 +1360,12 @@ def main():
 
                     # remove user from banned_users.json
                     try:
-                        with open('banned_users.json', 'r') as f:
+                        with open('config/banned_users.json', 'r') as f:
                             banned_users = json.load(f)
                     except FileNotFoundError:
                         banned_users = []
                     banned_users.remove(user.id)
-                    with open('banned_users.json', 'w') as f:
+                    with open('config/banned_users.json', 'w') as f:
                         json.dump(banned_users, f)
 
                     await botOwner.send(f"Unbanned {user.name}#{user.discriminator}")
