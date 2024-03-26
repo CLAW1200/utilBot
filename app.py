@@ -123,8 +123,8 @@ def main():
                 return True
         return False
         
-
     async def command_topper(ctx):
+
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
@@ -141,37 +141,43 @@ def main():
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With image link: {image_link}")
-
-        if "https://discord.com/channels/" in image_link:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+        
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
-        try:
-            imageFileSize = ub.get_file_size(image_link)
-            if imageFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
+        else:
+            log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With image link: {image_link}")
+
+            if "https://discord.com/channels/" in image_link:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
                 return
-        except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
-            log.error(e)
-            return
+            
+            try:
+                imageFileSize = ub.get_file_size(image_link)
+                if imageFileSize > ub.read_toml_var("maxFileSize"):
+                    await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
+                    return
+            except Exception as e:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+                log.error(e)
+                return
 
-
-        await ctx.respond(f"Converting image to gif {loading_emoji}") # this message will be edited when the gif is sent
-        log.info(f"Converting image {image_link} to gif")
-        try:
-            newGif = ub.convert_image_to_gif(image_link)
-            await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
-            log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
-        except Image.UnidentifiedImageError as e:
-            await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
-            log.error(e)
-        await command_topper(ctx)
+            await ctx.respond(f"Converting image to gif {loading_emoji}") # this message will be edited when the gif is sent
+            log.info(f"Converting image {image_link} to gif")
+            try:
+                newGif = ub.convert_image_to_gif(image_link)
+                await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
+                log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
+            except Image.UnidentifiedImageError as e:
+                await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
+                log.error(e)
+            await command_topper(ctx)
 
     @bot.slash_command(name="video-to-gif", description="Take a video link and send it as a gif")
     async def video_to_gif_command(
@@ -182,47 +188,53 @@ def main():
     ):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With image link: {video_link}")
-
-        if "https://discord.com/channels/" in video_link:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {video_link}")
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
-
-
-        #do not download videos larger than maxFileSize
-        try:
-            videoFileSize = ub.get_file_size(video_link)
-            if videoFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
-                return
-        except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
-            log.error(e)
-            return
-        if fps > 30:
-            await ctx.respond(f"Sorry, but the max FPS is 30! {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
-            return
-        if scale != None:
-            if scale > 500:
-                await ctx.respond(f"Sorry, but the max scale is 500px! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
-                return
         
-        await ctx.respond(f"Converting video to gif... {loading_emoji}")
-        log.info(f"Converting video {video_link} to gif")
-        try:
-            newGif = ub.convert_video_to_gif(video_link, fps, scale)
-            await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
-            log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
-        except Exception as e:
-            await ctx.edit(content = f"Sorry, but that video link is invalid! {error_emoji}")
-            log.error(e)
-        await command_topper(ctx)
+        else:
+            log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With image link: {video_link}")
+
+            if "https://discord.com/channels/" in video_link:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {video_link}")
+                return
+
+
+            #do not download videos larger than maxFileSize
+            try:
+                videoFileSize = ub.get_file_size(video_link)
+                if videoFileSize > ub.read_toml_var("maxFileSize"):
+                    await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
+                    return
+            except Exception as e:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
+                log.error(e)
+                return
+            if fps > 30:
+                await ctx.respond(f"Sorry, but the max FPS is 30! {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
+                return
+            if scale != None:
+                if scale > 500:
+                    await ctx.respond(f"Sorry, but the max scale is 500px! {error_emoji}", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to scale of {scale}")
+                    return
+            
+            await ctx.respond(f"Converting video to gif... {loading_emoji}")
+            log.info(f"Converting video {video_link} to gif")
+            try:
+                newGif = ub.convert_video_to_gif(video_link, fps, scale)
+                await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
+                log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
+            except Exception as e:
+                await ctx.edit(content = f"Sorry, but that video link is invalid! {error_emoji}")
+                log.error(e)
+            await command_topper(ctx)
 
     @bot.slash_command(name="speech-bubble", description="Add a speech bubble to an image or gif")
     async def speech_bubble_command(
@@ -232,49 +244,55 @@ def main():
     ):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With image link: {image_link}")
-
-        if "https://discord.com/channels/" in image_link:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
+        
+        else:
+            log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With image link: {image_link}")
 
-            
-        #do not download videos larger than maxFileSize
-        try:
-            imageFileSize = ub.get_file_size(image_link)
-            if imageFileSize > ub.read_toml_var("maxFileSize"):
-                await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
+            if "https://discord.com/channels/" in image_link:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
                 return
-        except Exception as e:
-            await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
-            log.error(e)
-            return
-        
-        if speech_bubble_size > 1 or speech_bubble_size < 0:
-            await ctx.respond(f"Sorry, values between 0 and 1 only! {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to speech bubble size of {speech_bubble_size}")
-            return
-        
-        await ctx.respond(f"Adding speech bubble to image {loading_emoji}")
-        log.info(f"Adding speech bubble to image {image_link}")
-        try:
-            newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
-            await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
-            log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
-        except Exception as e:
-            await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
-            log.BOT_REPLY_FAIL(f"Failed to add speech bubble to image {image_link}")
-            log.error(e)
-        try:
-            os.remove(newImage)
-            log.info(f"Removed temporary file {newImage}")
-        except Exception as e:
-            log.error(e)
-        await command_topper(ctx)
+
+                
+            #do not download videos larger than maxFileSize
+            try:
+                imageFileSize = ub.get_file_size(image_link)
+                if imageFileSize > ub.read_toml_var("maxFileSize"):
+                    await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
+                    return
+            except Exception as e:
+                await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
+                log.error(e)
+                return
+            
+            if speech_bubble_size > 1 or speech_bubble_size < 0:
+                await ctx.respond(f"Sorry, values between 0 and 1 only! {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to speech bubble size of {speech_bubble_size}")
+                return
+            
+            await ctx.respond(f"Adding speech bubble to image {loading_emoji}")
+            log.info(f"Adding speech bubble to image {image_link}")
+            try:
+                newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
+                await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
+                log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
+            except Exception as e:
+                await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
+                log.BOT_REPLY_FAIL(f"Failed to add speech bubble to image {image_link}")
+                log.error(e)
+            try:
+                os.remove(newImage)
+                log.info(f"Removed temporary file {newImage}")
+            except Exception as e:
+                log.error(e)
+            await command_topper(ctx)
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
@@ -314,281 +332,329 @@ def main():
         ):
         if command_ban_check(ctx):
             return
-        """Fetches the definition of a word from Urban Dictionary."""
-        log.BOT_GOT_COMMAND(f"Received command /urban from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {word}, {random_result}")
-        try:
-            async with aiohttp.ClientSession() as session:
-                word_encoded = urllib.parse.quote_plus(word)
-                url = f'https://api.urbandictionary.com/v0/define?term={word_encoded}'
-                async with session.get(url) as resp:
-                    data = await resp.json()
-                    if len(data['list']) == 0:
-                        await ctx.send("No definition found.")
-                        return
-                    if random_result:
-                        data['list'] = [random.choice(data['list'])]
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Fetches the definition of a word from Urban Dictionary."""
+            log.BOT_GOT_COMMAND(f"Received command /urban from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {word}, {random_result}")
+            try:
+                async with aiohttp.ClientSession() as session:
+                    word_encoded = urllib.parse.quote_plus(word)
+                    url = f'https://api.urbandictionary.com/v0/define?term={word_encoded}'
+                    async with session.get(url) as resp:
+                        data = await resp.json()
+                        if len(data['list']) == 0:
+                            await ctx.send("No definition found.")
+                            return
+                        if random_result:
+                            data['list'] = [random.choice(data['list'])]
 
-                    #make sure the definition isn't longer than 1024 characters
-                    if len(data['list'][0]['definition']) > 1024:
-                        data['list'][0]['definition'] = data['list'][0]['definition'][:1021] + "..."
-                    if len(data['list'][0]['example']) > 1024:
-                        data['list'][0]['example'] = data['list'][0]['example'][:1021] + "..."
+                        #make sure the definition isn't longer than 1024 characters
+                        if len(data['list'][0]['definition']) > 1024:
+                            data['list'][0]['definition'] = data['list'][0]['definition'][:1021] + "..."
+                        if len(data['list'][0]['example']) > 1024:
+                            data['list'][0]['example'] = data['list'][0]['example'][:1021] + "..."
 
-                    definition = data['list'][0]['definition']
-                    example = data['list'][0]['example']
-                    
-                    embed = discord.Embed(title=f"Definition of {word}", color=discord.Color.blue())
-                    embed.add_field(name="Definition", value=definition, inline=False)
-                    embed.add_field(name="Example", value=example, inline=False)
-                    await ctx.respond(embed=embed)
-                    log.BOT_REPLY_SUCCESS(f"Sent definition of {word}")
+                        definition = data['list'][0]['definition']
+                        example = data['list'][0]['example']
+                        
+                        embed = discord.Embed(title=f"Definition of {word}", color=discord.Color.blue())
+                        embed.add_field(name="Definition", value=definition, inline=False)
+                        embed.add_field(name="Example", value=example, inline=False)
+                        await ctx.respond(embed=embed)
+                        log.BOT_REPLY_SUCCESS(f"Sent definition of {word}")
 
-        except Exception as e:
-            await ctx.respond(f"Failed to send definition of {word}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to send definition of {word}")
-            log.error(f"Its all gone wrong!\n{e}")
-        await command_topper(ctx)
+            except Exception as e:
+                await ctx.respond(f"Failed to send definition of {word}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to send definition of {word}")
+                log.error(f"Its all gone wrong!\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
     async def random_word_command(ctx):
         if command_ban_check(ctx):
             return
-        """Gets a random word from Urban Dictionary."""
-        log.BOT_GOT_COMMAND(f"Received command /urban-random-word from {ctx.author.name}#{ctx.author.discriminator}")
-        try:
-            async with aiohttp.ClientSession() as session:
-                url = 'https://api.urbandictionary.com/v0/random'
-                async with session.get(url) as resp:
-                    data = await resp.json()
-                    
-                    word = data['list'][0]['word']
-                    definition = data['list'][0]['definition']
-                    example = data['list'][0]['example']
-                    
-                    embed = discord.Embed(title=f"Random Word: {word}", color=discord.Color.green())
-                    embed.add_field(name="Definition", value=definition, inline=False)
-                    embed.add_field(name="Example", value=example, inline=False)
-                    await ctx.respond(embed=embed)
-                    log.BOT_REPLY_SUCCESS(f"Sent random word {word}")
-            
-        except Exception as e:
-            await ctx.respond(f"Failed to send random word", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to send random word")
-            log.error(f"This is bad :(\n{e}")
-        await command_topper(ctx)
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Gets a random word from Urban Dictionary."""
+            log.BOT_GOT_COMMAND(f"Received command /urban-random-word from {ctx.author.name}#{ctx.author.discriminator}")
+            try:
+                async with aiohttp.ClientSession() as session:
+                    url = 'https://api.urbandictionary.com/v0/random'
+                    async with session.get(url) as resp:
+                        data = await resp.json()
+                        
+                        word = data['list'][0]['word']
+                        definition = data['list'][0]['definition']
+                        example = data['list'][0]['example']
+                        
+                        embed = discord.Embed(title=f"Random Word: {word}", color=discord.Color.green())
+                        embed.add_field(name="Definition", value=definition, inline=False)
+                        embed.add_field(name="Example", value=example, inline=False)
+                        await ctx.respond(embed=embed)
+                        log.BOT_REPLY_SUCCESS(f"Sent random word {word}")
+                
+            except Exception as e:
+                await ctx.respond(f"Failed to send random word", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to send random word")
+                log.error(f"This is bad :(\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="units", description="Convert units")
     async def convert(ctx, value: float, unit_from: str, unit_to: str):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /units from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {value}, {unit_from}, {unit_to}")
-        try:
-            # Parse the units
-            unit_from = ureg(unit_from)
-            unit_to = ureg(unit_to)
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            log.BOT_GOT_COMMAND(f"Received command /units from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {value}, {unit_from}, {unit_to}")
+            try:
+                # Parse the units
+                unit_from = ureg(unit_from)
+                unit_to = ureg(unit_to)
 
-            # Perform the conversion
-            converted_value = value * unit_from.to(unit_to)
-            unit_from = str(unit_from).split(" ")[1]
-            unit_to = str(unit_to).split(" ")[1]
+                # Perform the conversion
+                converted_value = value * unit_from.to(unit_to)
+                unit_from = str(unit_from).split(" ")[1]
+                unit_to = str(unit_to).split(" ")[1]
 
-            embed = discord.Embed(title=f"Units Conversion", color=discord.Color.green())
-            embed.add_field(name="Value", value=value, inline=False)
-            embed.add_field(name="Unit From", value=unit_from, inline=False)
-            embed.add_field(name="Unit To", value=unit_to, inline=False)
-            embed.add_field(name="Converted Value", value=converted_value, inline=False)
-            await ctx.respond(embed=embed)
-            log.BOT_REPLY_SUCCESS(f"Sent units conversion")
+                embed = discord.Embed(title=f"Units Conversion", color=discord.Color.green())
+                embed.add_field(name="Value", value=value, inline=False)
+                embed.add_field(name="Unit From", value=unit_from, inline=False)
+                embed.add_field(name="Unit To", value=unit_to, inline=False)
+                embed.add_field(name="Converted Value", value=converted_value, inline=False)
+                await ctx.respond(embed=embed)
+                log.BOT_REPLY_SUCCESS(f"Sent units conversion")
 
-        except Exception as e:
-            await ctx.respond(f"{str(e)}")
-            log.BOT_REPLY_FAIL(f"Failed to send units conversion")
-            log.error(f"Oh no\n{e}")
-        await command_topper(ctx)
+            except Exception as e:
+                await ctx.respond(f"{str(e)}")
+                log.BOT_REPLY_FAIL(f"Failed to send units conversion")
+                log.error(f"Oh no\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="note-new", description="Write a new note")
     async def new_note_command(ctx, note: str):
         if command_ban_check(ctx):
             return
-        """Create a new note for the user"""
-        log.BOT_GOT_COMMAND(f"Received command /note-new from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {note}")
-        try:
-            notes = {}
-
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Create a new note for the user"""
+            log.BOT_GOT_COMMAND(f"Received command /note-new from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {note}")
             try:
-                with open("data/notes.json", "r") as f:
-                    notes = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                pass
+                notes = {}
 
-            user_notes = notes.get(str(ctx.author.id), [])
-            user_notes.append(note)
-            notes[str(ctx.author.id)] = user_notes
+                try:
+                    with open("data/notes.json", "r") as f:
+                        notes = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
 
-            with open("data/notes.json", "w") as f:
-                json.dump(notes, f, indent=4)
+                user_notes = notes.get(str(ctx.author.id), [])
+                user_notes.append(note)
+                notes[str(ctx.author.id)] = user_notes
 
-            await ctx.respond("New note added!\nSee your new note with /notes.", ephemeral=True)
-            log.BOT_REPLY_SUCCESS(f"Added new note for {ctx.author.name}#{ctx.author.discriminator}")
-        except Exception as e:
-            await ctx.respond(f"Failed to add new note!", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to add new note for {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"This is not ideal\n{e}")
-        await command_topper(ctx)
+                with open("data/notes.json", "w") as f:
+                    json.dump(notes, f, indent=4)
+
+                await ctx.respond("New note added!\nSee your new note with /notes.", ephemeral=True)
+                log.BOT_REPLY_SUCCESS(f"Added new note for {ctx.author.name}#{ctx.author.discriminator}")
+            except Exception as e:
+                await ctx.respond(f"Failed to add new note!", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to add new note for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"This is not ideal\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="note-edit", description="Edit a note")
     async def edit_note_command(ctx, index: int, note: str):
         if command_ban_check(ctx):
             return
-        """Edit an existing note for the user"""
-        log.BOT_GOT_COMMAND(f"Received command /note-edit from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {index}, {note}")
-        try:
-            notes = {}
-
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Edit an existing note for the user"""
+            log.BOT_GOT_COMMAND(f"Received command /note-edit from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {index}, {note}")
             try:
-                with open("data/notes.json", "r") as f:
-                    notes = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                pass
+                notes = {}
 
-            user_notes = notes.get(str(ctx.author.id), [])
+                try:
+                    with open("data/notes.json", "r") as f:
+                        notes = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
 
-            if user_notes:
-                undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
+                user_notes = notes.get(str(ctx.author.id), [])
 
-                if 1 <= index <= len(undeleted_user_notes):
-                    undeleted_index = index - 1
-                    edited_note = undeleted_user_notes[undeleted_index]
-                    user_notes[user_notes.index(edited_note)] = note
-                    notes[str(ctx.author.id)] = user_notes
+                if user_notes:
+                    undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
 
-                    with open("data/notes.json", "w") as f:
-                        json.dump(notes, f, indent=4)
+                    if 1 <= index <= len(undeleted_user_notes):
+                        undeleted_index = index - 1
+                        edited_note = undeleted_user_notes[undeleted_index]
+                        user_notes[user_notes.index(edited_note)] = note
+                        notes[str(ctx.author.id)] = user_notes
 
-                    await ctx.respond(f"Note {index} updated!", ephemeral=True)
-                    log.BOT_REPLY_SUCCESS(f"Edited note for {ctx.author.name}#{ctx.author.discriminator}")
+                        with open("data/notes.json", "w") as f:
+                            json.dump(notes, f, indent=4)
+
+                        await ctx.respond(f"Note {index} updated!", ephemeral=True)
+                        log.BOT_REPLY_SUCCESS(f"Edited note for {ctx.author.name}#{ctx.author.discriminator}")
+                    else:
+                        await ctx.respond("Invalid note index!", ephemeral=True)
+                        log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
                 else:
-                    await ctx.respond("Invalid note index!", ephemeral=True)
-                    log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
-            else:
-                await ctx.respond("You have no notes!", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
+                    await ctx.respond("You have no notes!", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
 
-        except Exception as e:
-            await ctx.respond(f"Failed to edit note!", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"what now?\n{e}")
-        await command_topper(ctx)
+            except Exception as e:
+                await ctx.respond(f"Failed to edit note!", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"what now?\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="notes", description="Read your notes")
     async def my_notes_command(ctx):
         if command_ban_check(ctx):
             return
-        """Read the user's notes"""
-        log.BOT_GOT_COMMAND(f"Received command /notes from {ctx.author.name}#{ctx.author.discriminator}")
-        try:
-            notes = {}
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Read the user's notes"""
+            log.BOT_GOT_COMMAND(f"Received command /notes from {ctx.author.name}#{ctx.author.discriminator}")
             try:
-                with open("data/notes.json", "r") as f:
-                    notes = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                pass
+                notes = {}
+                try:
+                    with open("data/notes.json", "r") as f:
+                        notes = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
 
-            user_notes = notes.get(str(ctx.author.id), [])
+                user_notes = notes.get(str(ctx.author.id), [])
 
-            non_completed_notes = [note for note in user_notes if "[X]" not in note]
+                non_completed_notes = [note for note in user_notes if "[X]" not in note]
 
-            if non_completed_notes:
-                formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(non_completed_notes))
-                await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
-                log.BOT_REPLY_SUCCESS(f"Sent notes for {ctx.author.name}#{ctx.author.discriminator}")
-            else:
-                await ctx.respond("You have no notes!", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to send notes for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
-        except Exception as e:
-            await ctx.respond(f"Failed to send notes!", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to send notes for {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"AHHHH!\n{e}")
-        await command_topper(ctx)
+                if non_completed_notes:
+                    formatted_notes = '\n'.join(f"{i+1}. {note}" for i, note in enumerate(non_completed_notes))
+                    await ctx.respond(f"Your notes:\n{formatted_notes}", ephemeral=True)
+                    log.BOT_REPLY_SUCCESS(f"Sent notes for {ctx.author.name}#{ctx.author.discriminator}")
+                else:
+                    await ctx.respond("You have no notes!", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to send notes for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
+            except Exception as e:
+                await ctx.respond(f"Failed to send notes!", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to send notes for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"AHHHH!\n{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="note-delete", description="Delete a note or leave index blank to delete all")
     async def delete_note_command(ctx, index: int = None):
         if command_ban_check(ctx):
             return
-        """Delete a note, or all for the user"""
-        log.BOT_GOT_COMMAND(f"Received command /note-delete from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {index}")
-        try:
-            notes = {}
-
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Delete a note, or all for the user"""
+            log.BOT_GOT_COMMAND(f"Received command /note-delete from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {index}")
             try:
-                with open("data/notes.json", "r") as f:
-                    notes = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                pass
+                notes = {}
 
-            user_notes = notes.get(str(ctx.author.id), [])
+                try:
+                    with open("data/notes.json", "r") as f:
+                        notes = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
 
-            if user_notes:
-                if index is None:
-                    for i, note in enumerate(user_notes):
-                        if "[X]" not in note:
-                            user_notes[i] = f"[X] {note}"
-                    notes[str(ctx.author.id)] = user_notes
-                    await ctx.respond("All notes deleted!", ephemeral=True)
-                elif 1 <= index <= len(user_notes):
-                    undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
-                    undeleted_index = index - 1
-                    try:
-                        deleted_note = undeleted_user_notes[undeleted_index]
-                    except IndexError:
+                user_notes = notes.get(str(ctx.author.id), [])
+
+                if user_notes:
+                    if index is None:
+                        for i, note in enumerate(user_notes):
+                            if "[X]" not in note:
+                                user_notes[i] = f"[X] {note}"
+                        notes[str(ctx.author.id)] = user_notes
+                        await ctx.respond("All notes deleted!", ephemeral=True)
+                    elif 1 <= index <= len(user_notes):
+                        undeleted_user_notes = [n for n in user_notes if "[X]" not in n]
+                        undeleted_index = index - 1
+                        try:
+                            deleted_note = undeleted_user_notes[undeleted_index]
+                        except IndexError:
+                            await ctx.respond("Invalid note index!", ephemeral=True)
+                            log.BOT_REPLY_FAIL(f"Failed to delete note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
+                            return
+                        user_notes[user_notes.index(deleted_note)] = f"[X] {deleted_note}"
+                        notes[str(ctx.author.id)] = user_notes
+                        await ctx.respond(f"Note {index} deleted!", ephemeral=True)
+                        log.BOT_REPLY_SUCCESS(f"Deleted note for {ctx.author.name}#{ctx.author.discriminator}")
+                    else:
                         await ctx.respond("Invalid note index!", ephemeral=True)
                         log.BOT_REPLY_FAIL(f"Failed to delete note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
                         return
-                    user_notes[user_notes.index(deleted_note)] = f"[X] {deleted_note}"
-                    notes[str(ctx.author.id)] = user_notes
-                    await ctx.respond(f"Note {index} deleted!", ephemeral=True)
-                    log.BOT_REPLY_SUCCESS(f"Deleted note for {ctx.author.name}#{ctx.author.discriminator}")
-                else:
-                    await ctx.respond("Invalid note index!", ephemeral=True)
-                    log.BOT_REPLY_FAIL(f"Failed to delete note for {ctx.author.name}#{ctx.author.discriminator} due to invalid index of {index}")
-                    return
 
-                with open("data/notes.json", "w") as f:
-                    json.dump(notes, f, indent=4)
-            else:
-                await ctx.respond("You have no notes!", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to delete notes for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
-                return
-        except Exception as e:
-            await ctx.respond(f"Failed to delete notes!", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to delete notes for {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"{e}")
-        await command_topper(ctx)
+                    with open("data/notes.json", "w") as f:
+                        json.dump(notes, f, indent=4)
+                else:
+                    await ctx.respond("You have no notes!", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to delete notes for {ctx.author.name}#{ctx.author.discriminator} due to no notes")
+                    return
+            except Exception as e:
+                await ctx.respond(f"Failed to delete notes!", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to delete notes for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="find-a-friend", description="Get a random discord user")
     async def dox_command(ctx):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /find-a-friend from {ctx.author.name}#{ctx.author.discriminator}")
-        try:
-            def get_random_user():
-                randomUser = bot.users[random.randint(0, len(bot.users))-1]
-                if randomUser == ctx.author or randomUser.bot:
-                    return get_random_user()
-                else:
-                    return randomUser
-            await ctx.respond(f"Your new friend is `{get_random_user()}`")
-            log.BOT_REPLY_SUCCESS(f"Sent random user to {ctx.author.name}#{ctx.author.discriminator}")
-        except Exception as e:
-            await ctx.respond(f"Failed to send a user!", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to send random user to {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"{e}")
-        await command_topper(ctx)
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            log.BOT_GOT_COMMAND(f"Received command /find-a-friend from {ctx.author.name}#{ctx.author.discriminator}")
+            try:
+                def get_random_user():
+                    randomUser = bot.users[random.randint(0, len(bot.users))-1]
+                    if randomUser == ctx.author or randomUser.bot:
+                        return get_random_user()
+                    else:
+                        return randomUser
+                await ctx.respond(f"Your new friend is `{get_random_user()}`")
+                log.BOT_REPLY_SUCCESS(f"Sent random user to {ctx.author.name}#{ctx.author.discriminator}")
+            except Exception as e:
+                await ctx.respond(f"Failed to send a user!", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to send random user to {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"{e}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="timestamp", description="Convert a time to a timestamp")
     async def timestamp_command(ctx, 
@@ -599,17 +665,23 @@ def main():
                                     description="The format of the timestamp", required=False, default="Relative") = "Relative"):
         if command_ban_check(ctx):
             return
-        """Convert a time to a timestamp"""
-        log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {date_time}, {format}")
-        timestamp = ub.timecode_convert(date_time, format)
-        if timestamp == None:
-            await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to convert time {date_time} to timestamp")
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
-        await ctx.respond(f"Your timestamp is {timestamp}")
-        log.BOT_REPLY_SUCCESS(f"Converted time {date_time} to timestamp")
-        await command_topper(ctx)
+        
+        else:
+            """Convert a time to a timestamp"""
+            log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {date_time}, {format}")
+            timestamp = ub.timecode_convert(date_time, format)
+            if timestamp == None:
+                await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to convert time {date_time} to timestamp")
+                return
+            await ctx.respond(f"Your timestamp is {timestamp}")
+            log.BOT_REPLY_SUCCESS(f"Converted time {date_time} to timestamp")
+            await command_topper(ctx)
 
     @bot.slash_command(name="qr-code", description="Generate a qr code") # Text input. Then choose from image output or text output
     async def qr_code_command(ctx, 
@@ -620,26 +692,32 @@ def main():
                               description="The output of the QR code", required=False, default="Image") = "Image"): # type: ignore
         if command_ban_check(ctx):
             return
-        """Generate a qr code"""
-        log.BOT_GOT_COMMAND(f"Received command /qr-code from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {text}, {output}")
-        if text == None:
-            await ctx.respond(f"Sorry, but you need to enter some text! {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate QR code due to no text")
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
-        if output == "Image":
-            try:
-                qrCode = ub.qr_code_image_generator(text)
-                await ctx.respond(f"Here is your QR code! {success_emoji}", file=discord.File(qrCode))
+        
+        else:
+            """Generate a qr code"""
+            log.BOT_GOT_COMMAND(f"Received command /qr-code from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {text}, {output}")
+            if text == None:
+                await ctx.respond(f"Sorry, but you need to enter some text! {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate QR code due to no text")
+                return
+            if output == "Image":
+                try:
+                    qrCode = ub.qr_code_image_generator(text)
+                    await ctx.respond(f"Here is your QR code! {success_emoji}", file=discord.File(qrCode))
+                    log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
+                except Exception as e:
+                    await ctx.respond(f"Sorry, but I could not generate a QR code! {error_emoji}", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to generate QR code for {ctx.author.name}#{ctx.author.discriminator}")
+                    log.error(f"{e}")
+            elif output == "Text":
+                await ctx.respond(f"Here is your QR code! {success_emoji}\n`{ub.qr_code_text_generator(input=text)}`")
                 log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
-            except Exception as e:
-                await ctx.respond(f"Sorry, but I could not generate a QR code! {error_emoji}", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to generate QR code for {ctx.author.name}#{ctx.author.discriminator}")
-                log.error(f"{e}")
-        elif output == "Text":
-            await ctx.respond(f"Here is your QR code! {success_emoji}\n`{ub.qr_code_text_generator(input=text)}`")
-            log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
-        await command_topper(ctx)    
+            await command_topper(ctx)    
 
     @bot.slash_command(name="imagine", description="AI Generate an image quickly")
     async def quick_imagine_command(ctx, 
@@ -662,104 +740,121 @@ def main():
                                     ):
         if command_ban_check(ctx):
             return
-        """AI Generate an image quickly"""
-        log.BOT_GOT_COMMAND(f"Received command /imagine from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {prompt}")
-        if prompt == None:
-            await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
+        
+        else:
+            """AI Generate an image quickly"""
+            log.BOT_GOT_COMMAND(f"Received command /imagine from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {prompt}")
+            if prompt == None:
+                await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
+                return
 
-        if img2img is not None and await check_if_user_has_premium(ctx.author) == False:
-            await ctx.respond(f"Please upgrade to unlock Img2Img and extra generation settings. {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
-            return
-        
-        if seed is not None and await check_if_user_has_premium(ctx.author) == False:
-            await ctx.respond(f"Please upgrade to unlock custom image seeds and extra generation settings. {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
-            return
-        
-        if strength is not None and await check_if_user_has_premium(ctx.author) == False:
-            await ctx.respond(f"Please upgrade to unlock custom image generation strength and extra generation settings. {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
-            return
-        
-        if steps is not None and await check_if_user_has_premium(ctx.author) == False:
-            await ctx.respond(f"Please upgrade to unlock custom image generation steps and extra generation settings. {error_emoji}", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
-            return
-        
+            if img2img is not None and await check_if_user_has_premium(ctx.author) == False:
+                await ctx.respond(f"Please upgrade to unlock Img2Img and extra generation settings. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+                return
+            
+            if seed is not None and await check_if_user_has_premium(ctx.author) == False:
+                await ctx.respond(f"Please upgrade to unlock custom image seeds and extra generation settings. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+                return
+            
+            if strength is not None and await check_if_user_has_premium(ctx.author) == False:
+                await ctx.respond(f"Please upgrade to unlock custom image generation strength and extra generation settings. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+                return
+            
+            if steps is not None and await check_if_user_has_premium(ctx.author) == False:
+                await ctx.respond(f"Please upgrade to unlock custom image generation steps and extra generation settings. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+                return
+            
 
-        try:
-            await ctx.respond(f"Generating image... {loading_emoji}")
-            log.info(f"Generating image from prompt {prompt}")
-            image = await ub.ai_image_gen(prompt, enhancer, img2img, seed, strength, steps)
-            if gif == True:
-                #rename image to gif
-                os.rename(image, image.replace(".jpg", ".gif"))
-                image = image.replace(".jpg", ".gif")
-                
-            await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
-            log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
+            try:
+                await ctx.respond(f"Generating image... {loading_emoji}")
+                log.info(f"Generating image from prompt {prompt}")
+                image = await ub.ai_image_gen(prompt, enhancer, img2img, seed, strength, steps)
+                if gif == True:
+                    #rename image to gif
+                    os.rename(image, image.replace(".jpg", ".gif"))
+                    image = image.replace(".jpg", ".gif")
+                    
+                await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
+                log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
 
-        except Exception as e:
-            await ctx.edit(content = f"Sorry, but I could not generate an image! {error_emoji}")
-            log.BOT_REPLY_FAIL(f"Failed to generate image for {ctx.author.name}#{ctx.author.discriminator}")
-            log.error(f"{e}")
-        await command_topper(ctx)
+            except Exception as e:
+                await ctx.edit(content = f"Sorry, but I could not generate an image! {error_emoji}")
+                log.BOT_REPLY_FAIL(f"Failed to generate image for {ctx.author.name}#{ctx.author.discriminator}")
+                log.error(f"{e}")
+            await command_topper(ctx)
         
     @bot.slash_command(name="peepee", description="Get your peepee size")
     async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
         if command_ban_check(ctx):
             return
-        """Get your peepee size"""
-        log.BOT_GOT_COMMAND(f"Received command /peepee from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {user}")
-        #hash the user id to get a random number
-        if user == None:
-            user = ctx.author
-        peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
-        if user.id == ub.read_toml_var("botOwner"):
-            peepeeSize = 500
-        peepee = "8" + "=" * peepeeSize + "D"
-        await ctx.respond(f"{user.mention} peepee size is {peepee}")
-        log.BOT_REPLY_SUCCESS(f"Sent peepee size of {peepeeSize} to {ctx.author.name}#{ctx.author.discriminator}")
-        await command_topper(ctx)
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
+        
+        else:
+            """Get your peepee size"""
+            log.BOT_GOT_COMMAND(f"Received command /peepee from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {user}")
+            #hash the user id to get a random number
+            if user == None:
+                user = ctx.author
+            peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
+            if user.id == ub.read_toml_var("botOwner"):
+                peepeeSize = 500
+            peepee = "8" + "=" * peepeeSize + "D"
+            await ctx.respond(f"{user.mention} peepee size is {peepee}")
+            log.BOT_REPLY_SUCCESS(f"Sent peepee size of {peepeeSize} to {ctx.author.name}#{ctx.author.discriminator}")
+            await command_topper(ctx)
 
     ongoing_games = {}
     @bot.slash_command(name="rps", description="Play rock paper scissors with another user")
     async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
         if command_ban_check(ctx):
             return
-        """Play rock paper scissors with another user"""
-        log.BOT_GOT_COMMAND(f"Received command /rps from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {user}")
-        log.warning(f"A game of RPS is staring. Prepare for headaches")
-        if user is None:
-            await ctx.respond("Please mention a user to play with.", ephemeral=True)
+        if ctx.guild == None:
+            await ctx.respond("Sorry, but this command can only be used in a server!", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked rps command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
+        else:
+            """Play rock paper scissors with another user"""
+            log.BOT_GOT_COMMAND(f"Received command /rps from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {user}")
+            log.warning(f"A game of RPS is staring. Prepare for headaches")
+            if user is None:
+                await ctx.respond("Please mention a user to play with.", ephemeral=True)
+                return
 
-        if user == ctx.author:
-            await ctx.respond("Sorry, you can't play with yourself ;)", ephemeral=True)
-            return
+            if user == ctx.author:
+                await ctx.respond("Sorry, you can't play with yourself ;)", ephemeral=True)
+                return
 
-        if user.bot:
-            await ctx.respond("You can't play with a bot!", ephemeral=True)
-            return
+            if user.bot:
+                await ctx.respond("You can't play with a bot!", ephemeral=True)
+                return
 
-        game_key = tuple(sorted([ctx.author.id, user.id]))
-        if game_key in ongoing_games:
-            await ctx.respond("There is already an ongoing game involving these players.", ephemeral=True)
-            return
+            game_key = tuple(sorted([ctx.author.id, user.id]))
+            if game_key in ongoing_games:
+                await ctx.respond("There is already an ongoing game involving these players.", ephemeral=True)
+                return
 
-        #create a list of games and append a new game to it
-        ongoing_games[game_key] = RPSView(ctx.author, user)
+            #create a list of games and append a new game to it
+            ongoing_games[game_key] = RPSView(ctx.author, user)
 
-        #send the message
-        await ctx.respond(f"{user.mention}, you have been challenged to a game of Rock Paper Scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=ongoing_games[game_key])
-        log.BOT_REPLY_SUCCESS(f"Sent RPS game to {ctx.author.name}#{ctx.author.discriminator} and {user.name}#{user.discriminator}")
-        ongoing_games[game_key].timer = bot.loop.create_task(ongoing_games[game_key].start_timer())
+            #send the message
+            await ctx.respond(f"{user.mention}, you have been challenged to a game of Rock Paper Scissors by {ctx.author.mention}!\nBoth players, please select your move.", view=ongoing_games[game_key])
+            log.BOT_REPLY_SUCCESS(f"Sent RPS game to {ctx.author.name}#{ctx.author.discriminator} and {user.name}#{user.discriminator}")
+            ongoing_games[game_key].timer = bot.loop.create_task(ongoing_games[game_key].start_timer())
 
     class RPSView(View):
         def __init__(self, challenger, opponent):
@@ -884,55 +979,61 @@ def main():
                             hide: discord.Option(bool, description="Hide the message") = False):
         if command_ban_check(ctx):
             return
-
-        """Encode a message"""
-        log.BOT_GOT_COMMAND(f"Received command /encode from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
-        if message is None:
-            await ctx.respond("Please enter a message to encode.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
+        
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
-        if mode is None:
-            await ctx.respond("Please enter a mode to encode with.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no mode")
-            return
-
-        encoded_message = None
-
-        if mode == "base64":
-            encoded_message = base64.b64encode(message.encode()).decode()
-        elif mode == "rot13":
-            encoded_message = codecs.encode(message, 'rot_13')
-        elif mode == "caesar":
-            if key is None or not key.isdigit():
-                await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
-                return
-            encoded_message = ub.caesar_cipher_encode(message, key)
-        elif mode == "vigenere":
-            if key is None:
-                await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
-                return
-            encoded_message = ub.vigenere_cipher_encode(message, key)
-        elif mode == "atbash":
-            encoded_message = ub.atbash_cipher_encode(message)
-        elif mode == "binary":
-            encoded_message = ' '.join(format(ord(char), '08b') for char in message)
-        elif mode == "hex":
-            encoded_message = ' '.join(format(ord(char), '02x') for char in message)
-
-        if encoded_message is None:
-            await ctx.respond("Invalid mode selected.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid mode of {mode}")
+        
         else:
-            if hide:
-                await ctx.respond(f"Encoded message: {encoded_message}", ephemeral=True)
-                log.BOT_REPLY_SUCCESS(f"Sent encoded message to {ctx.author.name}#{ctx.author.discriminator}")
+            """Encode a message"""
+            log.BOT_GOT_COMMAND(f"Received command /encode from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
+            if message is None:
+                await ctx.respond("Please enter a message to encode.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
+                return
+            if mode is None:
+                await ctx.respond("Please enter a mode to encode with.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no mode")
+                return
+
+            encoded_message = None
+
+            if mode == "base64":
+                encoded_message = base64.b64encode(message.encode()).decode()
+            elif mode == "rot13":
+                encoded_message = codecs.encode(message, 'rot_13')
+            elif mode == "caesar":
+                if key is None or not key.isdigit():
+                    await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
+                    return
+                encoded_message = ub.caesar_cipher_encode(message, key)
+            elif mode == "vigenere":
+                if key is None:
+                    await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
+                    return
+                encoded_message = ub.vigenere_cipher_encode(message, key)
+            elif mode == "atbash":
+                encoded_message = ub.atbash_cipher_encode(message)
+            elif mode == "binary":
+                encoded_message = ' '.join(format(ord(char), '08b') for char in message)
+            elif mode == "hex":
+                encoded_message = ' '.join(format(ord(char), '02x') for char in message)
+
+            if encoded_message is None:
+                await ctx.respond("Invalid mode selected.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid mode of {mode}")
             else:
-                await ctx.respond(f"Encoded message: {encoded_message}")
-                log.BOT_REPLY_SUCCESS(f"Sent encoded message to {ctx.author.name}#{ctx.author.discriminator}")
-        await command_topper(ctx)
+                if hide:
+                    await ctx.respond(f"Encoded message: {encoded_message}", ephemeral=True)
+                    log.BOT_REPLY_SUCCESS(f"Sent encoded message to {ctx.author.name}#{ctx.author.discriminator}")
+                else:
+                    await ctx.respond(f"Encoded message: {encoded_message}")
+                    log.BOT_REPLY_SUCCESS(f"Sent encoded message to {ctx.author.name}#{ctx.author.discriminator}")
+            await command_topper(ctx)
 
     @bot.slash_command(name="decode", description="Decode a message")
     async def decode_command(ctx,
@@ -942,61 +1043,67 @@ def main():
                             hide: discord.Option(bool, description="Hide the message") = False):
         if command_ban_check(ctx):
             return
+        if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
+            await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            return
         
-        """Decode a message"""
-        log.BOT_GOT_COMMAND(f"Received command /decode from {ctx.author.name}#{ctx.author.discriminator}")
-        log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
-        if message is None:
-            await ctx.respond("Please enter a message to decode.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
-            return
-        if mode is None:
-            await ctx.respond("Please enter a mode to decode with.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no mode")
-            return
-
-        decoded_message = None
-
-        if mode == "base64":
-            try:
-                decoded_bytes = base64.b64decode(message.encode())
-                decoded_message = decoded_bytes.decode()
-            except ValueError:
-                await ctx.respond("Invalid base64 encoded message.", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid base64 message")
-        elif mode == "rot13":
-            decoded_message = codecs.decode(message, 'rot_13')
-        elif mode == "caesar":
-            if key is None or not key.isdigit():
-                await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
-                return
-            decoded_message = ub.caesar_cipher_decode(message, key)
-        elif mode == "vigenere":
-            if key is None:
-                await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
-                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
-                return
-            decoded_message = ub.vigenere_cipher_decode(message, key)
-        elif mode == "atbash":
-            decoded_message = ub.atbash_cipher_decode(message)
-        elif mode == "binary":
-            decoded_message = ub.binary_to_text(message)
-        elif mode == "hex":
-            decoded_message = ub.hex_to_text(message)
-
-        if decoded_message is None:
-            await ctx.respond("Invalid mode selected.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid mode of {mode}")
         else:
-            if hide:
-                await ctx.respond(f"Decoded message: {decoded_message}", ephemeral=True)
-                log.BOT_REPLY_SUCCESS(f"Sent decoded message to {ctx.author.name}#{ctx.author.discriminator}")
-            else:
-                await ctx.respond(f"Decoded message: {decoded_message}")
-                log.BOT_REPLY_SUCCESS(f"Sent decoded message to {ctx.author.name}#{ctx.author.discriminator}")
+            
+            """Decode a message"""
+            log.BOT_GOT_COMMAND(f"Received command /decode from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
+            if message is None:
+                await ctx.respond("Please enter a message to decode.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
+                return
+            if mode is None:
+                await ctx.respond("Please enter a mode to decode with.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no mode")
+                return
 
-        await command_topper(ctx)
+            decoded_message = None
+
+            if mode == "base64":
+                try:
+                    decoded_bytes = base64.b64decode(message.encode())
+                    decoded_message = decoded_bytes.decode()
+                except ValueError:
+                    await ctx.respond("Invalid base64 encoded message.", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid base64 message")
+            elif mode == "rot13":
+                decoded_message = codecs.decode(message, 'rot_13')
+            elif mode == "caesar":
+                if key is None or not key.isdigit():
+                    await ctx.respond("Please enter a valid key for the Caesar cipher.", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
+                    return
+                decoded_message = ub.caesar_cipher_decode(message, key)
+            elif mode == "vigenere":
+                if key is None:
+                    await ctx.respond("Please enter a valid key for the Vigenère cipher.", ephemeral=True)
+                    log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid key of {key}")
+                    return
+                decoded_message = ub.vigenere_cipher_decode(message, key)
+            elif mode == "atbash":
+                decoded_message = ub.atbash_cipher_decode(message)
+            elif mode == "binary":
+                decoded_message = ub.binary_to_text(message)
+            elif mode == "hex":
+                decoded_message = ub.hex_to_text(message)
+
+            if decoded_message is None:
+                await ctx.respond("Invalid mode selected.", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to invalid mode of {mode}")
+            else:
+                if hide:
+                    await ctx.respond(f"Decoded message: {decoded_message}", ephemeral=True)
+                    log.BOT_REPLY_SUCCESS(f"Sent decoded message to {ctx.author.name}#{ctx.author.discriminator}")
+                else:
+                    await ctx.respond(f"Decoded message: {decoded_message}")
+                    log.BOT_REPLY_SUCCESS(f"Sent decoded message to {ctx.author.name}#{ctx.author.discriminator}")
+
+            await command_topper(ctx)
 
     @bot.slash_command(name="feedback", description="Send feedback to the developer")
     async def send_bot_owner_feedback(ctx,
