@@ -915,7 +915,7 @@ def qr_code_text_generator(input=None, invert=False, white='█', black=' ', ver
     qr_string = qr_string.replace('\n ', '\n')
     return qr_string
 
-async def ai_image_gen(prompt, enhancer):
+async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_steps):
     # read wordblacklist.json
     async with aiofiles.open("config/wordblacklist.json", "r") as f:
         banned_words = await f.read()
@@ -947,7 +947,15 @@ async def ai_image_gen(prompt, enhancer):
 }
 
     prompt = enhancer_prompts.get(enhancer.lower(), prompt)
+    if img_seed == None:
+        img_seed = random.randint(1,999999999)
+
+    if img_strength == None:
+        img_strength = 0.7
+
+    if img_steps == None:
+        img_steps = 3
 
     client = Client("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/c6neu/", output_dir="//home/ubuntu/utilBot/temp/")
-    result = client.predict(None, f"{prompt}", 1, 3, random.randint(1,999999999), api_name="/predict")
+    result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
     return result

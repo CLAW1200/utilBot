@@ -114,7 +114,17 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked command from {ctx.author.name}#{ctx.author.discriminator} due to being BANNED")
             return True
 
-    def check_if_user_has_prem
+    async def check_if_user_has_premium(user):
+        info = await bot.fetch_entitlements()
+        #check in list and find index for ctx.author.id 
+        print (info)
+        print (user.id)
+        for ent in info:
+            if ent.user_id == user.id:
+                print (ent)
+                return True
+        return False
+        
 
     async def command_topper(ctx):
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
@@ -169,8 +179,8 @@ def main():
     async def video_to_gif_command(
         ctx: discord.ApplicationContext,
         video_link: str,
-        fps: discord.Option(int, "The FPS of the gif", required=False, default=25),
-        scale: discord.Option(int, "The scale of the gif", required=False),
+        fps: discord.Option(int, "The FPS of the gif", required=False, default=25), # type: ignore
+        scale: discord.Option(int, "The scale of the gif", required=False), # type: ignore
     ):
         if command_ban_check(ctx):
             return
@@ -220,7 +230,7 @@ def main():
     async def speech_bubble_command(
         ctx: discord.ApplicationContext,
         image_link: str,
-        speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2),
+        speech_bubble_size: discord.Option(float, "The size of the speech bubble in the y axis", required=False, default=0.2), # type: ignore
     ):
         if command_ban_check(ctx):
             return
@@ -609,7 +619,7 @@ def main():
                               description="Enter text to convert to a QR code") = None,
                               output: discord.Option(str, 
                               choices=["Image", "Text"], 
-                              description="The output of the QR code", required=False, default="Image") = "Image"):
+                              description="The output of the QR code", required=False, default="Image") = "Image"): # type: ignore
         if command_ban_check(ctx):
             return
         """Generate a qr code"""
@@ -641,7 +651,15 @@ def main():
                                     choices=["None", "Digital Painting", "Indie Game", "Photo", "Film Noir", "Isometric Room", "Space Hologram", "Cute Creature", "Realistic Portrait", "Realistic Landscape"],
                                     description="The enhancer to use on the image", required=False, default="None") = "None",
                                     gif: discord.Option(bool,
-                                    description="Whether to generate a gif or not", required=False, default=False) = False
+                                    description="Whether to generate a gif or not", required=False, default=False) = False,
+                                    img2img: discord.Option(str,
+                                    description="Generate an image from an image (url)", required=False, default=None) = None,
+                                    img_seed: discord.Option(int,
+                                    description="The seed for the image generation", required=False, default=None) = None,
+                                    img_strength: discord.Option(float,
+                                    description="The strength of the image generation (0-1)", required=False, default=None) = None,
+                                    img_steps: discord.Option(int,
+                                    description="The steps for the image generation (1-8)", required=False, default=None) = None
                                     ):
         if command_ban_check(ctx):
             return
@@ -652,10 +670,32 @@ def main():
             await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
             return
+        
+
+        if img2img is not None and await check_if_user_has_premium(ctx.author) == False:
+            await ctx.respond(f"Please upgrade to unlock Img2Img and extra generation settings. {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+            return
+        
+        if img_seed is not None and await check_if_user_has_premium(ctx.author) == False:
+            await ctx.respond(f"Please upgrade to unlock custom image seeds and extra generation settings. {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+            return
+        
+        if img_strength is not None and await check_if_user_has_premium(ctx.author) == False:
+            await ctx.respond(f"Please upgrade to unlock custom image generation strength and extra generation settings. {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+            return
+        
+        if img_steps is not None and await check_if_user_has_premium(ctx.author) == False:
+            await ctx.respond(f"Please upgrade to unlock custom image generation steps and extra generation settings. {error_emoji}", ephemeral=True)
+            log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
+            return
+
         try:
             await ctx.respond(f"Generating image... {loading_emoji}")
             log.info(f"Generating image from prompt {prompt}")
-            image = await ub.ai_image_gen(prompt, enhancer)
+            image = await ub.ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_steps)
             if gif == True:
                 #rename image to gif
                 os.rename(image, image.replace(".jpg", ".gif"))
@@ -663,13 +703,6 @@ def main():
                 
             await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
             log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
-            # get link to the image that was just sent by the bot
-            # async for message in ctx.channel.history(limit=1):
-            #     imageLink = message.attachments[0].url
-            #     # append url to txt file
-            #     with open("SDXL-Images.txt", "a") as f:
-            #         line = f"{datetime.datetime.now()}{ctx.author.name}#{ctx.author.discriminator} - {imageLink}\n"
-            #         f.write(line)
 
         except Exception as e:
             await ctx.edit(content = f"Sorry, but I could not generate an image! {error_emoji}")
@@ -969,7 +1002,7 @@ def main():
     @bot.slash_command(name="feedback", description="Send feedback to the developer")
     async def send_bot_owner_feedback(ctx,
         option: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
-        feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None,
+        feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None, # type: ignore
         description: discord.Option(str, description="Describe the issue / change") = None
     ):
             if command_ban_check(ctx):
@@ -1399,8 +1432,7 @@ def main():
                 """)
 
             if message.content.startswith("!sku"):
-                info = await bot.fetch_entitlements()
-                await botOwner.send(info)
+                await botOwner.send(await check_if_user_has_premium(message.author))
 
     bot.response_messages = {}
     bot.run(BOT_TOKEN)
