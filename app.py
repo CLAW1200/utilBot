@@ -117,10 +117,8 @@ def main():
     async def check_if_user_has_premium(user):
         info = await bot.fetch_entitlements()
         #check in list and find index for ctx.author.id 
-        print (info)
-        print (user.id)
         for ent in info:
-            if ent.user_id == user.id:
+            if ent.user_id == user.id and ent.starts_at < datetime.datetime.now(datetime.timezone.utc) < ent.ends_at:
                 print (ent)
                 return True
         return False
@@ -653,12 +651,13 @@ def main():
                                     gif: discord.Option(bool,
                                     description="Whether to generate a gif or not", required=False, default=False) = False,
                                     img2img: discord.Option(str,
-                                    description="Generate an image from an image (url)", required=False, default=None) = None,
-                                    img_seed: discord.Option(int,
+                                    description="Generate an image from another image (url)", required=False, default=None) = None,
+                                    seed: discord.Option(int,
                                     description="The seed for the image generation", required=False, default=None) = None,
-                                    img_strength: discord.Option(float,
+                                    strength: discord.Option(float,
                                     description="The strength of the image generation (0-1)", required=False, default=None) = None,
-                                    img_steps: discord.Option(int,
+                                    steps: discord.Option(int,
+                                    choices=[1, 2, 3, 4, 5, 6, 7, 8],
                                     description="The steps for the image generation (1-8)", required=False, default=None) = None
                                     ):
         if command_ban_check(ctx):
@@ -670,32 +669,32 @@ def main():
             await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
             return
-        
 
         if img2img is not None and await check_if_user_has_premium(ctx.author) == False:
             await ctx.respond(f"Please upgrade to unlock Img2Img and extra generation settings. {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
             return
         
-        if img_seed is not None and await check_if_user_has_premium(ctx.author) == False:
+        if seed is not None and await check_if_user_has_premium(ctx.author) == False:
             await ctx.respond(f"Please upgrade to unlock custom image seeds and extra generation settings. {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
             return
         
-        if img_strength is not None and await check_if_user_has_premium(ctx.author) == False:
+        if strength is not None and await check_if_user_has_premium(ctx.author) == False:
             await ctx.respond(f"Please upgrade to unlock custom image generation strength and extra generation settings. {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
             return
         
-        if img_steps is not None and await check_if_user_has_premium(ctx.author) == False:
+        if steps is not None and await check_if_user_has_premium(ctx.author) == False:
             await ctx.respond(f"Please upgrade to unlock custom image generation steps and extra generation settings. {error_emoji}", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
             return
+        
 
         try:
             await ctx.respond(f"Generating image... {loading_emoji}")
             log.info(f"Generating image from prompt {prompt}")
-            image = await ub.ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_steps)
+            image = await ub.ai_image_gen(prompt, enhancer, img2img, seed, strength, steps)
             if gif == True:
                 #rename image to gif
                 os.rename(image, image.replace(".jpg", ".gif"))
