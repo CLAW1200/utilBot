@@ -19,7 +19,8 @@ from qrcode import QRCode, constants
 from numpy import array
 import aiohttp
 import aiofiles
-from playwright.async_api import async_playwright
+# from playwright.async_api import async_playwright
+from gradio_client import Client
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -947,31 +948,6 @@ async def ai_image_gen(prompt, enhancer):
 
     prompt = enhancer_prompts.get(enhancer.lower(), prompt)
 
-    ### Updated for new sdxlturbo site, hopefully this works, test before push
-    
-    # Initialize the Playwright
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto("https://sdxlturbo.ai/app?")
-
-        #press button "turbo"
-        #<div class="w-full px-2 py-1 rounded-md bg-zinc-700/50 border flex items-center gap-x-2 border-gray-700"><input id="Turbo" name="model" type="radio" class="hidden h-4 w-4 border-gray-100 text-indigo-600 focus:ring-indigo-600" value="sdxlTurbo"><label for="Turbo" class="w-full flex-1 block text-sm font-medium leading-6 text-white text-center relative">Turbo</label></div>
-
-        await page.click('input[name="model"][value="sdxlTurbo"]')  # updated for new model selector 
-
-        await page.fill('input[name="prompt"]', prompt, timeout=15000) # should be the same still
-        # Wait until the image has loaded
-        await page.wait_for_selector('//img[@alt="image"]') # changed this to new alt name
-        image_url = await page.get_attribute('//img[@alt="image"]', "src")
-        # Download the image
-        async with aiohttp.ClientSession() as session:
-            async with session.get(image_url) as resp:
-                if resp.status == 200:
-                    seed = hashlib.md5(prompt.encode()).hexdigest()
-                    async with aiofiles.open(f"temp/sdturbo{seed}.jpg", 'wb') as f:
-                        await f.write(await resp.read())
-        # Close the browser
-        await browser.close()
-    return f"temp/sdturbo{seed}.jpg"
+    client = Client("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/c6neu/", output_dir="//home/ubuntu/utilBot/temp/")
+    result = client.predict(None, f"{prompt}", 1, 3, random.randint(1,999999999), api_name="/predict")
+    return result

@@ -114,6 +114,8 @@ def main():
             log.BOT_REPLY_FAIL(f"Blocked command from {ctx.author.name}#{ctx.author.discriminator} due to being BANNED")
             return True
 
+    def check_if_user_has_prem
+
     async def command_topper(ctx):
         ub.edit_user_data(ctx.author, "commandsUsed", ub.get_user_data(ctx.author, "commandsUsed") + 1)
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
@@ -631,7 +633,7 @@ def main():
             log.BOT_REPLY_SUCCESS(f"Generated QR code for {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)    
 
-    @bot.slash_command(name="quick-imagine", description="AI Generate an image quickly")
+    @bot.slash_command(name="imagine", description="AI Generate an image quickly")
     async def quick_imagine_command(ctx, 
                                     prompt: discord.Option(str, 
                                     description="Enter a prompt to generate an image from") = None,
@@ -644,7 +646,7 @@ def main():
         if command_ban_check(ctx):
             return
         """AI Generate an image quickly"""
-        log.BOT_GOT_COMMAND(f"Received command /quick-imagine from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"Received command /imagine from {ctx.author.name}#{ctx.author.discriminator}")
         log.BOT_GOT_COMMAND(f"With input {prompt}")
         if prompt == None:
             await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
@@ -1014,7 +1016,7 @@ def main():
         """Get help"""
         log.BOT_GOT_COMMAND(f"Received command /help from {ctx.author.name}#{ctx.author.discriminator}")
         embed = discord.Embed(title="Help", color=discord.Color.green())
-        embed.add_field(name="quick-imagine", value="AI Generate an image quickly", inline=False)
+        embed.add_field(name="imagine", value="AI Generate an image quickly", inline=False)
         embed.add_field(name="image-to-gif", value="Convert an image to a gif", inline=False)
         embed.add_field(name="video-to-gif", value="Convert a video to a gif", inline=False)
         embed.add_field(name="speech-bubble", value="Add a speech bubble to an image", inline=False)
@@ -1395,6 +1397,10 @@ def main():
 **!invme** - Create a guild invite
 **!stats** - Send the data/data.csv file
                 """)
+
+            if message.content.startswith("!sku"):
+                info = await bot.fetch_entitlements()
+                await botOwner.send(info)
 
     bot.response_messages = {}
     bot.run(BOT_TOKEN)
