@@ -88,6 +88,32 @@ def main():
     bot = discord.Bot(intents=intents)
     log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
 
+    from discord.ext import tasks, commands
+
+    class logDataToCSV(commands.Cog):
+        def __init__(self, bot):
+            self.index = 0
+            self.bot = bot
+            self.printer.start()
+
+        def cog_unload(self):
+            self.printer.cancel()
+
+        @tasks.loop(seconds=60)
+        async def printer(self):
+            log.debug(f"Checking time")
+            now = datetime.datetime.now()
+            if now.minute == 0: 
+                await ub.log_data_to_csv(self.bot)
+                log.info(f"Logged data to CSV")
+
+        @printer.before_loop
+        async def before_printer(self):
+            print('waiting...')
+            await self.bot.wait_until_ready()
+
+    logDataToCSV(bot)
+
     def check_bot_permissions(ctx):
         if ctx.guild == None:
             return True
@@ -1213,16 +1239,10 @@ def main():
             log.BOT_REPLY_FAIL(f"Failed to check vote status for {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
 
+
     @bot.event
     async def on_ready():
         log.info(f"Bot is now online")
-        while True:
-            log.debug(f"Checking time")
-            now = datetime.datetime.now()
-            if now.minute == 0: 
-                await ub.log_data_to_csv(bot)
-                log.info(f"Logged data to CSV")
-            await asyncio.sleep(60)  # wait for 60 seconds before checking the time again
 
     @bot.event
     async def on_message(message):

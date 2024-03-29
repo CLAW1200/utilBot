@@ -168,14 +168,24 @@ def read_toml_var(var):
         return data[var]
 
 def clean_up_temp_files():
-    log.debug("Checking for old files")
-    for file in os.listdir("temp"):
-        if os.path.getmtime(f"temp/{file}") < time.time() - (5 * 60): # 5 minutes
-            try:
-                os.remove(f"temp/{file}")
-                log.debug(f"Removed old file '{file}'")
-            except Exception as e:
-                log.error(f"Error removing old file '{file}': {e}")
+    log.debug("Checking for old files and folders")
+    for root, dirs, files in os.walk("temp"):
+        for file in files:
+            file_path = os.path.join(root, file)
+            if os.path.getmtime(file_path) < time.time() - (5 * 60): # 5 minutes
+                try:
+                    os.remove(file_path)
+                    log.debug(f"Removed old file '{file_path}'")
+                except Exception as e:
+                    log.error(f"Error removing old file '{file_path}': {e}")
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            if os.path.getmtime(dir_path) < time.time() - (5 * 60): # 5 minutes
+                try:
+                    shutil.rmtree(dir_path)
+                    log.debug(f"Removed old folder '{dir_path}'")
+                except Exception as e:
+                    log.error(f"Error removing old folder '{dir_path}': {e}")
 
 def get_file_size(link):
     # function to check the size of a video or image link
