@@ -271,6 +271,9 @@ def split_gif_frames(gif_path):
     return frames
 
 def link_processor(link):
+    """
+    Process a link to get the media link from a webpage
+    """
     response = requests.get(link)
     if response.status_code == 200:
         page_content = response.content

@@ -214,7 +214,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -225,13 +225,11 @@ def main():
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {video_link}")
                 return
-
-
             #do not download videos larger than maxFileSize
             try:
                 videoFileSize = ub.get_file_size(video_link)
-                if videoFileSize > ub.read_toml_var("maxFileSize"):
-                    await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
+                if videoFileSize > 8000000:
+                    await ctx.respond(f"Sorry, but the max video size is 8MB! {error_emoji}", ephemeral=True)
                     log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
                     return
             except Exception as e:
@@ -239,6 +237,7 @@ def main():
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
                 log.error(e)
                 return
+
             if fps > 30:
                 await ctx.respond(f"Sorry, but the max FPS is 30! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to FPS of {fps}")
@@ -270,7 +269,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -319,12 +318,12 @@ def main():
             await command_topper(ctx)
 
     @bot.slash_command(name="download", description="Download some media from a link")
-    async def play_command(ctx: discord.ApplicationContext, media_link: str, audio_only: discord.Option(bool, "Whether to download as audio", required=False, default=False)):
+    async def download_command(ctx: discord.ApplicationContext, media_link: str, audio_only: discord.Option(bool, "Whether to download as audio", required=False, default=False)):
         if command_ban_check(ctx):
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -392,7 +391,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked urban command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -438,7 +437,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked urban-random-word command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -472,7 +471,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked units command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -508,7 +507,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked note-new command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -545,7 +544,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked note-edit command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -596,7 +595,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked notes command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -633,7 +632,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked note-delete command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -694,7 +693,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked find-a-friend command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -725,7 +724,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked timestamp command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -752,7 +751,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked qr-code command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -800,7 +799,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked imagine command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -856,7 +855,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked peepee command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -1039,7 +1038,7 @@ def main():
         
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked encode command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
@@ -1102,7 +1101,7 @@ def main():
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
-            log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
+            log.BOT_REPLY_FAIL(f"Blocked decode command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
         
         else:
