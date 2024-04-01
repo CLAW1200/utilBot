@@ -78,4 +78,5 @@ def add_col_to_csv(filename):
         writer.writerows(rows)
 
 if __name__ == '__main__':
-    add_col_to_csv('data.csv')
+    # add_col_to_csv('data.csv')
+    remove_duplicates('data/data.csv')
