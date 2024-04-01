@@ -9,3 +9,4 @@ matplotlib
 bs4
 qrcode
 gradio_client
+regex

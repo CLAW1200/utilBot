@@ -831,7 +831,6 @@ def main():
                 await ctx.respond(f"Please upgrade to unlock custom image generation steps and extra generation settings. {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to generate image due to no premium")
                 return
-            
 
             try:
                 await ctx.respond(f"Generating image... {loading_emoji}")

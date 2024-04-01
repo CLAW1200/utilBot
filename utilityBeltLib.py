@@ -1015,6 +1015,6 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     if img_steps == None:
         img_steps = 3
 
-    client = Client("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/c6neu/", output_dir="//home/ubuntu/utilBot/temp/")
+    client = Client("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/23p9w/", output_dir="//home/ubuntu/utilBot/temp/")
     result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
     return result
