@@ -17,8 +17,8 @@ from matplotlib import pyplot as plt
 from difflib import SequenceMatcher
 from qrcode import QRCode, constants
 from numpy import array
-import aiohttp
 import aiofiles
+import regex as re
 # from playwright.async_api import async_playwright
 from gradio_client import Client
 
@@ -196,6 +196,55 @@ def get_file_size(link):
     except Exception as e:
         log.error(f"Error getting file size for '{link}': {e}")
         return None
+    
+
+def download_multimedia(media_link, audio_only):
+    """Use cobalt API to download media"""
+
+    clean_up_temp_files()
+
+    # use co.wuk.sh api to download media
+    api_url = "https://co.wuk.sh/api/json"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+        }
+    data = {
+        "url": media_link}
+    
+    if audio_only:
+        data["isAudioOnly"] = "true"
+
+    response = requests.post(api_url, headers=headers, json=data)
+    if response.status_code != 200:
+        print ("Error: ", response.json())
+        raise Exception(f"Error: {response.json()}")
+
+    # Extract download URL from the response
+    download_url = response.json().get('url')
+
+    if not download_check(download_url):
+        return "SizeError"
+
+    # Send a GET request
+    response = requests.get(download_url)
+
+    # Get the filename from the Content-Disposition header
+    content_disposition = response.headers.get('content-disposition')
+    filename = re.findall('filename=(.+)', content_disposition)[0]
+    
+    #remove any quotes from the filename
+    filename = filename.replace('"', '')
+    print (filename)
+
+    # Download the media from the download URL
+    media = response.content
+    file_download = f"temp/{filename}"
+
+    with open(file_download, "wb") as f:
+        f.write(media)
+
+    return file_download
 
 def download_check(link, max_size=read_toml_var("maxFileSize")):
     # function to check if a file is too large to download
