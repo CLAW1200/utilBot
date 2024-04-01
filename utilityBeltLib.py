@@ -19,6 +19,7 @@ from qrcode import QRCode, constants
 from numpy import array
 import aiofiles
 import regex as re
+import math
 # from playwright.async_api import async_playwright
 from gradio_client import Client
 
@@ -187,6 +188,58 @@ def clean_up_temp_files():
                 except Exception as e:
                     log.error(f"Error removing old folder '{dir_path}': {e}")
 
+
+def compress_to_size(input_file, output_file, target_file_size, trim_start_time, trim_end_time):
+    print (f"Compressing {input_file} to {output_file} with target file size {target_file_size} MB")
+    # if video is higher than 1080p downscale it to 1080p
+    # Get the video resolution
+    resolution = subprocess.check_output(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=s=x:p=0', input_file])
+    resolution = resolution.decode('utf-8').split('x')
+    width = int(resolution[0])
+    height = int(resolution[1])
+
+    if width > 1920 or height > 1080:
+        subprocess.call(['ffmpeg', '-y', '-i', input_file, '-vf', 'scale=1920:1080', "temp/temp.mkv"])
+        input_file = "temp/temp.mkv"
+
+    # Get the duration of the input file
+    duration = subprocess.check_output(['ffprobe', '-i', input_file, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
+    duration = float(duration.decode('utf-8')) # decode byte string and convert to float
+    
+    # Prepare trim arguments
+    trim_args = []
+    if trim_start_time is not None:
+        trim_args += ['-ss', str(trim_start_time)]
+    if trim_end_time is not None:
+        end_time = int(trim_end_time)
+        trim_args += ['-to', str(end_time)]
+
+    # Trim the video first
+    trimmed_file = "temp/trimmed.mkv"
+    subprocess.call(['ffmpeg', '-y', '-i', input_file] + trim_args + [trimmed_file])
+
+    # Get the duration of the trimmed file
+    duration = subprocess.check_output(['ffprobe', '-i', trimmed_file, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
+    duration = float(duration.decode('utf-8')) # decode byte string and convert to float
+
+    # Calculate the target bitrate
+    target_bitrate = math.floor((target_file_size * 8192) / duration)
+
+    # Compress the video in two passes
+    subprocess.call(['ffmpeg', '-y', '-i', trimmed_file] + ['-c:v', 'libx264', '-preset', 'medium', '-b:v', str(target_bitrate) + 'k', '-pass', '1', '-c:a', 'aac', '-b:a', '128k', '-f', 'mp4', 'NUL'])
+    subprocess.call(['ffmpeg', '-y', '-i', trimmed_file] + ['-c:v', 'libx264', '-preset', 'medium', '-b:v', str(target_bitrate) + 'k', '-pass', '2', '-c:a', 'aac', '-b:a', '128k', output_file])
+
+    # Delete the trimmed file
+    os.remove(trimmed_file)
+    os.remove("temp/temp.mkv")
+
+    # Delete the ffmpeg2pass files
+    os.remove("ffmpeg2pass-0.log")
+    os.remove("ffmpeg2pass-0.log.mbtree")
+
+    return output_file
+
+
 def get_file_size(link):
     # function to check the size of a video or image link
     try:
@@ -196,7 +249,6 @@ def get_file_size(link):
     except Exception as e:
         log.error(f"Error getting file size for '{link}': {e}")
         return None
-    
 
 def download_multimedia(media_link, audio_only):
     """Use cobalt API to download media"""
@@ -210,7 +262,9 @@ def download_multimedia(media_link, audio_only):
         "Accept": "application/json"
         }
     data = {
-        "url": media_link}
+        "url": media_link,
+        "filenamePattern": "pretty"
+        }
     
     if audio_only:
         data["isAudioOnly"] = "true"
@@ -223,8 +277,8 @@ def download_multimedia(media_link, audio_only):
     # Extract download URL from the response
     download_url = response.json().get('url')
 
-    if not download_check(download_url):
-        return "SizeError"
+    # if not download_check(download_url):
+    #     return "SizeError"
 
     # Send a GET request
     response = requests.get(download_url)

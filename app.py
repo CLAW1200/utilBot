@@ -317,7 +317,7 @@ def main():
                 log.error(e)
             await command_topper(ctx)
 
-    @bot.slash_command(name="download", description="Download some media from a link")
+    @bot.slash_command(name="download", description="Download from Youtube, SoundCloud, Twitter, Instagram and more!")
     async def download_command(ctx: discord.ApplicationContext, media_link: str, audio_only: discord.Option(bool, "Whether to download as audio", required=False, default=False)):
         if command_ban_check(ctx):
             return
@@ -335,21 +335,27 @@ def main():
                 log.BOT_REPLY_FAIL(f"Blocked play command from {ctx.author.name}#{ctx.author.discriminator} due to invalid media link of {media_link}")
                 return
             
-            await ctx.respond(f"Preparing media... {loading_emoji}")
+            await ctx.respond(f"Downloading media... {loading_emoji}")
 
             file = ub.download_multimedia(media_link, audio_only)
             if file == None:
                 await ctx.edit(content = f"Sorry, but that media link is invalid! {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
                 return
+            """
             if file == "SizeError":
                 await ctx.edit(content = f"Sorry, but the max file size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to file size of too large")
                 return
-            
-            await ctx.edit(content = f"Here is your media! {success_emoji}", file=discord.File(file))
-            log.BOT_REPLY_SUCCESS(f"Downloaded media from {media_link}")
-                        
+            """
+            try:
+                await ctx.edit(content = f"Here is your media! {success_emoji}", file=discord.File(file))
+                log.BOT_REPLY_SUCCESS(f"Downloaded media from {media_link}")
+            except discord.errors.HTTPException as e:
+                await ctx.edit(content = f"Sorry, but that media is too large for discord! {error_emoji}")
+                log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
+                log.error(e)
+
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
