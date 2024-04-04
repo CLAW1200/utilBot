@@ -20,7 +20,8 @@ from numpy import array
 import aiofiles
 import regex as re
 import math
-# from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright
+import aiohttp
 from gradio_client import Client
 
 # Create a log
@@ -250,7 +251,7 @@ def get_file_size(link):
         log.error(f"Error getting file size for '{link}': {e}")
         return None
 
-def download_multimedia(media_link, audio_only):
+def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     """Use cobalt API to download media"""
 
     clean_up_temp_files()
@@ -268,6 +269,10 @@ def download_multimedia(media_link, audio_only):
     
     if audio_only:
         data["isAudioOnly"] = "true"
+        data["aFormat"] = audio_quality
+    if not audio_only:
+        data["isAudioOnly"] = "false"
+        data["vQuality"] = video_quality
 
     response = requests.post(api_url, headers=headers, json=data)
     if response.status_code != 200:
@@ -1039,6 +1044,19 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     for word in banned_words:
         if word in prompt.lower():
             return None
+
+
+    # Initialize the Playwright
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/?view=api")
+        # get text in div.url.svelte-3n2nxs
+        ai_api_key = await page.get_attribute('div.url.svelte-3n2nxs', 'innerText')
+        print (ai_api_key)
+        # Close the browser
+        await browser.close()
         
     enhancer_prompts = {
     "none": f"{prompt}",
@@ -1072,6 +1090,6 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     if img_steps == None:
         img_steps = 3
 
-    client = Client("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/23p9w/", output_dir="//home/ubuntu/utilBot/temp/")
+    client = Client(f"https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/{ai_api_key}/", output_dir="//home/ubuntu/utilBot/temp/")
     result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
     return result

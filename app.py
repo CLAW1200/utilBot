@@ -318,7 +318,12 @@ def main():
             await command_topper(ctx)
 
     @bot.slash_command(name="download", description="Download from Youtube, SoundCloud, Twitter, Instagram and more!")
-    async def download_command(ctx: discord.ApplicationContext, media_link: str, audio_only: discord.Option(bool, "Whether to download as audio", required=False, default=False)):
+    async def download_command(ctx: discord.ApplicationContext, 
+                                media_link: str,
+                                audio_only: discord.Option(bool, "Whether to download audio only", required=False, default=False),
+                                video_quality: discord.Option(str, choices=["max", "144", "240", "360", "480", "720", "1080", "1440", "2160"], required=False, default="360"),
+                                audio_quality: discord.Option(str, choices=["best", "mp3", "wav", "ogg", "opus"], required=False, default="mp3")
+                               ):
         if command_ban_check(ctx):
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
@@ -329,15 +334,25 @@ def main():
         else:
             log.BOT_GOT_COMMAND(f"Received command /download from {ctx.author.name}#{ctx.author.discriminator}")
             log.BOT_GOT_COMMAND(f"With media link: {media_link}")
-            
+
             if "https://discord.com/channels/" in media_link:
                 await ctx.respond(f"Sorry, but that media link is invalid! {error_emoji}\nMake sure your using a media link, not a message link.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked play command from {ctx.author.name}#{ctx.author.discriminator} due to invalid media link of {media_link}")
                 return
             
+            if (video_quality != ("360" or "240" or "144")) and not await check_if_user_has_premium(ctx.author):
+                await ctx.respond(f"Sorry, but only 360p, 240p and 144p are available for non-premium users! Please upgrade to Utility Belt+ to get access to better quality downloads and other features. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to quality of {video_quality}")
+                return
+            
+            if (audio_quality != "mp3") and not await check_if_user_has_premium(ctx.author):
+                await ctx.respond(f"Sorry, but only mp3 is available for non-premium users! Please upgrade to Utility Belt+ to get access to better quality downloads and other features. {error_emoji}", ephemeral=True)
+                log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to quality of {audio_quality}")
+                return
+            
             await ctx.respond(f"Downloading media... {loading_emoji}")
 
-            file = ub.download_multimedia(media_link, audio_only)
+            file = ub.download_multimedia(media_link, audio_only, video_quality, audio_quality)
             if file == None:
                 await ctx.edit(content = f"Sorry, but that media link is invalid! {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
@@ -352,10 +367,9 @@ def main():
                 await ctx.edit(content = f"Here is your media! {success_emoji}", file=discord.File(file))
                 log.BOT_REPLY_SUCCESS(f"Downloaded media from {media_link}")
             except discord.errors.HTTPException as e:
-                await ctx.edit(content = f"Sorry, but that media is too large for discord! {error_emoji}")
+                await ctx.edit(content = f"Sorry, but that media is too large for discord! Try lowering the quality. {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
                 log.error(e)
-
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
