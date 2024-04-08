@@ -4,5 +4,6 @@ botOwner = 512609720885051425
 suportServer = 1170496731872493739
 feedbackChannel = 1172257536968249487
 loading_emoji = "<a:loading2:1191387482076491889>"
-success_emoji = "<:success:1191390057916022786>"
-error_emoji = "<:error:1191389811039277236>"
+success_emoji = "<:ok2:1226948857565544518>"
+error_emoji = "<:error2:1226948640602587186>"
+# type a backslash before the emoji in discord to get the id

@@ -254,6 +254,10 @@ def main():
                 newGif = ub.convert_video_to_gif(video_link, fps, scale)
                 await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
                 log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
+
+            except discord.errors.HTTPException as e:
+                await ctx.edit(content = f"Sorry, but the converted video is too large for discord or your server! {error_emoji}")
+                log.error(e)
             except Exception as e:
                 await ctx.edit(content = f"Sorry, but that video link is invalid! {error_emoji}")
                 log.error(e)
