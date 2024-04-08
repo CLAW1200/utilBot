@@ -1044,20 +1044,16 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     for word in banned_words:
         if word in prompt.lower():
             return None
-
-
-    # Initialize the Playwright
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/?view=api")
-        # get text in div.url.svelte-3n2nxs
-        ai_api_key = await page.get_attribute('div.url.svelte-3n2nxs', 'innerText')
-        print (ai_api_key)
-        # Close the browser
-        await browser.close()
         
+    async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context()
+            page = await context.new_page()
+            await page.goto("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/?view=api")
+            ai_api_url = await page.inner_text("div.url.svelte-3n2nxs")
+            await browser.close()
+
+
     enhancer_prompts = {
     "none": f"{prompt}",
 
@@ -1090,6 +1086,6 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     if img_steps == None:
         img_steps = 3
 
-    client = Client(f"https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/--replicas/{ai_api_key}/", output_dir="//home/ubuntu/utilBot/temp/")
+    client = Client(ai_api_url, output_dir="//home/ubuntu/utilBot/temp/")
     result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
     return result
