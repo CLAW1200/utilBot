@@ -286,7 +286,7 @@ def main():
             try:
                 imageFileSize = ub.get_file_size(image_link)
                 if imageFileSize > ub.read_toml_var("maxFileSize"):
-                    await ctx.respond(f"Sorry, but the max video size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
+                    await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
                     log.BOT_REPLY_FAIL(f"Blocked speech-bubble command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                     return
             except Exception as e:
