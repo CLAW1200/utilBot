@@ -23,6 +23,10 @@ import math
 from playwright.async_api import async_playwright
 import aiohttp
 from gradio_client import Client
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=5)
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -268,11 +272,14 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
         }
     
     if audio_only:
+        print ("Downloading audio only")
         data["isAudioOnly"] = "true"
         data["aFormat"] = audio_quality
-    if not audio_only:
-        data["isAudioOnly"] = "false"
+    else:
+        print ("Downloading video")
         data["vQuality"] = video_quality
+
+    print (data)
 
     response = requests.post(api_url, headers=headers, json=data)
     if response.status_code != 200:

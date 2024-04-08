@@ -1,3 +1,4 @@
+# the longer i spend on this, the more jank it becomes...
 import utilityBeltLib as ub
 import discord
 from discord.ui import View
@@ -216,7 +217,7 @@ def main():
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
             return
-        
+
         else:
             log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
             log.BOT_GOT_COMMAND(f"With image link: {video_link}")
@@ -232,6 +233,7 @@ def main():
                     await ctx.respond(f"Sorry, but the max video size is 8MB! {error_emoji}", ephemeral=True)
                     log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {videoFileSize}")
                     return
+
             except Exception as e:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link not a message link.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked video-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid video link of {video_link}")
