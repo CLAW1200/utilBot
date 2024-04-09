@@ -30,6 +30,8 @@ log.BOT_MESSAGE = lambda bot_message: log.log(25, f"SENT MESSAGE: {bot_message}"
 log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"SUCCESS: {bot_message}")
 log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"FAIL: {bot_message}")
 
+log.BOT_PROCESS = lambda bot_message: log.log(25, f"PROCESS: {bot_message}")
+
 
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
@@ -198,7 +200,7 @@ def main():
                 return
 
             await ctx.respond(f"Converting image to gif {loading_emoji}") # this message will be edited when the gif is sent
-            log.info(f"Converting image {image_link} to gif")
+            log.BOT_PROCESS(f"Converting image {image_link} to gif")
             try:
                 newGif = ub.convert_image_to_gif(image_link)
                 await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
@@ -254,7 +256,7 @@ def main():
                     return
             
             await ctx.respond(f"Converting video to gif... {loading_emoji}")
-            log.info(f"Converting video {video_link} to gif")
+            log.BOT_PROCESS(f"Converting video {video_link} to gif")
             try:
                 newGif = ub.convert_video_to_gif(video_link, fps, scale)
                 await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
@@ -309,7 +311,7 @@ def main():
                 return
             
             await ctx.respond(f"Adding speech bubble to image {loading_emoji}")
-            log.info(f"Adding speech bubble to image {image_link}")
+            log.BOT_PROCESS(f"Adding speech bubble to image {image_link}")
             try:
                 newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
                 await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
@@ -320,7 +322,7 @@ def main():
                 log.error(e)
             try:
                 os.remove(newImage)
-                log.info(f"Removed temporary file {newImage}")
+                log.BOT_PROCESS(f"Removed temporary file {newImage}")
             except Exception as e:
                 log.error(e)
             await command_topper(ctx)
@@ -852,7 +854,7 @@ def main():
 
             try:
                 await ctx.respond(f"Generating image... {loading_emoji}")
-                log.info(f"Generating image from prompt {prompt}")
+                log.BOT_PROCESS(f"Generating image from prompt {prompt}")
                 image = await ub.ai_image_gen(prompt, enhancer, img2img, seed, strength, steps)
                 if gif == True:
                     #rename image to gif
@@ -1459,7 +1461,7 @@ def main():
                     user_id = message.content.split(" ")[1]
                     #if input is not an int convert username to id
                     if not user_id.isdigit():
-                        log.info(f"Converting username to user ID")
+                        log.BOT_PROCESS(f"Converting username to user ID")
                         user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
                     embed = discord.Embed(title="User Lookup", color=discord.Color.green())
@@ -1539,7 +1541,7 @@ def main():
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
-                        log.info(f"Converting username to user ID")
+                        log.BOT_PROCESS(f"Converting username to user ID")
                         user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
 
@@ -1564,7 +1566,7 @@ def main():
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
-                        log.info(f"Converting username to user ID")
+                        log.BOT_PROCESS(f"Converting username to user ID")
                         user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
 
@@ -1586,7 +1588,7 @@ def main():
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
-                        log.info(f"Converting username to user ID")
+                        log.BOT_PROCESS(f"Converting username to user ID")
                         user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
                     dm_message = message.content.split(" ", 2)[2]
