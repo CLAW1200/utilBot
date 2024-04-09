@@ -19,27 +19,32 @@ import asyncio
 import datetime
 # Create a log
 log = logging.getLogger('Utility Belt')
-log.setLevel(logging.DEBUG)
 
 # Add custom levels
-log.BOT_GOT_MESSAGE = lambda bot_message: log.log(25, f"BOT GOT MESSAGE: {bot_message}")
-log.BOT_GOT_COMMAND = lambda bot_command: log.log(25, f"BOT GOT COMMAND: {bot_command}")
-log.BOT_REPLY = lambda bot_message: log.log(25, f"BOT REPLY: {bot_message}")
-log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"BOT REPLY SUCCESS: {bot_message}")
-log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"BOT REPLY FAIL: {bot_message}")
+log.BOT_GOT_MESSAGE = lambda bot_message: log.log(25, f"GOT MESSAGE: {bot_message}")
+log.BOT_GOT_COMMAND = lambda bot_command: log.log(25, f"GOT COMMAND: {bot_command}")
+
+log.BOT_REPLY = lambda bot_message: log.log(25, f"SENT REPLY: {bot_message}")
+log.BOT_MESSAGE = lambda bot_message: log.log(25, f"SENT MESSAGE: {bot_message}")
+
+log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"SUCCESS: {bot_message}")
+log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"FAIL: {bot_message}")
 
 
 # Create a formatter and set it to the handler
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+
+# Set the base level of the log
+log.setLevel(logging.DEBUG)
 
 # Create a console handler and set the level to INFO
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.INFO) # The level of logs to display in console
 console_handler.setFormatter(formatter)
 
 # Create a file handler and set the level to DEBUG
 file_handler = logging.FileHandler('data/app.log')
-file_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.INFO) # The level of logs to display in file
 file_handler.setFormatter(formatter)
 
 
@@ -60,7 +65,7 @@ def main():
     keywords = {
         "https://discord",
     }
-    BOT_TOKEN, TOP_GG_TOKEN = ub.get_tokens("config/token.toml")
+    BOT_TOKEN, TOP_GG_TOKEN, TOP_GG_ID = ub.get_tokens("config/token.toml")
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
 
@@ -173,8 +178,7 @@ def main():
             return
         
         else:
-            log.BOT_GOT_COMMAND(f"Received command /image-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With image link: {image_link}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} image_link = {image_link}")
 
             if "https://discord.com/channels/" in image_link:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
@@ -219,8 +223,7 @@ def main():
             return
 
         else:
-            log.BOT_GOT_COMMAND(f"Received command /video-to-gif from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With image link: {video_link}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} video_link = {video_link}")
 
             if "https://discord.com/channels/" in video_link:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
@@ -279,8 +282,7 @@ def main():
             return
         
         else:
-            log.BOT_GOT_COMMAND(f"Received command /speech-bubble from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With image link: {image_link}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} image_link = {image_link} speech_bubble_size = {speech_bubble_size}")
 
             if "https://discord.com/channels/" in image_link:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
@@ -338,8 +340,7 @@ def main():
             return
         
         else:
-            log.BOT_GOT_COMMAND(f"Received command /download from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With media link: {media_link}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} media_link = {media_link} audio_only = {audio_only} video_quality = {video_quality} audio_quality = {audio_quality}")
 
             if "https://discord.com/channels/" in media_link:
                 await ctx.respond(f"Sorry, but that media link is invalid! {error_emoji}\nMake sure your using a media link, not a message link.", ephemeral=True)
@@ -379,7 +380,7 @@ def main():
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
-        log.BOT_GOT_COMMAND(f"Received command /update-permissions from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
         if ctx.guild == None:
             await ctx.respond(f"Sorry, but this command can only be used in a server!", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked update-permissions command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
@@ -397,7 +398,7 @@ def main():
 
     @bot.slash_command(name="invite", description="Get the bot's invite link")
     async def invite_command(ctx):
-        log.BOT_GOT_COMMAND(f"Received command /invite from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
         #respond with message with button that links to bot invite link
         try:
             client_id = bot.user.id
@@ -422,8 +423,7 @@ def main():
         
         else:
             """Fetches the definition of a word from Urban Dictionary."""
-            log.BOT_GOT_COMMAND(f"Received command /urban from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {word}, {random_result}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} /{ctx.command} word = {word} random_result = {random_result}")
             try:
                 async with aiohttp.ClientSession() as session:
                     word_encoded = urllib.parse.quote_plus(word)
@@ -468,7 +468,7 @@ def main():
         
         else:
             """Gets a random word from Urban Dictionary."""
-            log.BOT_GOT_COMMAND(f"Received command /urban-random-word from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
             try:
                 async with aiohttp.ClientSession() as session:
                     url = 'https://api.urbandictionary.com/v0/random'
@@ -501,8 +501,7 @@ def main():
             return
         
         else:
-            log.BOT_GOT_COMMAND(f"Received command /units from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {value}, {unit_from}, {unit_to}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} value = {value} unit_from = {unit_from} unit_to = {unit_to}")
             try:
                 # Parse the units
                 unit_from = ureg(unit_from)
@@ -538,8 +537,7 @@ def main():
         
         else:
             """Create a new note for the user"""
-            log.BOT_GOT_COMMAND(f"Received command /note-new from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {note}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} note = {note}")
             try:
                 notes = {}
 
@@ -575,8 +573,7 @@ def main():
         
         else:
             """Edit an existing note for the user"""
-            log.BOT_GOT_COMMAND(f"Received command /note-edit from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {index}, {note}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} index = {index} note = {note}")
             try:
                 notes = {}
 
@@ -626,7 +623,7 @@ def main():
         
         else:
             """Read the user's notes"""
-            log.BOT_GOT_COMMAND(f"Received command /notes from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
             try:
                 notes = {}
                 try:
@@ -663,8 +660,7 @@ def main():
         
         else:
             """Delete a note, or all for the user"""
-            log.BOT_GOT_COMMAND(f"Received command /note-delete from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {index}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} index = {index}")
             try:
                 notes = {}
 
@@ -723,7 +719,7 @@ def main():
             return
         
         else:
-            log.BOT_GOT_COMMAND(f"Received command /find-a-friend from {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
             try:
                 def get_random_user():
                     randomUser = bot.users[random.randint(0, len(bot.users))-1]
@@ -743,7 +739,7 @@ def main():
     async def timestamp_command(ctx, 
                                 date_time: discord.Option(str,
                                     description="Enter a Holiday or DateTime after 1/1/1970") = None,
-                                format: discord.Option(str,
+                                output_format: discord.Option(str,
                                     choices=["Relative", "Short Time", "Long Time", "Short Date", "Long Date", "Long Date with Short Time", "Long Date with Day of the Week"], 
                                     description="The format of the timestamp", required=False, default="Relative") = "Relative"):
         if command_ban_check(ctx):
@@ -755,9 +751,8 @@ def main():
         
         else:
             """Convert a time to a timestamp"""
-            log.BOT_GOT_COMMAND(f"Received command /timestamp from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {date_time}, {format}")
-            timestamp = ub.timecode_convert(date_time, format)
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} date_time = {date_time} output_format = {output_format}")
+            timestamp = ub.timecode_convert(date_time, output_format)
             if timestamp == None:
                 await ctx.respond(f"Sorry, but that time is invalid! Make sure the time is after <t:0:f> {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to convert time {date_time} to timestamp")
@@ -782,8 +777,7 @@ def main():
         
         else:
             """Generate a qr code"""
-            log.BOT_GOT_COMMAND(f"Received command /qr-code from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {text}, {output}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} text = {text} output = {output}")
             if text == None:
                 await ctx.respond(f"Sorry, but you need to enter some text! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to generate QR code due to no text")
@@ -830,8 +824,7 @@ def main():
         
         else:
             """AI Generate an image quickly"""
-            log.BOT_GOT_COMMAND(f"Received command /imagine from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {prompt}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} prompt = {prompt} enhancer = {enhancer} gif = {gif} img2img = {img2img} seed = {seed} strength = {strength} steps = {steps}")
             if prompt == None:
                 await ctx.respond(f"Sorry, but you need to enter a prompt! {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to generate image due to no prompt")
@@ -886,14 +879,13 @@ def main():
         
         else:
             """Get your peepee size"""
-            log.BOT_GOT_COMMAND(f"Received command /peepee from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {user}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} user = {user}")
             #hash the user id to get a random number
             if user == None:
                 user = ctx.author
-            peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 10
+            peepeeSize = int(hashlib.sha256(str(user.id).encode()).hexdigest(), 16) % 20 # get a random number between 0 and 19
             if user.id == ub.read_toml_var("botOwner"):
-                peepeeSize = 500
+                peepeeSize = 20
             peepee = "8" + "=" * peepeeSize + "D"
             await ctx.respond(f"{user.mention} peepee size is {peepee}")
             log.BOT_REPLY_SUCCESS(f"Sent peepee size of {peepeeSize} to {ctx.author.name}#{ctx.author.discriminator}")
@@ -910,8 +902,7 @@ def main():
             return
         else:
             """Play rock paper scissors with another user"""
-            log.BOT_GOT_COMMAND(f"Received command /rps from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {user}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} user = {user}")
             log.warning(f"A game of RPS is staring. Prepare for headaches")
             if user is None:
                 await ctx.respond("Please mention a user to play with.", ephemeral=True)
@@ -1069,8 +1060,7 @@ def main():
         
         else:
             """Encode a message"""
-            log.BOT_GOT_COMMAND(f"Received command /encode from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} message = {message} mode = {mode} key = {key} hide = {hide}")
             if message is None:
                 await ctx.respond("Please enter a message to encode.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to encode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
@@ -1133,8 +1123,7 @@ def main():
         else:
             
             """Decode a message"""
-            log.BOT_GOT_COMMAND(f"Received command /decode from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {message}, {mode}, {key}, {hide}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} message = {message} mode = {mode} key = {key} hide = {hide}")
             if message is None:
                 await ctx.respond("Please enter a message to decode.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to decode message for {ctx.author.name}#{ctx.author.discriminator} due to no message")
@@ -1195,8 +1184,7 @@ def main():
     ):
             if command_ban_check(ctx):
                 return
-            log.BOT_GOT_COMMAND(f"Received command /feedback from {ctx.author.name}#{ctx.author.discriminator}")
-            log.BOT_GOT_COMMAND(f"With input {option}, {feature}, {description}")
+            log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command} option = {option} feature = {feature} description = {description}")
             #make post in feedback channel in support server
             feedbackID = str(f"{ctx.author.id}{ub.get_date_time_gmt()}")
             feedbackID = int(hashlib.sha256(str(feedbackID).encode()).hexdigest(), 16) % 100001
@@ -1235,7 +1223,7 @@ def main():
         if command_ban_check(ctx):
             return
         """Get help"""
-        log.BOT_GOT_COMMAND(f"Received command /help from {ctx.author.name}#{ctx.author.discriminator}")
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
         embed = discord.Embed(title="Help", color=discord.Color.green())
         embed.add_field(name="imagine", value="AI Generate an image quickly", inline=False)
         embed.add_field(name="image-to-gif", value="Convert an image to a gif", inline=False)
@@ -1265,11 +1253,10 @@ def main():
     async def vote(ctx):
         if command_ban_check(ctx):
             return
-        log.BOT_GOT_COMMAND(f"Received command /vote from {ctx.author.name}#{ctx.author.discriminator}")
-        topggID=1098280039486849174
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
         # Check if the user has voted on top.gg
         headers = {'Authorization': TOP_GG_TOKEN}
-        request = requests.get(f"https://top.gg/api/bots/{topggID}/check?userId={ctx.author.id}", headers=headers)
+        request = requests.get(f"https://top.gg/api/bots/{TOP_GG_ID}/check?userId={ctx.author.id}", headers=headers)
         if request.status_code == 200:
             data = request.json()
             if data['voted'] == 1:
@@ -1288,7 +1275,7 @@ def main():
                     log.BOT_REPLY_FAIL(f"Failed to give vote reward role to {ctx.author.name}#{ctx.author.discriminator}")
 
             else:
-                await ctx.respond(f"You haven't voted yet!\nhttps://top.gg/bot/{topggID}/vote")
+                await ctx.respond(f"You haven't voted yet!\nhttps://top.gg/bot/{TOP_GG_ID}/vote")
                 log.BOT_REPLY_SUCCESS(f"Sent vote link to {ctx.author.name}#{ctx.author.discriminator}")
         else:
             await ctx.respond("Error checking vote status!")
@@ -1358,7 +1345,7 @@ def main():
 
         #BOT OWNER ONLY COMMANDS
         if message.guild == None and message.author == botOwner:
-            if message.content == "!guilds":
+            if message.content == "!guildlist":
                 # print(f"{message.author} requested guilds")
                 await botOwner.send("Getting guilds...\nThis may take a while.")
                 guilds = await ub.get_guild_data(bot, botOwner, discord)
@@ -1467,7 +1454,7 @@ def main():
                 except IndexError:
                     await botOwner.send("No search term provided")
 
-            if message.content.startswith("!userlookup"):
+            if message.content.startswith("!user"):
                 try:
                     user_id = message.content.split(" ")[1]
                     #if input is not an int convert username to id
@@ -1492,7 +1479,7 @@ def main():
                 except AttributeError:
                     await botOwner.send("User not found")
 
-            if message.content.startswith("!guildlookup"):
+            if message.content.startswith("!guild"):
                 try:
                     guild_id = message.content.split(" ")[1]
                     guild = bot.get_guild(int(guild_id))
@@ -1530,7 +1517,7 @@ def main():
                 if "command" in message.content:
                     draw_commands = True
                 if "diff" in message.content:
-                    draw_diff = True
+                    draw_diff = False
                 if "user" not in message.content and "guild" not in message.content and "command" not in message.content and "diff" not in message.content:
                     draw_users = True
                     draw_guilds = True
@@ -1551,6 +1538,9 @@ def main():
             if message.content.startswith("!ban"):
                 try:
                     user_id = message.content.split(" ")[1]
+                    if not user_id.isdigit():
+                        log.info(f"Converting username to user ID")
+                        user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
 
                     # append user to banned_users.json if not already banned
@@ -1573,6 +1563,9 @@ def main():
             if message.content.startswith("!unban"):
                 try:
                     user_id = message.content.split(" ")[1]
+                    if not user_id.isdigit():
+                        log.info(f"Converting username to user ID")
+                        user_id = ub.get_user_id(user_id)
                     user = bot.get_user(int(user_id))
 
                     # remove user from banned_users.json
@@ -1589,11 +1582,24 @@ def main():
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
+            if message.content.startswith("!dm"):
+                try:
+                    user_id = message.content.split(" ")[1]
+                    if not user_id.isdigit():
+                        log.info(f"Converting username to user ID")
+                        user_id = ub.get_user_id(user_id)
+                    user = bot.get_user(int(user_id))
+                    dm_message = message.content.split(" ", 2)[2]
+                    await user.send(dm_message)
+                    await botOwner.send(f"Sent message to {user.name}#{user.discriminator}")
+                except IndexError:
+                    await botOwner.send("No user ID provided")
+
             if message.content.startswith("!help"):
                 # https://cdn.discordapp.com/emojis/1191381954453586061.gif?size=96&quality=lossless
                 # https://discord.com/channels/1170496731872493739/1178817154620067851/1191382117972717649
                 await botOwner.send(f"""**!help** - Send this message
-**!guilds** - Send a list of guilds the bot is in
+**!guildlist** - Send a list of guilds the bot is in
 **!log** - Send the log file
 **!clearlog** - Clear the log file
 **!usercount** - Send the number of users the bot can see
@@ -1607,11 +1613,12 @@ def main():
 **!guilds.zip** - Send a zip file of all guilds the bot is in
 **!notes** - Send the data/notes.json file
 **!search** - Search all messages for a query
-**!userlookup** - Search a user ID
-**!guildlookup** - Search a guild ID
+**!user** - Search a user ID
+**!guild** - Search a guild ID
 **!invme** - Create a guild invite
 **!stats** - Send the data/data.csv file
-                """)
+**!dm** - Message a user by ID
+                                                    """)
 
             if message.content.startswith("!sku"):
                 await botOwner.send(await check_if_user_has_premium(message.author))

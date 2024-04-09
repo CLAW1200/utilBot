@@ -33,7 +33,7 @@ log = logging.getLogger('Utility Belt Lib')
 log.setLevel(logging.DEBUG)
 
 # Create a formatter and set it to the handler
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
 
 file_handler = logging.FileHandler('data/app.log')
 file_handler.setLevel(logging.INFO)
@@ -85,7 +85,8 @@ def get_tokens(tokenFile):
         data = toml.load(toml_file)
         bot_token = data["tokenLive"]
         top_gg_token = data["top-gg-token"]
-        return bot_token, top_gg_token
+        top_gg_id = data["top-gg-id"]
+        return bot_token, top_gg_token, top_gg_id
 
 def edit_user_data(user, field, data):
     # Edit data/users.json, add data to key
@@ -399,7 +400,7 @@ def convert_video_to_gif(video_link, fps=25, scale = None):
             scale = f"scale={scale}:-1"
 
         output_path = f"temp/{video_seed}.gif"
-        subprocess.call(['ffmpeg', '-n', '-i', f"temp/{video_seed}", '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
+        subprocess.call(['ffmpeg', '-n', '-i', f"temp/{video_seed}", '-vframes', '80', '-filter_complex', f'[0:v] fps=fps={fps},{scale},split [a][b];[a] palettegen [p];[b][p] paletteuse', output_path])
         os.remove(f"temp/{video_seed}")
         log.info(f"Converted video '{video_link}' to gif '{output_path}'")
         return output_path
