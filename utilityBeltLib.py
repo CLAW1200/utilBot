@@ -21,10 +21,10 @@ import aiofiles
 import regex as re
 import math
 from playwright.async_api import async_playwright
-import aiohttp
 from gradio_client import Client
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from discord import NotFound, Forbidden
+
 
 executor = ThreadPoolExecutor(max_workers=5)
 
@@ -298,6 +298,7 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
 
     # Get the filename from the Content-Disposition header
     content_disposition = response.headers.get('content-disposition')
+    print (content_disposition)
     filename = re.findall('filename=(.+)', content_disposition)[0]
     
     #remove any quotes from the filename
@@ -363,7 +364,7 @@ def convert_image_to_gif(image_link):
     image_seed = hashlib.md5(data).hexdigest() # generate a unique seed for the image based on its content
     # if the image is already in the temp folder, don't download it again
     if os.path.isfile(f"temp/{image_seed}.gif"):
-        log.info(f"Image '{image_link}' already converted to gif '{image_seed}.gif'")
+        log.info(f"Image already converted to gif '{image_seed}.gif'")
         output_path = f"temp/{image_seed}.gif"
         return output_path
     else:
@@ -371,11 +372,11 @@ def convert_image_to_gif(image_link):
             with open(f"temp/{image_seed}.png", "wb") as f: # save image in temp folder
                 f.write(data) # write image data to file
         except FileExistsError as e:
-            log.error(f"Error saving image '{image_link}' to temp folder: {e}")
+            log.error(f"Error saving image to temp folder: {e}")
             pass
         output_path = f"temp/{image_seed}.gif" # set output path
         os.rename(f"temp/{image_seed}.png", f"temp/{image_seed}.gif") # rename image to gif
-        log.info(f"Converted image '{image_link}' to gif '{output_path}'")
+        log.info(f"Converted image to gif '{output_path}'")
         return output_path
 
 def convert_video_to_gif(video_link, fps=25, scale = None):
@@ -416,25 +417,21 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
     """
     if download_check(image_link):
         data = requests.get(image_link).content
-
     image_seed = hashlib.md5(data).hexdigest()
     speechBubble = "assets/speechBubble.png"
     output_path = f"temp/{image_seed}.gif"
-
     with open(output_path, "wb") as f:
         f.write(data)
         
     # Load the gif and speech bubble
     image = Image.open(output_path).convert("RGBA")
     bubble = Image.open(speechBubble).convert("RGBA")
-
     # Calculate 20% of the height of the first image
     new_height = int(image.height * speech_bubble_y_scale)
-
     # Resize the speech bubble to exactly 20% of the image's height and 100% of the image's width
     bubble = bubble.resize((image.width, new_height))
-
     # Create a new GIF with the speech bubble on top of each frame
+
     input_frames = split_gif_frames(output_path)
     output_frames = []
     for input_frame in input_frames:
@@ -442,7 +439,6 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
         result = Image.new("RGBA", input_frame.size) # A blank image with the same size as the original
         # Paste the resized speech bubble onto the new image at the top left corner (0,0)
         result.paste(bubble, (0,0), bubble) # Paste the bubble onto the blank image
-
         # Result now contains the speech bubble on top of the blank image
         # Frame now contains the original frame
         frame = ImageChops.composite(result, input_frame, result)
@@ -1067,7 +1063,7 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
 
     "digital painting": f"{prompt}, glow effects, godrays, Hand drawn, render, 8k, octane render, cinema 4d, blender, dark, atmospheric 4k ultra detailed, cinematic, Sharp focus, big depth of field, Masterpiece, colors, 3d octane render, 4k, concept art, trending on artstation, hyperrealistic, Vivid colors, extremely detailed CG unity 8k wallpaper, trending on CGSociety, Intricate, High Detail, dramatic",
     
-    "indie game": f"{prompt}, Indie game art, Vector Art, Borderlands style, Arcane style, Cartoon style, Line art, Disctinct features, Hand drawn, Technical illustration, Graphic design, Vector graphics, High contrast, Precision artwork, Linear compositions, Scalable artwork, Digital art, cinematic sensual, Sharp focus, humorous illustration, big depth of field, Masterpiece, trending on artstation, Vivid colors, trending on ArtStation, trending on CGSociety, Intricate, Low Detail, dramatic",
+    "indie game": f"{prompt}, Indie game art, Vector Art, Borderlands style, Arcane style, Cartoon style, Line art, Distinct features, Hand drawn, Technical illustration, Graphic design, Vector graphics, High contrast, Precision artwork, Linear compositions, Scalable artwork, Digital art, cinematic sensual, Sharp focus, humorous illustration, big depth of field, Masterpiece, trending on artstation, Vivid colors, trending on ArtStation, trending on CGSociety, Intricate, Low Detail, dramatic",
     
     "photo": f"{prompt}, Photorealistic, Hyperrealistic, Hyperdetailed, analog style, soft lighting, subsurface scattering, realistic, heavy shadow, masterpiece, best quality, ultra realistic, 8k, golden ratio, Intricate, High Detail, film photography, soft focus",
     
@@ -1075,11 +1071,11 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     
     "isometric room": f"{prompt}, Tiny cute isometric in a cutaway box, soft smooth lighting, soft colors, 100mm lens, 3d blender render",
     
-    "space hologram": f"{prompt}, hologram floating in space, a vibrant digital illustration, dribbble, quantum wavetracing, black background, behance hd",
+    "space hologram": f"{prompt}, hologram floating in space, a vibrant digital illustration, dribble, quantum wavetracing, black background, bechance hd",
     
     "cute creature": f"{prompt}, 3d fluffy, closeup cute and adorable, cute big circular reflective eyes, long fuzzy fur, Pixar render, unreal engine cinematic smooth, intricate detail, cinematic",
     
-    "realistic portrait": f"{prompt}, RAW candid cinema, 16mm, color graded portra 400 film, remarkable color, ultra realistic, textured skin, remarkable detailed pupils, realistic dull skin noise, visible skin detail, skin fuzz, dry skin, shot with cinematic camera",
+    "realistic portrait": f"{prompt}, RAW candid cinema, 16mm, color graded portrait 400 film, remarkable color, ultra realistic, textured skin, remarkable detailed pupils, realistic dull skin noise, visible skin detail, skin fuzz, dry skin, shot with cinematic camera",
     
     "realistic landscape": f"long shot scenic professional photograph of {prompt}, perfect viewpoint, highly detailed, wide-angle lens, hyper realistic, with dramatic sky, polarizing filter, natural lighting, vivid colors, everything in sharp focus, HDR, UHD, 64K",
 }
@@ -1097,3 +1093,5 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     client = Client(ai_api_url, output_dir="//home/ubuntu/utilBot/temp/")
     result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
     return result
+
+

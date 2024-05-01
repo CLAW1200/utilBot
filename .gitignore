@@ -6,3 +6,4 @@
 /config/token.toml
 /config/wordblacklist.json
 config/banned_users.json
+intent request.txt

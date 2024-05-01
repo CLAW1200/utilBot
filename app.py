@@ -193,6 +193,10 @@ def main():
                     await ctx.respond(f"Sorry, but the max image size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}", ephemeral=True)
                     log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to file size of {imageFileSize}")
                     return
+            except Image.UnidentifiedImageError as e:
+                await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
+                await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
+                log.error(e)
             except Exception as e:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked image-to-gif command from {ctx.author.name}#{ctx.author.discriminator} due to invalid image link of {image_link}")
@@ -316,12 +320,17 @@ def main():
                 newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
                 await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
                 log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
+            # cannot identify image file
+            except Image.UnidentifiedImageError as e:
+                await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
+                await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
+                log.error(e)
             except Exception as e:
                 await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to add speech bubble to image {image_link}")
                 log.error(e)
             try:
-                os.remove(newImage)
+                # os.remove(newImage)
                 log.BOT_PROCESS(f"Removed temporary file {newImage}")
             except Exception as e:
                 log.error(e)
@@ -330,9 +339,9 @@ def main():
     @bot.slash_command(name="download", description="Download from Youtube, SoundCloud, Twitter, Instagram and more!")
     async def download_command(ctx: discord.ApplicationContext, 
                                 media_link: str,
-                                audio_only: discord.Option(bool, "Whether to download audio only", required=False, default=False),
-                                video_quality: discord.Option(str, choices=["max", "144", "240", "360", "480", "720", "1080", "1440", "2160"], required=False, default="360"),
-                                audio_quality: discord.Option(str, choices=["best", "mp3", "wav", "ogg", "opus"], required=False, default="mp3")
+                                audio_only: discord.Option(bool, "Whether to download audio only", required=False, default=False), # type: ignore # type: ignore
+                                video_quality: discord.Option(str, choices=["max", "144", "240", "360", "480", "720", "1080", "1440", "2160"], required=False, default="360"), # type: ignore
+                                audio_quality: discord.Option(str, choices=["best", "mp3", "wav", "ogg", "opus"], required=False, default="mp3") # type: ignore
                                ):
         if command_ban_check(ctx):
             return
@@ -379,6 +388,10 @@ def main():
                 await ctx.edit(content = f"Sorry, but that media is too large for discord! Try lowering the quality. {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
                 log.error(e)
+            except Exception as e:
+                await ctx.edit(content = f"Sorry, but I could not download that media! {error_emoji}")
+                log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
+                log.error(e)
 
     @bot.slash_command(name="update-permissions", description="Update the bot's permissions")
     async def update_permissions(ctx):
@@ -414,7 +427,7 @@ def main():
     async def urban_command(
         ctx: discord.ApplicationContext,
         word: str,
-        random_result: discord.Option(bool, "Whether to get a random result", required=False, default=False),
+        random_result: discord.Option(bool, "Whether to get a random result", required=False, default=False), # type: ignore
         ):
         if command_ban_check(ctx):
             return
@@ -740,10 +753,10 @@ def main():
     @bot.slash_command(name="timestamp", description="Convert a time to a timestamp")
     async def timestamp_command(ctx, 
                                 date_time: discord.Option(str,
-                                    description="Enter a Holiday or DateTime after 1/1/1970") = None,
+                                    description="Enter a Holiday or DateTime after 1/1/1970") = None, # type: ignore
                                 output_format: discord.Option(str,
                                     choices=["Relative", "Short Time", "Long Time", "Short Date", "Long Date", "Long Date with Short Time", "Long Date with Day of the Week"], 
-                                    description="The format of the timestamp", required=False, default="Relative") = "Relative"):
+                                    description="The format of the timestamp", required=False, default="Relative") = "Relative"): # type: ignore
         if command_ban_check(ctx):
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
@@ -766,7 +779,7 @@ def main():
     @bot.slash_command(name="qr-code", description="Generate a qr code") # Text input. Then choose from image output or text output
     async def qr_code_command(ctx, 
                               text: discord.Option(str, 
-                              description="Enter text to convert to a QR code") = None,
+                              description="Enter text to convert to a QR code") = None, # type: ignore
                               output: discord.Option(str, 
                               choices=["Image", "Text"], 
                               description="The output of the QR code", required=False, default="Image") = "Image"): # type: ignore
@@ -801,21 +814,21 @@ def main():
     @bot.slash_command(name="imagine", description="AI Generate an image quickly")
     async def quick_imagine_command(ctx, 
                                     prompt: discord.Option(str, 
-                                    description="Enter a prompt to generate an image from") = None,
+                                    description="Enter a prompt to generate an image from") = None, # type: ignore
                                     enhancer: discord.Option(str,
                                     choices=["None", "Digital Painting", "Indie Game", "Photo", "Film Noir", "Isometric Room", "Space Hologram", "Cute Creature", "Realistic Portrait", "Realistic Landscape"],
-                                    description="The enhancer to use on the image", required=False, default="None") = "None",
+                                    description="The enhancer to use on the image", required=False, default="None") = "None", # type: ignore
                                     gif: discord.Option(bool,
-                                    description="Whether to generate a gif or not", required=False, default=False) = False,
+                                    description="Whether to generate a gif or not", required=False, default=False) = False, # type: ignore
                                     img2img: discord.Option(str,
-                                    description="Generate an image from another image (url)", required=False, default=None) = None,
+                                    description="Generate an image from another image (url)", required=False, default=None) = None, # type: ignore
                                     seed: discord.Option(int,
-                                    description="The seed for the image generation", required=False, default=None) = None,
+                                    description="The seed for the image generation", required=False, default=None) = None, # type: ignore
                                     strength: discord.Option(float,
-                                    description="The strength of the image generation (0-1)", required=False, default=None) = None,
+                                    description="The strength of the image generation (0-1)", required=False, default=None) = None, # type: ignore
                                     steps: discord.Option(int,
                                     choices=[1, 2, 3, 4, 5, 6, 7, 8],
-                                    description="The steps for the image generation (1-8)", required=False, default=None) = None
+                                    description="The steps for the image generation (1-8)", required=False, default=None) = None # type: ignore
                                     ):
         if command_ban_check(ctx):
             return
@@ -871,7 +884,7 @@ def main():
             await command_topper(ctx)
         
     @bot.slash_command(name="peepee", description="Get your peepee size")
-    async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None):
+    async def peepee_command(ctx, user: discord.Option(discord.User, description="User to get peepee size of") = None): # type: ignore
         if command_ban_check(ctx):
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
@@ -895,7 +908,7 @@ def main():
 
     ongoing_games = {}
     @bot.slash_command(name="rps", description="Play rock paper scissors with another user")
-    async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None):
+    async def rps_command(ctx, user: discord.Option(discord.User, description="User to play with") = None): # type: ignore
         if command_ban_check(ctx):
             return
         if ctx.guild == None:
@@ -1048,10 +1061,10 @@ def main():
 
     @bot.slash_command(name="encode", description="Encode a message")
     async def encode_command(ctx,
-                            message: discord.Option(str, description="Message to encode") = None,
-                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Encode mode") = None,
-                            key: discord.Option(str, description="Key to encode with") = None,
-                            hide: discord.Option(bool, description="Hide the message") = False):
+                            message: discord.Option(str, description="Message to encode") = None, # type: ignore
+                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Encode mode") = None, # type: ignore
+                            key: discord.Option(str, description="Key to encode with") = None, # type: ignore
+                            hide: discord.Option(bool, description="Hide the message") = False): # type: ignore
         if command_ban_check(ctx):
             return
         
@@ -1111,10 +1124,10 @@ def main():
 
     @bot.slash_command(name="decode", description="Decode a message")
     async def decode_command(ctx,
-                            message: discord.Option(str, description="Message to decode") = None,
-                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Decode mode") = None,
-                            key: discord.Option(str, description="Key to decode with") = None,
-                            hide: discord.Option(bool, description="Hide the message") = False):
+                            message: discord.Option(str, description="Message to decode") = None, # type: ignore
+                            mode: discord.Option(str, choices=["base64", "rot13", "caesar", "vigenere", "atbash", "binary", "hex"], description="Decode mode") = None, # type: ignore
+                            key: discord.Option(str, description="Key to decode with") = None, # type: ignore
+                            hide: discord.Option(bool, description="Hide the message") = False): # type: ignore
         if command_ban_check(ctx):
             return
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
@@ -1180,9 +1193,9 @@ def main():
 
     @bot.slash_command(name="feedback", description="Send feedback to the developer")
     async def send_bot_owner_feedback(ctx,
-        option: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?") = None,
-        feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?") = None, # type: ignore
-        description: discord.Option(str, description="Describe the issue / change") = None
+        option: discord.Option(str, choices=["Bug Report", "Feature Request", "Other"], description="What are you reporting?", required=True), # type: ignore
+        feature: discord.Option(str, choices=["Command", "Profile", "Other"], description="What feature is this about?", required=True), # type: ignore
+        description: discord.Option(str, description="Describe the issue / change", required=True) # type: ignore
     ):
             if command_ban_check(ctx):
                 return
@@ -1519,12 +1532,12 @@ def main():
                 if "command" in message.content:
                     draw_commands = True
                 if "diff" in message.content:
-                    draw_diff = False
+                    draw_diff = True
                 if "user" not in message.content and "guild" not in message.content and "command" not in message.content and "diff" not in message.content:
                     draw_users = True
                     draw_guilds = True
                     draw_commands = True
-                    draw_diff = True
+                    draw_diff = False
                 if "-t " in message.content:
                     # get everything after -t 
                     time = message.content.split("-t ")[1]
