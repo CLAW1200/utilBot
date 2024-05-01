@@ -1,5 +1,5 @@
 # Bugs:
-- Speech-bubble does not work with some images????? WHY?! need more testing
+- Speech-bubble does not work with some images. something to do with the link being a jpg then format=webp in url?????
 
 - If the previous game has not concluded and another game is started by someone else, the previous game gives an "interaction failed" message when played. The issue occurs even if two completely different people start a game.
 - Already transparent gifs get kinda fucky with /speech bubble

@@ -370,11 +370,7 @@ def main():
             
             await ctx.respond(f"Downloading media... {loading_emoji}")
 
-            file = ub.download_multimedia(media_link, audio_only, video_quality, audio_quality)
-            if file == None:
-                await ctx.edit(content = f"Sorry, but that media link is invalid! {error_emoji}")
-                log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
-                return
+            
             """
             if file == "SizeError":
                 await ctx.edit(content = f"Sorry, but the max file size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}")
@@ -382,6 +378,11 @@ def main():
                 return
             """
             try:
+                file = ub.download_multimedia(media_link, audio_only, video_quality, audio_quality)
+                if file == None:
+                    await ctx.edit(content = f"Sorry, but that media link is invalid! {error_emoji}")
+                    log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
+                    return
                 await ctx.edit(content = f"Here is your media! {success_emoji}", file=discord.File(file))
                 log.BOT_REPLY_SUCCESS(f"Downloaded media from {media_link}")
             except discord.errors.HTTPException as e:
