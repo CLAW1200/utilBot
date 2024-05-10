@@ -284,7 +284,6 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
 
     response = requests.post(api_url, headers=headers, json=data)
     if response.status_code != 200:
-        print ("Error: ", response.json())
         raise Exception(f"Error: {response.json()}")
 
     # Extract download URL from the response
