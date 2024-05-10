@@ -32,6 +32,8 @@ log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"FAIL: {bot_message}")
 
 log.BOT_PROCESS = lambda bot_message: log.log(25, f"PROCESS: {bot_message}")
 
+log.BOT_EVENT = lambda bot_message: log.log(25, f"EVENT: {bot_message}")
+
 
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
@@ -150,8 +152,14 @@ def main():
         info = await bot.fetch_entitlements()
         #check in list and find index for ctx.author.id 
         for ent in info:
-            if ent.user_id == user.id and ent.starts_at < datetime.datetime.now(datetime.timezone.utc) < ent.ends_at:
-                print (ent)
+            try:
+                if ent.user_id == user.id and ent.starts_at < datetime.datetime.now(datetime.timezone.utc) < ent.ends_at:
+                    log.BOT_EVENT(f"User {user.name}#{user.discriminator} has premium subscription")
+                    return True
+            except:
+                pass
+            if ent.user_id == user.id and ent.sku_id == ub.read_toml_var("sku_lifetime_subscription_id"):
+                log.BOT_EVENT(f"User {user.name}#{user.discriminator} has lifetime subscription")
                 return True
         return False
         
@@ -833,6 +841,7 @@ def main():
                                     ):
         if command_ban_check(ctx):
             return
+        
         if ctx.guild == None and not await check_if_user_has_premium(ctx.author):
             await ctx.respond("Sorry, but this command can only be used in a server! Upgrade to Utility Belt+ to use commands in DMs and help support us.", ephemeral=True)
             log.BOT_REPLY_FAIL(f"Blocked imagine command from {ctx.author.name}#{ctx.author.discriminator} due to not being in a server")
@@ -1614,7 +1623,8 @@ def main():
             if message.content.startswith("!help"):
                 # https://cdn.discordapp.com/emojis/1191381954453586061.gif?size=96&quality=lossless
                 # https://discord.com/channels/1170496731872493739/1178817154620067851/1191382117972717649
-                await botOwner.send(f"""**!help** - Send this message
+                await botOwner.send(
+f"""**!help** - Send this message
 **!guildlist** - Send a list of guilds the bot is in
 **!log** - Send the log file
 **!clearlog** - Clear the log file
@@ -1634,10 +1644,17 @@ def main():
 **!invme** - Create a guild invite
 **!stats** - Send the data/data.csv file
 **!dm** - Message a user by ID
-                                                    """)
+""")
 
             if message.content.startswith("!sku"):
-                await botOwner.send(await check_if_user_has_premium(message.author))
+                info = await bot.fetch_entitlements()
+                await botOwner.send(info)
+
+    @bot.event
+    async def on_entitlement_create(entitlement):
+        log.BOT_EVENT(f"Entitlement created: {entitlement}")
+        botOwner = bot.get_user(ub.read_toml_var("botOwner"))  # Get the bot owner
+        await botOwner.send(f"Entitlement created: {entitlement}")
 
     bot.response_messages = {}
     bot.run(BOT_TOKEN)
