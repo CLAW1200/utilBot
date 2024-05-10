@@ -378,13 +378,6 @@ def main():
             
             await ctx.respond(f"Downloading media... {loading_emoji}")
 
-            
-            """
-            if file == "SizeError":
-                await ctx.edit(content = f"Sorry, but the max file size is {ub.read_toml_var('maxFileSize')/1000000}MB! {error_emoji}")
-                log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to file size of too large")
-                return
-            """
             try:
                 file = ub.download_multimedia(media_link, audio_only, video_quality, audio_quality)
                 if file == None:
@@ -396,9 +389,9 @@ def main():
             except discord.errors.HTTPException as e:
                 await ctx.edit(content = f"Sorry, but that media is too large for discord! Try lowering the quality. {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
-                log.error(e)
+                log.error(e)            
             except Exception as e:
-                await ctx.edit(content = f"Sorry, but I could not download that media! {error_emoji}")
+                await ctx.edit(content = f"It seems like this service is not supported yet or your link is invalid. Have you pasted the right link? {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
                 log.error(e)
 
