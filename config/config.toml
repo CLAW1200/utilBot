@@ -1,10 +1,27 @@
+# This is the main configuration file for the bot
+
+# The permissions integer that the bot needs to function properly
+# This should match the interger in the Discord Developer Portal and the bot's invite link
 permissionsInt = 275146861665
+
+# The maximum file size that the bot can upload in bytes
+# This is set to 25MB by default (25,000,000 bytes)
 maxFileSize = 25000000
+
+# The user ID of the bot owner
+# The bot owner has control over admin commands
 botOwner = 512609720885051425
+
+# Where the bot will send feedback
+# If the server or channel cannot be used, the bot will send feedback to the bot owner as a fallback
 suportServer = 1170496731872493739
 feedbackChannel = 1172257536968249487
+
+# The emojis used by the bot
+# In Discord, type a backslash followed by the emoji name to get the emoji ID
 loading_emoji = "<a:loading2:1191387482076491889>"
 success_emoji = "<:ok2:1226948857565544518>"
 error_emoji = "<:error2:1226948640602587186>"
+
+# SKUs for the bot's premium subscription
 sku_lifetime_subscription_id = 1235569700222668904
-# type a backslash before the emoji in discord to get the id
