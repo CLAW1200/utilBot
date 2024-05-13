@@ -1,5 +1,5 @@
 # the longer i spend on this, the more jank it becomes...
-import utilityBeltLib as ub
+import ublib as ub
 import discord
 from discord.ui import View
 from discord.ext import tasks, commands
