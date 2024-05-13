@@ -6,4 +6,4 @@
 1. Clone the repository
 2. Install the dependencies with `pip install -r requirements.txt`
 3. Enter your tokens in `token.toml`
-4. Run the bot with `python3 app.py --live` for the live version
+4. Run the bot with `python3 app.py -live` for the live version
