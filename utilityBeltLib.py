@@ -80,13 +80,19 @@ def log_guild_message(message):
         file.write(f"{embeds_info}\n")
         file.write("--------------------------------\n")
 
-def get_tokens(tokenFile):
+def get_tokens(tokenFile, live):
     with open(tokenFile) as toml_file:
         data = toml.load(toml_file)
-        bot_token = data["tokenLive"]
+        if live:
+            log.info("Live build deployed")
+            bot_token = data["tokenLive"]
+        else:
+            log.info("Test build deployed")
+            bot_token = data["tokenTest"]
         top_gg_token = data["top-gg-token"]
         top_gg_id = data["top-gg-id"]
-        return bot_token, top_gg_token, top_gg_id
+        api_ninjas_token = data["api-ninjas-key"]
+        return bot_token, top_gg_token, top_gg_id, api_ninjas_token
 
 def edit_user_data(user, field, data):
     # Edit data/users.json, add data to key
@@ -416,11 +422,11 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
     """
     if download_check(image_link):
         data = requests.get(image_link).content
-    image_seed = hashlib.md5(data).hexdigest()
-    speechBubble = "assets/speechBubble.png"
-    output_path = f"temp/{image_seed}.gif"
-    with open(output_path, "wb") as f:
-        f.write(data)
+        image_seed = hashlib.md5(data).hexdigest()
+        speechBubble = "assets/speechBubble.png"
+        output_path = f"temp/{image_seed}.gif"
+        with open(output_path, "wb") as f:
+            f.write(data)
         
     # Load the gif and speech bubble
     image = Image.open(output_path).convert("RGBA")
@@ -431,6 +437,23 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
     bubble = bubble.resize((image.width, new_height))
     # Create a new GIF with the speech bubble on top of each frame
 
+
+    # Create a new image with the same size as the original image
+    result = Image.new("RGBA", image.size) # A blank image with the same size as the original
+    # Paste the resized speech bubble onto the new image at the top left corner (0,0)
+    result.paste(bubble, (0,0), bubble) # Paste the bubble onto the blank image
+    # Result now contains the speech bubble on top of the blank image
+    # Frame now contains the original frame
+    frame = ImageChops.composite(result, image, result)
+    # Now remove the speech bubble from the original frame and make it transparent
+    frame = ImageChops.subtract(image, result)
+    frame.save(output_path, "PNG")
+    log.info(f"Added speech bubble to image '{output_path}'")
+
+    return output_path
+
+
+    """
     input_frames = split_gif_frames(output_path)
     output_frames = []
     for input_frame in input_frames:
@@ -445,6 +468,7 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
         frame = ImageChops.subtract(input_frame, result)
         output_frames.append(frame)
 
+
     # Save the result
     try:
         output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:], duration=image.info['duration'], loop=0)
@@ -453,34 +477,8 @@ def add_speech_bubble(image_link, speech_bubble_y_scale):
         output_frames[0].save(output_path, save_all=True, append_images=output_frames[1:])
     return output_path
 
-
-def gif_search(query):
-    tokenFile = "config/token.toml"
-    with open(tokenFile) as toml_file:
-        data = toml.load(toml_file)
-        GIPHY_API_KEY = data["giphy-api-key"]
-    # Create the search URL based on the query
-    url = "http://api.giphy.com/v1/gifs/search?"
-    params = {
-        "api_key": GIPHY_API_KEY,
-        "q": query,
-        "limit": 1,
-        "offset": random.randint(1, 100),
-        "rating": "g",
-        "lang": "en"
-    }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        data = response.json()
-        if len(data['data']) > 0:
-            # Return the first GIF's URL
-            return data['data'][0]['images']['original']['url']
-        else:
-            print('No GIFs found.')
-            gif_search(query)
-    else:
-        print('Failed to get a response from the API.')
-        return
+    """
+ 
 
 def status(status):
     #open config toml and set status to string
@@ -761,9 +759,7 @@ def get_api_ninjas_key():
 
 def call_api_holidays(country_code, year):
     print ("Switching to API")
-
     # Look up string to see if it's a holiday
-    
     # holiday_type = 'public_holiday'
     api_url = "https://api.api-ninjas.com/v1/holidays?country={}&year={}".format(country_code, year)
     response = requests.get(api_url, headers={'X-Api-Key': get_api_ninjas_key()})
