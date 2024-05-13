@@ -2,6 +2,8 @@
 import utilityBeltLib as ub
 import discord
 from discord.ui import View
+from discord.ext import tasks, commands
+import argparse
 import os
 import random
 import logging
@@ -17,15 +19,17 @@ import base64
 import codecs
 import asyncio
 import datetime
+
+
 # Create a log
 log = logging.getLogger('Utility Belt')
 
 # Add custom levels
-log.BOT_GOT_MESSAGE = lambda bot_message: log.log(25, f"GOT MESSAGE: {bot_message}")
-log.BOT_GOT_COMMAND = lambda bot_command: log.log(25, f"GOT COMMAND: {bot_command}")
+log.BOT_GOT_MESSAGE = lambda bot_message: log.log(25, f"MESSAGE: {bot_message}")
+log.BOT_GOT_COMMAND = lambda bot_command: log.log(25, f"COMMAND: {bot_command}")
 
-log.BOT_REPLY = lambda bot_message: log.log(25, f"SENT REPLY: {bot_message}")
-log.BOT_MESSAGE = lambda bot_message: log.log(25, f"SENT MESSAGE: {bot_message}")
+log.BOT_SENT_REPLY = lambda bot_message: log.log(25, f"SENT REPLY: {bot_message}")
+log.BOT_SENT_MESSAGE = lambda bot_message: log.log(25, f"SENT MESSAGE: {bot_message}")
 
 log.BOT_REPLY_SUCCESS = lambda bot_message: log.log(25, f"SUCCESS: {bot_message}")
 log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"FAIL: {bot_message}")
@@ -33,7 +37,6 @@ log.BOT_REPLY_FAIL = lambda bot_message: log.log(25, f"FAIL: {bot_message}")
 log.BOT_PROCESS = lambda bot_message: log.log(25, f"PROCESS: {bot_message}")
 
 log.BOT_EVENT = lambda bot_message: log.log(25, f"EVENT: {bot_message}")
-
 
 # Create a formatter and set it to the handler
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
@@ -51,52 +54,60 @@ file_handler = logging.FileHandler('data/app.log')
 file_handler.setLevel(logging.INFO) # The level of logs to display in file
 file_handler.setFormatter(formatter)
 
-
 # Add the file handler to the log
 log.addHandler(file_handler)
 
 # Add the console handler to the log
 log.addHandler(console_handler)
 
-
 def main():
-    ureg = UnitRegistry()
-    log.BOT_GOT_MESSAGE("Starting bot...")
 
-    ########################
-    # DECLARE VARIABLES HERE
-    ########################
-    keywords = {
-        "https://discord",
-    }
-    BOT_TOKEN, TOP_GG_TOKEN, TOP_GG_ID = ub.get_tokens("config/token.toml")
+    # get args
+    parser = argparse.ArgumentParser(description='Utility Belt Bot')
+    parser.add_argument('-live', action='store_true', help='Run the bot in live mode')
+    args = parser.parse_args()
+    live = args.live
+
+    ureg = UnitRegistry()
+    log.info("Starting Utility Belt")
+
+    BOT_TOKEN, TOP_GG_TOKEN, TOP_GG_ID, API_NINJAS_TOKEN = ub.get_tokens("config/token.toml", live)
+
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
+    log.debug(f"Fetched top.gg id: **********")
+    log.debug(f"Fetched api.ninjas token **********")
 
     loading_emoji = ub.read_toml_var("loading_emoji")
     success_emoji = ub.read_toml_var("success_emoji")
     error_emoji = ub.read_toml_var("error_emoji")
 
-    ########################
-    ########################
-
-
     #if there is no temp folder make one
     if not os.path.exists("temp"):
-        log.info("Creating temp folder as it does not exist")
+        log.info("Creating /temp/ as it does not exist")
         os.makedirs("temp")
-        log.info("Created temp folder")
+        log.info("Created /temp/")
     else:
-        log.debug("Temp folder already exists")
+        log.debug("/temp/ already exists")
 
-    intents = discord.Intents.all()  # Create an intents object with default intents
-    intents.message_content = False  # Disable the message content intent
-    intents.typing = False  # Disable the typing intent
-    intents.presences = False  # Disable the presence intent
-    bot = discord.Bot(intents=intents)
-    log.info(f"Created bot object: {bot}\n with intents: {intents}\n")
+    try:
+        intents = discord.Intents.all()  # Create an intents object with default intents
+        intents.message_content = False  # Disable the message content intent
+        intents.typing = False  # Disable the typing intent
+        intents.presences = False  # Disable the presence intent
+    except Exception as e:
+        log.critical(f"Failed to set intents\n{e}")
+        exit()
+    log.info(f"Set intents: {intents}\n")
+    
+    try:
+        bot = discord.Bot(intents=intents)
+    except Exception as e:
+        log.critical(f"Failed to create bot\n{e}")
+        exit()
+    log.info(f"Created bot object: {bot}\n")
 
-    from discord.ext import tasks, commands
+    log.info("Bot has started")
 
     class logDataToCSV(commands.Cog):
         def __init__(self, bot):
@@ -117,7 +128,7 @@ def main():
 
         @printer.before_loop
         async def before_printer(self):
-            print('waiting...')
+            log.info('Waiting for bot ready before logging statistics')
             await self.bot.wait_until_ready()
 
     logDataToCSV(bot)
@@ -169,11 +180,11 @@ def main():
         ub.edit_user_data(ctx.author, "username", ctx.author.name + "#" + ctx.author.discriminator)
         if ub.get_user_data(ctx.author, "commandsUsed") <= 1:
             await ctx.respond(f"Welcome to Utility Belt! You can use **/help** to get a list of commands.\nPlease use **/feedback** if you have any issues!\nRemember to use **/vote** if you find me useful :) - This will be the only reminder", ephemeral=True)
-            log.BOT_REPLY(f"Sent welcome message to {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_SENT_REPLY(f"Sent welcome message to {ctx.author.name}#{ctx.author.discriminator}")
 
         if not check_bot_permissions(ctx):
             await ctx.respond("Warning: I am missing some permissions which may cause errors. Please use /update-permissions to avoid problems with commands", ephemeral=True)
-            log.BOT_REPLY(f"Sent missing permissions message to {ctx.author.name}#{ctx.author.discriminator}")
+            log.BOT_SENT_REPLY(f"Sent missing permissions message to {ctx.author.name}#{ctx.author.discriminator}")
             return False
         return True
 
@@ -1303,7 +1314,7 @@ def main():
 
     @bot.event
     async def on_ready():
-        log.info(f"Bot is now online")
+        log.info(f"Bot is now ready")
 
     @bot.event
     async def on_message(message):
@@ -1314,15 +1325,6 @@ def main():
             ub.edit_user_data(message.author, "messages", ub.get_user_data(message.author, "messages") + 1)
             ub.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
 
-            #if any keyword in keywords list is in the message content
-            if any(keyword in message.content.lower() for keyword in keywords):
-                embed=discord.Embed(title="Message Link Detected", url=message.jump_url, color=discord.Color.blue())
-                embed.add_field(name="Message", value=message.content, inline=False)
-                embed.add_field(name="Server", value=message.guild, inline=False)
-                embed.add_field(name="Channel", value=message.channel, inline=False)
-                embed.add_field(name="User", value=message.author, inline=False)
-
-                await botOwner.send(embed=embed)
 
         # (A DM from a user) Check if the message is not from the bot or the bot owner 
         if message.author != bot.user and message.author != botOwner and message.guild == None:
