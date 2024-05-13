@@ -1320,7 +1320,7 @@ def main():
     async def on_message(message):
         botOwner = bot.get_user(ub.read_toml_var("botOwner"))  # Get the bot owner
         if message.guild != None: # Any message in a server
-            ub.log_guild_message(message)
+            # ub.log_guild_message(message)
             #read how many messages the user has sent and add 1
             ub.edit_user_data(message.author, "messages", ub.get_user_data(message.author, "messages") + 1)
             ub.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
