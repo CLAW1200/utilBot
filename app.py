@@ -98,14 +98,14 @@ def main():
     except Exception as e:
         log.critical(f"Failed to set intents\n{e}")
         exit()
-    log.info(f"Set intents: {intents}\n")
+    log.info(f"Set intents: {intents}")
     
     try:
         bot = discord.Bot(intents=intents)
     except Exception as e:
         log.critical(f"Failed to create bot\n{e}")
         exit()
-    log.info(f"Created bot object: {bot}\n")
+    log.info(f"Created bot object: {bot}")
 
     log.info("Bot has started")
 
