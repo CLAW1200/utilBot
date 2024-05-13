@@ -1,0 +1,12 @@
+# This file should contain your tokens needed for the bot to run.
+
+# tokenLive: The token for the live version of the bot
+tokenLive = ""
+# tokenTest: The token for the test version of the bot
+tokenTest = ""
+# top-gg-token: The token for the top.gg API (if you want to use the vote intergration)
+top-gg-token = ""
+# top-gg-id: The ID of the bot on top.gg (if you want to use the vote intergration)
+top-gg-id = ""
+# api-ninjas-key: The key for the API Ninjas API
+api-ninjas-key = ""
