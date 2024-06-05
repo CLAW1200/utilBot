@@ -226,7 +226,9 @@ def main():
             log.BOT_PROCESS(f"Converting image {image_link} to gif")
             try:
                 newGif = ub.convert_image_to_gif(image_link)
-                await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
+                print (newGif)
+                await ctx.edit(content = f"Here is your gif! {success_emoji}")
+                await ctx.send(file=discord.File(newGif))
                 log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
             except Image.UnidentifiedImageError as e:
                 await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
@@ -282,7 +284,8 @@ def main():
             log.BOT_PROCESS(f"Converting video {video_link} to gif")
             try:
                 newGif = ub.convert_video_to_gif(video_link, fps, scale)
-                await ctx.edit(content = f"Here is your gif! {success_emoji}" , file=discord.File(newGif))
+                await ctx.edit(content = f"Here is your gif! {success_emoji}")
+                await ctx.send(file=discord.File(newGif))
                 log.BOT_REPLY_SUCCESS(f"Converted video {video_link} to gif")
 
             except discord.errors.HTTPException as e:
@@ -337,7 +340,8 @@ def main():
             log.BOT_PROCESS(f"Adding speech bubble to image {image_link}")
             try:
                 newImage = ub.add_speech_bubble(image_link, speech_bubble_size)
-                await ctx.edit(content = (f"Here is your image! {success_emoji}") , file=discord.File(newImage))
+                await ctx.edit(content = (f"Here is your image! {success_emoji}"))
+                await ctx.send(file=discord.File(newImage))
                 log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
             # cannot identify image file
             except Image.UnidentifiedImageError as e:
@@ -395,7 +399,8 @@ def main():
                     await ctx.edit(content = f"Sorry, but that media link is invalid! {error_emoji}")
                     log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
                     return
-                await ctx.edit(content = f"Here is your media! {success_emoji}", file=discord.File(file))
+                await ctx.edit(content = f"Here is your media! {success_emoji}")
+                await ctx.send(file=discord.File(file))
                 log.BOT_REPLY_SUCCESS(f"Downloaded media from {media_link}")
             except discord.errors.HTTPException as e:
                 await ctx.edit(content = f"Sorry, but that media is too large for discord! Try lowering the quality. {error_emoji}")
@@ -888,7 +893,8 @@ def main():
                     os.rename(image, image.replace(".jpg", ".gif"))
                     image = image.replace(".jpg", ".gif")
                     
-                await ctx.edit(content = f"Here is your image! {success_emoji}" , file=discord.File(image))
+                await ctx.edit(content = f"Here is your image! {success_emoji}")
+                await ctx.send(file=discord.File(image))
                 log.BOT_REPLY_SUCCESS(f"Generated image for {ctx.author.name}#{ctx.author.discriminator}")
 
             except Exception as e:
@@ -1311,7 +1317,6 @@ def main():
             log.BOT_REPLY_FAIL(f"Failed to check vote status for {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
 
-
     @bot.event
     async def on_ready():
         log.info(f"Bot is now ready")
@@ -1324,7 +1329,6 @@ def main():
             #read how many messages the user has sent and add 1
             ub.edit_user_data(message.author, "messages", ub.get_user_data(message.author, "messages") + 1)
             ub.edit_user_data(message.author, "username", message.author.name + "#" + message.author.discriminator)
-
 
         # (A DM from a user) Check if the message is not from the bot or the bot owner 
         if message.author != bot.user and message.author != botOwner and message.guild == None:
@@ -1639,11 +1643,27 @@ f"""**!help** - Send this message
 **!invme** - Create a guild invite
 **!stats** - Send the data/data.csv file
 **!dm** - Message a user by ID
+**!sku** - Send the SKU info
+**!members** - Send all usernames of payload members
 """)
 
             if message.content.startswith("!sku"):
                 info = await bot.fetch_entitlements()
                 await botOwner.send(info)
+
+            if message.content.startswith("!members"):
+                member_list = []
+                username_list = []
+                info = await bot.fetch_entitlements()
+                # get a list of all instances between "user_id=" and " "
+                import re
+                member_list = re.findall(r'user_id=(\d+)', str(info))
+                print (member_list)
+                for member in member_list:
+                    print (member)
+                    user = bot.get_user(int(member))
+                    username_list.append(user)
+                await botOwner.send(username_list)
 
     @bot.event
     async def on_entitlement_create(entitlement):
