@@ -214,7 +214,7 @@ def main():
                     return
             except Image.UnidentifiedImageError as e:
                 await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
-                await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
+                # await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
                 log.error(e)
             except Exception as e:
                 await ctx.respond(f"Sorry, but that image link is invalid! {error_emoji}\nMake sure your using an image link, not a message link.", ephemeral=True)
@@ -346,7 +346,7 @@ def main():
             # cannot identify image file
             except Image.UnidentifiedImageError as e:
                 await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
-                await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
+                # await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
                 log.error(e)
             except Exception as e:
                 await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
