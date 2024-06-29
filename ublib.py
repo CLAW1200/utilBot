@@ -558,32 +558,51 @@ async def get_guild_data(bot, botOwner, discord):
     # Get the bot's guild object by ID
     #print a list of guilds the bot is in
     guildData = []
+    init_message = None
     for guild in bot.guilds:
         try:
             invites = await guild.invites()
             if len(invites) > 0:
                 # Return the all in the list of invites
                 invite = str(invites)
-            else:
-                log.warning(f"Failed to get invites for guild with ID {guild.id}")
-                await botOwner.send(f"No active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
-                invite = str("No active invites")
+                if init_message is None:
+                    await botOwner.send(f"Retrieved active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)}): {invite}")
+                    # get the message object the bot just sent
+                    async for message in botOwner.history(limit=1):
+                        init_message = message
+                else:
+                    # edit the message object to show the guild that has no invites
+                    init_message = await init_message.edit(content=f"Retrieved active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)}): {invite}")
 
-                #invite = None
-                # If there are no active invites, create a new one and return it
-                # botOwner.send(f"Creating invite for guild with ID {guild.id}")
-                # Disabled invite creation because it's sus and takes ages
-                # try:
-                #     channel = guild.text_channels[0]
-                #     invite = await channel.create_invite()
-                # except:
-                #     # If the bot can't create an invite, return None
-                #     print (f"Failed to create invite for guild with ID {guild.id}")
+            else:
+                #log.warning(f"No active invites for guild with ID {guild.id}")
+                # get the message object
+                if init_message is None:
+                    await botOwner.send(f"No active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+                    # get the message object the bot just sent
+                    async for message in botOwner.history(limit=1):
+                        init_message = message
+                else:
+                    # edit the message object to show the guild that has no invites
+                    init_message = await init_message.edit(content=f"No active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+                
+                #set the invite text to reflect that there are no active invites
+                invite = str("No active invites")
 
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
-            log.warning(f"Failed to get invites for guild with ID {guild.id}")
-            await botOwner.send(f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+            #log.warning(f"Failed to get invites for guild with ID {guild.id}")
+            # await botOwner.send(f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+            if init_message is None:
+                await botOwner.send(f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+                # get the message object the bot just sent
+                async for message in botOwner.history(limit=1):
+                    init_message = message
+            else:
+                # edit the message object to show the guild that has no invites
+                init_message = await init_message.edit(content=f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+
+            # set the invite text to reflect that the bot doesn't have the permission to get invites
             invite = str("Permission Denied")
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
@@ -615,10 +634,9 @@ async def create_guild_invite(bot, botOwner, guildID, discord, expireTime=60):
         try:
             log.info(f"Creating invite for guild with ID {guildID}")
             channel = guild.text_channels[0]
-            #invite expires in 1 hour
             invite = await channel.create_invite(max_age=expireTime)
             log.debug(invite)
-            invite = str(invite)
+            #invite = str(invite)
         except:
             # If the bot can't create an invite, return None
             log.warning(f"Failed to create invite for guild with ID {guildID}")
