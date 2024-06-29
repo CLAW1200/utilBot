@@ -1322,6 +1322,36 @@ def main():
         log.info(f"Bot is now ready")
 
     @bot.event
+    async def on_guild_join(guild):
+        # Send a message to the bot owner
+        botOwner = bot.get_user(ub.read_toml_var("botOwner"))
+        if botOwner is None:
+            return
+        log.info(f"Joined guild {guild.name}")
+        embed = discord.Embed(title="Joined Guild", color=discord.Color.green())
+        embed.add_field(name="Guild Name", value=guild.name)
+        embed.add_field(name="Guild ID", value=guild.id)
+        embed.add_field(name="Owner", value=guild.owner)
+        embed.add_field(name="Members", value=guild.member_count)
+        embed.add_field(name="Online", value=len([member for member in guild.members if member.status != discord.Status.offline]))
+        await botOwner.send(embed=embed)
+
+    @bot.event
+    async def on_guild_remove(guild):
+        # Send a message to the bot owner
+        botOwner = bot.get_user(ub.read_toml_var("botOwner"))
+        if botOwner is None:
+            return
+        log.info(f"Left guild {guild.name}")
+        embed = discord.Embed(title="Left Guild", color=discord.Color.red())
+        embed.add_field(name="Guild Name", value=guild.name)
+        embed.add_field(name="Guild ID", value=guild.id)
+        embed.add_field(name="Owner", value=guild.owner)
+        embed.add_field(name="Members", value=guild.member_count)
+        embed.add_field(name="Online", value=len([member for member in guild.members if member.status != discord.Status.offline]))
+        await botOwner.send(embed=embed)
+
+    @bot.event
     async def on_message(message):
         botOwner = bot.get_user(ub.read_toml_var("botOwner"))  # Get the bot owner
         if message.guild != None: # Any message in a server
