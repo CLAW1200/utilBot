@@ -1341,6 +1341,8 @@ def main():
         botOwner = bot.get_user(ub.read_toml_var("botOwner"))
         if botOwner is None:
             return
+        if guild.unavailable or guild.name == None:
+            return
         log.info(f"Left guild {guild.name}")
         embed = discord.Embed(title="Left Guild", color=discord.Color.red())
         embed.add_field(name="Guild Name", value=guild.name)
@@ -1467,7 +1469,7 @@ def main():
                 try:
                     status = message.content.split(" ", 1)[1]
                     ub.status(status)
-                    await bot.change_presence(activity=discord.Streaming(name=status))
+                    await bot.change_presence(activity=discord.Game(name=status))
                     await botOwner.send(f"Status set to {status}")
 
                 except IndexError:
@@ -1554,10 +1556,29 @@ def main():
                     await botOwner.send(f"Guild not found: {e}")
 
             if message.content.startswith("!invme "):
-                try: expireTime = message.content.split(" ")[2]
-                except IndexError: expireTime = 60
-                invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1], discord, expireTime)
-                await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
+                guild = message.content.split(" ")[1]
+                guild = bot.get_guild(int(guild))
+                invites = await guild.invites()
+
+                # if the end if the message is "-f" then force create an invite
+                if message.content.endswith("-f"):
+                    await botOwner.send("Force creating invite")
+                    try:
+                        expireTime = message.content.split(" ")[2]
+                        if expireTime.isdigit() == False:
+                            raise Exception
+                    except: 
+                        expireTime = 60
+                    invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1], discord, expireTime)
+                    await botOwner.send(f"Invite: {invite.url}\nExpires {ub.timecode_convert(str(invite.expires_at), 'relative')}")
+
+                elif len(invites) > 0:
+                    await botOwner.send("Valid invites already exist. Skipping invite generation.\n If you wish to create a custom invite anyway, include `-f` at the end of the command.")
+                    for invite in invites:
+                        await botOwner.send(f"Invite: {invite.url}\nExpires {ub.timecode_convert(str(invite.expires_at), 'relative')}")
+
+                else:
+                    await botOwner.send("No valid invites found. Use `-f` to force create an invite.")
 
             if message.content.startswith("!stats "):
                 draw_users = False
@@ -1661,18 +1682,18 @@ f"""**!help** - Send this message
 **!userlist** - Send a CSV file of all users the bot can see
 **!guildcount** - Send the number of guilds the bot is in
 **!userdata** - Send the data/users.json file
-**!status** - Set the bot status
-**!streamstatus** - Set the bot stream status
-**!ban** - Ban a user from using the bot
-**!unban** - Unban a user from using the bot
+**!status** [Status] - Set the bot status
+**!streamstatus** [Status] - Set the bot stream status
+**!ban** [userID] - Ban a user from using the bot
+**!unban** [userID] - Unban a user from using the bot
 **!guilds.zip** - Send a zip file of all guilds the bot is in
 **!notes** - Send the data/notes.json file
-**!search** - Search all messages for a query
-**!user** - Search a user ID
-**!guild** - Search a guild ID
-**!invme** - Create a guild invite
+**!search** (Depreciated) - Search all messages for a query
+**!user** [guildID / username] - Search a user ID
+**!guild** [guildID] - Search a guild ID
+**!invme** [guildID] [Duration] [-f] - Create a guild invite
 **!stats** - Send the data/data.csv file
-**!dm** - Message a user by ID
+**!dm** [userID] - Message a user by ID
 **!sku** - Send the SKU info
 **!members** - Send all usernames of payload members
 """)
