@@ -1043,7 +1043,8 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     for word in banned_words:
         if word in prompt.lower():
             return None
-        
+    
+    """
     async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context()
@@ -1051,7 +1052,7 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
             await page.goto("https://diffusers-unofficial-sdxl-turbo-i2i-t2i.hf.space/?view=api")
             ai_api_url = await page.inner_text("div.url.svelte-3n2nxs")
             await browser.close()
-
+    """
 
     enhancer_prompts = {
     "none": f"{prompt}",
@@ -1084,6 +1085,8 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
 
     if img_steps == None:
         img_steps = 3
+
+    ai_api_url = "diffusers/unofficial-SDXL-Turbo-i2i-t2i"
 
     client = Client(ai_api_url, output_dir="//home/ubuntu/utilBot/temp/")
     result = client.predict(img2img, f"{prompt}", img_strength, img_steps, img_seed, api_name="/predict")
