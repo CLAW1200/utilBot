@@ -439,7 +439,7 @@ def main():
             await ctx.respond(f"{inviteLink}", ephemeral=True)
             await command_topper(ctx)
         except Exception as e:
-            log.error(f"Shit must really going wrong now!\n{e}")
+            log.error(f"{e}")
 
     @bot.slash_command(name="urban", description="Find a definition of a word on urban dictionary")
     async def urban_command(
@@ -487,7 +487,7 @@ def main():
             except Exception as e:
                 await ctx.respond(f"Failed to send definition of {word}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to send definition of {word}")
-                log.error(f"Its all gone wrong!\n{e}")
+                log.error(f"{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="urban-random-word", description="Get a random word from urban dictionary")
@@ -521,7 +521,7 @@ def main():
             except Exception as e:
                 await ctx.respond(f"Failed to send random word", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to send random word")
-                log.error(f"This is bad :(\n{e}")
+                log.error(f"{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="units", description="Convert units")
@@ -556,7 +556,7 @@ def main():
             except Exception as e:
                 await ctx.respond(f"{str(e)}")
                 log.BOT_REPLY_FAIL(f"Failed to send units conversion")
-                log.error(f"Oh no\n{e}")
+                log.error(f"{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="note-new", description="Write a new note")
@@ -592,7 +592,7 @@ def main():
             except Exception as e:
                 await ctx.respond(f"Failed to add new note!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to add new note for {ctx.author.name}#{ctx.author.discriminator}")
-                log.error(f"This is not ideal\n{e}")
+                log.error(f"{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="note-edit", description="Edit a note")
@@ -642,7 +642,7 @@ def main():
             except Exception as e:
                 await ctx.respond(f"Failed to edit note!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to edit note for {ctx.author.name}#{ctx.author.discriminator}")
-                log.error(f"what now?\n{e}")
+                log.error(f"{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="notes", description="Read your notes")
@@ -679,7 +679,6 @@ def main():
             except Exception as e:
                 await ctx.respond(f"Failed to send notes!", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Failed to send notes for {ctx.author.name}#{ctx.author.discriminator}")
-                log.error(f"AHHHH!\n{e}")
             await command_topper(ctx)
 
     @bot.slash_command(name="note-delete", description="Delete a note or leave index blank to delete all")
@@ -1055,7 +1054,7 @@ def main():
             return interaction.user in [self.challenger, self.opponent]
 
         async def on_error(self, error, item, traceback):
-            log.error(f"I am going to bash my head into a wall\n{error}")
+            log.error(f"{error}")
             # Handle errors and cancel the timer
             if isinstance(error, discord.NotFound):
                 self.timer.cancel()
