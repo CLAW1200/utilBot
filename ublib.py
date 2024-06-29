@@ -567,6 +567,8 @@ async def get_guild_data(bot, botOwner, discord):
             else:
                 log.warning(f"Failed to get invites for guild with ID {guild.id}")
                 await botOwner.send(f"No active invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
+                invite = str("No active invites")
+
                 #invite = None
                 # If there are no active invites, create a new one and return it
                 # botOwner.send(f"Creating invite for guild with ID {guild.id}")
@@ -577,16 +579,18 @@ async def get_guild_data(bot, botOwner, discord):
                 # except:
                 #     # If the bot can't create an invite, return None
                 #     print (f"Failed to create invite for guild with ID {guild.id}")
-                #     invite = None
 
         except discord.errors.Forbidden:
             # If the bot doesn't have the permission "Manage Guild" in the guild, it can't get invites
             log.warning(f"Failed to get invites for guild with ID {guild.id}")
             await botOwner.send(f"Failed to get invites for guild with ID {guild.id} ({bot.guilds.index(guild)}/{len(bot.guilds)})")
-            invite = None
+            invite = str("Permission Denied")
 
         # [guildName, guildInvite, guildID, guildOwner, guildMemberCount, guildMemberOnlineCount]
-        online_members = len([member for member in guild.members if member.status == discord.Status.online])
+        
+        # online_members = len([member for member in guild.members if member.status == discord.Status.online])
+        # This perm is not allowed for the bot right now and will always return 0,
+        online_members = str("Permission Denied")
         guildData.append([guild.name, invite, guild.id, guild.owner, guild.member_count, online_members])
 
     return guildData
