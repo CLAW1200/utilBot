@@ -1404,13 +1404,13 @@ def main():
                 guilds = await ub.get_guild_data(bot, botOwner, discord)
 
                 # Create a text file to store guild information
-                with open("guilds.txt", "w", encoding="UTF-8") as file:
+                with open("data/guilds.txt", "w", encoding="UTF-8") as file:
                     for guild in guilds:
                         file.write(f"Guild Name: {guild[0]}\nInvite: {guild[1]}\nID: {guild[2]}\nOwner: {guild[3]}\nMembers: {guild[4]}\nOnline: {guild[5]}\n\n")
 
                 # Send the text file
-                with open("guilds.txt", "rb") as file:
-                    await botOwner.send(file=discord.File(file, "guilds.txt"))
+                with open("data/guilds.txt", "rb") as file:
+                    await botOwner.send(file=discord.File(file, "data/guilds.txt"))
 
             if message.content == ("!log"):
                 # print (f"{message.author} requested log")
@@ -1463,7 +1463,7 @@ def main():
             if message.content == ("!userdata"):
                 await botOwner.send(file=discord.File('data/users.json'))
 
-            if message.content.startswith("!status"):
+            if message.content.startswith("!status "):
                 try:
                     status = message.content.split(" ", 1)[1]
                     ub.status(status)
@@ -1475,7 +1475,7 @@ def main():
                     await bot.change_presence(activity=None)
                     await botOwner.send("Status cleared")
                     
-            if message.content.startswith("!streamstatus"):
+            if message.content.startswith("!streamstatus "):
                 try:
                     status = message.content.split(" ", 1)[1]
                     ub.status(status)
@@ -1492,13 +1492,14 @@ def main():
                 await botOwner.send(file=discord.File(guildsZip))
                 os.remove(guildsZip)
 
-            if message.content.startswith("!notes"):
+            if message.content == ("!notes"):
                 try:
                     await botOwner.send(file=discord.File('data/notes.json'))
                 except FileNotFoundError:
                     await botOwner.send("No notes file found")
 
-            if message.content.startswith("!search"):
+            if message.content.startswith("!search "):
+                botOwner.send("This function needs MESSAGE INTENT and will most likely not work")
                 try:
                     mode = message.content.split(" ")[1]
                     query = message.content.split(" ")[2]
@@ -1507,7 +1508,7 @@ def main():
                 except IndexError:
                     await botOwner.send("No search term provided")
 
-            if message.content.startswith("!user"):
+            if message.content.startswith("!user "):
                 try:
                     user_id = message.content.split(" ")[1]
                     #if input is not an int convert username to id
@@ -1532,7 +1533,7 @@ def main():
                 except AttributeError:
                     await botOwner.send("User not found")
 
-            if message.content.startswith("!guild"):
+            if message.content.startswith("!guild "):
                 try:
                     guild_id = message.content.split(" ")[1]
                     guild = bot.get_guild(int(guild_id))
@@ -1552,13 +1553,13 @@ def main():
                 except AttributeError as e:
                     await botOwner.send(f"Guild not found: {e}")
 
-            if message.content.startswith("!invme"):
+            if message.content.startswith("!invme "):
                 try: expireTime = message.content.split(" ")[2]
                 except IndexError: expireTime = 60
                 invite = await ub.create_guild_invite(bot, botOwner, message.content.split(" ")[1], discord, expireTime)
                 await botOwner.send(f"Invite: {invite}\nExpires after {expireTime} seconds")
 
-            if message.content.startswith("!stats"):
+            if message.content.startswith("!stats "):
                 draw_users = False
                 draw_guilds = False
                 draw_commands = False
@@ -1588,7 +1589,7 @@ def main():
                     await botOwner.send(file=discord.File('data/data.csv'))
                 await botOwner.send(file=discord.File(plot))
 
-            if message.content.startswith("!ban"):
+            if message.content.startswith("!ban "):
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
@@ -1613,7 +1614,7 @@ def main():
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
-            if message.content.startswith("!unban"):
+            if message.content.startswith("!unban "):
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
@@ -1635,7 +1636,7 @@ def main():
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
-            if message.content.startswith("!dm"):
+            if message.content.startswith("!dm "):
                 try:
                     user_id = message.content.split(" ")[1]
                     if not user_id.isdigit():
@@ -1648,7 +1649,7 @@ def main():
                 except IndexError:
                     await botOwner.send("No user ID provided")
 
-            if message.content.startswith("!help"):
+            if message.content == ("!help"):
                 # https://cdn.discordapp.com/emojis/1191381954453586061.gif?size=96&quality=lossless
                 # https://discord.com/channels/1170496731872493739/1178817154620067851/1191382117972717649
                 await botOwner.send(
@@ -1676,11 +1677,11 @@ f"""**!help** - Send this message
 **!members** - Send all usernames of payload members
 """)
 
-            if message.content.startswith("!sku"):
+            if message.content == ("!sku"):
                 info = await bot.fetch_entitlements()
                 await botOwner.send(info)
 
-            if message.content.startswith("!members"):
+            if message.content == ("!members"):
                 member_list = []
                 username_list = []
                 info = await bot.fetch_entitlements()
