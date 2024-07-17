@@ -19,6 +19,7 @@ import base64
 import codecs
 import asyncio
 import datetime
+import itertools
 
 
 # Create a log
@@ -345,8 +346,7 @@ def main():
                 log.BOT_REPLY_SUCCESS(f"Added speech bubble to image {image_link}")
             # cannot identify image file
             except Image.UnidentifiedImageError as e:
-                await ctx.edit(content = f"Sorry, but that image link is invalid! {error_emoji}")
-                # await ctx.respond(content = f"Sorry, due to the new Discord changes regarding CDN links I cannot access that image.\nCopying the link again from the image may fix this.\n**We are currently working on a fix for this and it should be resolved soon.**\nPlease see [this post](https://www.reddit.com/r/DataHoarder/comments/16zs1gt/cdndiscordapp_links_will_expire_breaking/) to learn more. {error_emoji}", ephemeral=True, embed=None)
+                await ctx.edit(content = f"Sorry, but that image link is invalid! Please copy a new link.{error_emoji}")
                 log.error(e)
             except Exception as e:
                 await ctx.edit(content = f"Sorry, but I could not add a speech bubble to that image! {error_emoji}")
@@ -392,7 +392,7 @@ def main():
                 return
             
             await ctx.respond(f"Downloading media... {loading_emoji}")
-
+            
             try:
                 file = ub.download_multimedia(media_link, audio_only, video_quality, audio_quality)
                 if file == None:
@@ -405,7 +405,7 @@ def main():
             except discord.errors.HTTPException as e:
                 await ctx.edit(content = f"Sorry, but that media is too large for discord! Try lowering the quality. {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
-                log.error(e)            
+                log.error(e)
             except Exception as e:
                 await ctx.edit(content = f"It seems like this service is not supported yet or your link is invalid. Have you pasted the right link? {error_emoji}")
                 log.BOT_REPLY_FAIL(f"Failed to download media from {media_link}")
@@ -1252,6 +1252,34 @@ def main():
             log.BOT_REPLY_SUCCESS(f"Ticked ID {feedbackID}")
             await command_topper(ctx)
 
+    @bot.slash_command(name="leaderboard", description="Get the leaderboard")
+    async def leaderboard_command(ctx):
+        if command_ban_check(ctx):
+            return
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
+        #get the top 10 users with the most commands used
+        with open("data/users.json") as f:
+            users = json.load(f)
+
+        # sort users by commandsUsed and get top 10
+        sorted_users = dict(sorted(users.items(), key=lambda item: item[1].get("commandsUsed", 0), reverse=True))
+        top_users = dict(itertools.islice(sorted_users.items(), 10))
+
+        #create embed
+        embed = discord.Embed(title="Leaderboard", color=discord.Color.blue())
+        for index, (user_id, user_data) in enumerate(top_users.items(), start=1):
+            user = await bot.fetch_user(int(user_id))
+            embed.add_field(name=f"{index}. {user.name}#{user.discriminator}", value=f"Commands Used: {user_data.get('commandsUsed', 0)}", inline=False)
+        await ctx.respond(embed=embed)
+        log.BOT_REPLY_SUCCESS(f"Sent leaderboard to {ctx.author.name}#{ctx.author.discriminator}")
+        await command_topper(ctx)
+
+
+
+
+
+
+
     @bot.slash_command(name="help", description="Get help")
     async def help_command(ctx):
         if command_ban_check(ctx):
@@ -1363,7 +1391,7 @@ def main():
 
         # (A DM from a user) Check if the message is not from the bot or the bot owner 
         if message.author != bot.user and message.author != botOwner and message.guild == None:
-            embed = discord.Embed(title="Message From", color=discord.Color.green())
+            embed = discord.Embed(title="Message From", color=discord.Color.blue())
             embed.add_field(name="User", value=message.author)
             embed.add_field(name="Message", value=message.content)
             try:
@@ -1607,6 +1635,7 @@ def main():
                 plot = ub.gen_csv_plot("data/data.csv", draw_users, draw_guilds, draw_commands, draw_diff, time)
                 #send data/data.csv
                 if "file" in message.content:
+                    
                     await botOwner.send(file=discord.File('data/data.csv'))
                 await botOwner.send(file=discord.File(plot))
 

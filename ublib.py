@@ -279,14 +279,10 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
         }
     
     if audio_only:
-        print ("Downloading audio only")
         data["isAudioOnly"] = "true"
         data["aFormat"] = audio_quality
     else:
-        print ("Downloading video")
         data["vQuality"] = video_quality
-
-    print (data)
 
     response = requests.post(api_url, headers=headers, json=data)
     if response.status_code != 200:
@@ -303,21 +299,30 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
 
     # Get the filename from the Content-Disposition header
     content_disposition = response.headers.get('content-disposition')
-    print (content_disposition)
-    filename = re.findall('filename=(.+)', content_disposition)[0]
+    if content_disposition != None:
+        filename = re.findall('filename=(.+)', content_disposition)[0]
+        
+        #remove any quotes from the filename
+        filename = filename.replace('"', '')
+
+        # Download the media from the download URL
+        media = response.content
+        file_download = f"temp/{filename}"
+
+        with open(file_download, "wb") as f:
+            f.write(media)
+
+        return file_download
     
-    #remove any quotes from the filename
-    filename = filename.replace('"', '')
-    print (filename)
+    else:
+        media = response.content
+        file_download = f"temp/media.mp4"
 
-    # Download the media from the download URL
-    media = response.content
-    file_download = f"temp/{filename}"
+        with open(file_download, "wb") as f:
+            f.write(media)
 
-    with open(file_download, "wb") as f:
-        f.write(media)
-
-    return file_download
+        return file_download
+    
 
 def download_check(link, max_size=read_toml_var("maxFileSize")):
     # function to check if a file is too large to download
