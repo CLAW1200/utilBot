@@ -25,3 +25,5 @@ error_emoji = "<:error2:1226948640602587186>"
 
 # SKUs for the bot's premium subscription
 sku_lifetime_subscription_id = 1235569700222668904
+
+status = "/imagine"
