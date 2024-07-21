@@ -262,6 +262,7 @@ def get_file_size(link):
         log.error(f"Error getting file size for '{link}': {e}")
         return None
 
+
 def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     """Use cobalt API to download media"""
 
@@ -297,21 +298,32 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     # Send a GET request
     response = requests.get(download_url)
 
+    import re
+    from urllib.parse import unquote
+    
     # Get the filename from the Content-Disposition header
     content_disposition = response.headers.get('content-disposition')
-    if content_disposition != None:
-        filename = re.findall('filename=(.+)', content_disposition)[0]
-        
-        #remove any quotes from the filename
-        filename = filename.replace('"', '')
-
+    if content_disposition:
+        # Check for encoded filename (RFC 5987)
+        match = re.search("filename\*=UTF-8''(.+)", content_disposition)
+        if match:
+            # Decode the percent-encoded UTF-8 part
+            encoded_filename = match.group(1)
+            filename = unquote(encoded_filename)
+        else:
+            # Fallback to regular expression if not encoded
+            match = re.search('filename=(.+)', content_disposition)
+            if match:
+                filename = match.group(1)
+    
         # Download the media from the download URL
         media = response.content
         file_download = f"temp/{filename}"
-
+    
+        print(f"Downloading {filename}")
         with open(file_download, "wb") as f:
             f.write(media)
-
+    
         return file_download
     
     else:
