@@ -291,7 +291,7 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
 
     # Extract download URL from the response
     download_url = response.json().get('url')
-
+    print(download_url)
     # if not download_check(download_url):
     #     return "SizeError"
 
