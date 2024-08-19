@@ -269,10 +269,10 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     clean_up_temp_files()
 
     # use co.wuk.sh api to download media
-    api_url = "https://api.cobalt.tools/api/json"
+    api_url = "api.cobalt.tools/api/json"
     headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept": "application/json"
         }
     data = {
         "url": media_link,
@@ -285,9 +285,7 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     else:
         data["vQuality"] = video_quality
 
-    
     response = requests.post(api_url, headers=headers, json=data)
-    print(response)
     if response.status_code != 200:
         raise Exception(f"Error: {response.json()}")
 
