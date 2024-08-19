@@ -285,13 +285,15 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     else:
         data["vQuality"] = video_quality
 
+    
     response = requests.post(api_url, headers=headers, json=data)
+    print(response)
     if response.status_code != 200:
         raise Exception(f"Error: {response.json()}")
 
     # Extract download URL from the response
     download_url = response.json().get('url')
-    print(download_url)
+
     # if not download_check(download_url):
     #     return "SizeError"
 
