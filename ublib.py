@@ -286,6 +286,7 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
         data["vQuality"] = video_quality
 
     response = requests.post(api_url, headers=headers, json=data)
+    print(response)
     if response.status_code != 200:
         raise Exception(f"Error: {response.json()}")
 
