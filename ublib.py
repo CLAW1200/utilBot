@@ -271,8 +271,8 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     # use co.wuk.sh api to download media
     api_url = "https://api.cobalt.tools/api/json"
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept: application/json"
+        "Content-Type: application/json"
         }
     data = {
         "url": media_link,
