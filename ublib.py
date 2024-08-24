@@ -269,7 +269,7 @@ def download_multimedia(media_link, audio_only, video_quality, audio_quality):
     clean_up_temp_files()
 
     # use co.wuk.sh api to download media
-    api_url = "https://api.cobalt.tools/api/json"
+    api_url = "https://olly.imput.net/api/json"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json"
