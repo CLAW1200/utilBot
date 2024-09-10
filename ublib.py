@@ -1098,3 +1098,6 @@ async def ai_image_gen(prompt, enhancer, img2img, img_seed, img_strength, img_st
     return result
 
 
+
+def generate_nickname(message_content):
+    return "Snack Seeker"

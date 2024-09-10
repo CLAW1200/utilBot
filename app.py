@@ -93,9 +93,9 @@ def main():
 
     try:
         intents = discord.Intents.all()  # Create an intents object with default intents
-        intents.message_content = False  # Disable the message content intent
+        intents.message_content = True  # Disable the message content intent
         intents.typing = False  # Disable the typing intent
-        intents.presences = False  # Disable the presence intent
+        intents.presences = True  # Disable the presence intent
     except Exception as e:
         log.critical(f"Failed to set intents\n{e}")
         exit()
@@ -1293,7 +1293,34 @@ def main():
         log.BOT_REPLY_SUCCESS(f"Sent leaderboard to {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
 
-    
+
+    @bot.slash_command(name="auto-name", description="Automatically nickname online users in the server")
+    async def auto_name_command(ctx):
+        if command_ban_check(ctx):
+            return
+        log.BOT_GOT_COMMAND(f"{ctx.author.name}#{ctx.author.discriminator} - /{ctx.command}")
+        # get all online users in the server
+        online_users = [member for member in ctx.guild.members if member.status != discord.Status.offline]
+        # for each user, get the last 5 messages they sent
+        for user in online_users:
+            messages = await ctx.channel.history(limit=5).flatten()
+            message_content = ""
+            for message in messages:
+                message_content += f"{message.content} \n"
+            print(message_content)
+            # create a new nickname for the user based on the last 5 messages
+            new_nickname = ub.generate_nickname(message_content)
+            # set the new nickname
+            if not user.bot:
+                try:
+                    await user.edit(nick=new_nickname)
+                    log.BOT_REPLY_SUCCESS(f"Set nickname for {user.name} to {new_nickname}")
+                except discord.Forbidden:
+                    log.BOT_REPLY_FAIL(f"Failed to set nickname for {user.name} to {new_nickname}")
+
+        await ctx.respond("Auto naming complete!")
+        log.BOT_REPLY_SUCCESS(f"Auto naming complete")
+        await command_topper(ctx)
 
 
     @bot.slash_command(name="help", description="Get help")
