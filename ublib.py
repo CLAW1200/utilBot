@@ -18,15 +18,15 @@ from difflib import SequenceMatcher
 from qrcode import QRCode, constants
 from numpy import array
 import aiofiles
-import regex as re
+# import regex as re
 import math
-from playwright.async_api import async_playwright
+# from playwright.async_api import async_playwright
 from gradio_client import Client
-from concurrent.futures import ThreadPoolExecutor
-from discord import NotFound, Forbidden
+# from concurrent.futures import ThreadPoolExecutor
+# from discord import NotFound, Forbidden
 
 
-executor = ThreadPoolExecutor(max_workers=5)
+# executor = ThreadPoolExecutor(max_workers=5)
 
 # Create a log
 log = logging.getLogger('Utility Belt Lib')
@@ -46,39 +46,6 @@ console_handler.setFormatter(formatter)
 log.addHandler(file_handler)
 log.addHandler(console_handler)
 
-def log_guild_message(message):
-    # Get the server name and channel name
-    server_name = message.guild.name
-    channel_name = message.channel.name
-    #get the time in GMT
-    time_code = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Create the directory if it doesn't exist
-    directory = f"guilds/{message.guild.id}"
-    os.makedirs(directory, exist_ok=True)
-    
-    # Create the file path
-    file_path = f"{directory}/{message.channel.id}.txt"
-    
-    # Write the server name and channel name to the file
-    with open(file_path, "a", encoding="utf-8") as file:
-        # Write the server name and channel name if the file is empty
-        if file.tell() == 0:
-            file.write(f"Server: {server_name}\n")
-            file.write(f"Channel: {channel_name}\n")
-        
-        # Format the message information
-        author_info = f"{message.author.name}#{message.author.discriminator} ({message.author.id})"
-        attachments_info = f"Attachments: {', '.join(str(attachment) for attachment in message.attachments)}"
-        embeds_info = f"Embeds: {', '.join(str(embed) for embed in message.embeds)}"
-        
-        # Write the formatted message to the file
-        file.write(f"{author_info}:\n")
-        file.write(f"Time (GMT): {time_code}\n")
-        file.write(f"Message: {message.content}\n")
-        file.write(f"{attachments_info}\n")
-        file.write(f"{embeds_info}\n")
-        file.write("--------------------------------\n")
 
 def get_tokens(tokenFile, live):
     with open(tokenFile) as toml_file:
@@ -91,8 +58,7 @@ def get_tokens(tokenFile, live):
             bot_token = data["tokenTest"]
         top_gg_token = data["top-gg-token"]
         top_gg_id = data["top-gg-id"]
-        api_ninjas_token = data["api-ninjas-key"]
-        return bot_token, top_gg_token, top_gg_id, api_ninjas_token
+        return bot_token, top_gg_token, top_gg_id
 
 def edit_user_data(user, field, data):
     # Edit data/users.json, add data to key

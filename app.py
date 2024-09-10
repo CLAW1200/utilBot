@@ -72,7 +72,7 @@ def main():
     ureg = UnitRegistry()
     log.info("Starting Utility Belt")
 
-    BOT_TOKEN, TOP_GG_TOKEN, TOP_GG_ID, API_NINJAS_TOKEN = ub.get_tokens("config/token.toml", live)
+    BOT_TOKEN, TOP_GG_TOKEN, TOP_GG_ID = ub.get_tokens("config/token.toml", live)
 
     log.debug(f"Fetched bot token: **********")
     log.debug(f"Fetched top.gg token: **********")
@@ -123,7 +123,8 @@ def main():
         async def printer(self):
             log.debug(f"Checking time")
             now = datetime.datetime.now()
-            if now.minute == 0: 
+            # log data to csv every hour only if bot is in live mode
+            if now.minute == 0 and live:
                 await ub.log_data_to_csv(self.bot)
                 log.info(f"Logged data to CSV")
 
@@ -161,7 +162,10 @@ def main():
             return True
 
     async def check_if_user_has_premium(user):
-        info = await bot.fetch_entitlements()
+
+        return True
+
+        info = await bot.entitlements()
         #check in list and find index for ctx.author.id 
         for ent in info:
             try:
@@ -189,7 +193,14 @@ def main():
             return False
         return True
 
-    @bot.slash_command(name="image-to-gif", description="Take an image link and send it as a gif")
+    @bot.slash_command(
+    integration_types={
+        discord.IntegrationType.guild_install,
+        discord.IntegrationType.user_install,
+    },
+    name="image-to-gif", 
+    description="Take an image link and send it as a gif")
+
     async def image_to_gif_command(ctx: discord.ApplicationContext, image_link: str):
         if command_ban_check(ctx):
             return
@@ -1261,23 +1272,28 @@ def main():
         with open("data/users.json") as f:
             users = json.load(f)
 
+
         # sort users by commandsUsed and get top 10
         sorted_users = dict(sorted(users.items(), key=lambda item: item[1].get("commandsUsed", 0), reverse=True))
-        top_users = dict(itertools.islice(sorted_users.items(), 10))
+        top_users = dict(itertools.islice(sorted_users.items(), 5))
+
+        self_rank = 0
+        for index, (user_id, user_data) in enumerate(sorted_users.items(), start=1):
+            if int(user_id) == ctx.author.id:
+                self_rank = index
+                break
 
         #create embed
         embed = discord.Embed(title="Leaderboard", color=discord.Color.blue())
         for index, (user_id, user_data) in enumerate(top_users.items(), start=1):
             user = await bot.fetch_user(int(user_id))
-            embed.add_field(name=f"{index}. {user.name}#{user.discriminator}", value=f"Commands Used: {user_data.get('commandsUsed', 0)}", inline=False)
+            embed.add_field(name=f"{index}. {user.name}", value=f"Commands Used: {user_data.get('commandsUsed', 0)}", inline=False)
+            embed.set_footer(text=f"You are ranked number {self_rank} on the leaderboard")
         await ctx.respond(embed=embed)
         log.BOT_REPLY_SUCCESS(f"Sent leaderboard to {ctx.author.name}#{ctx.author.discriminator}")
         await command_topper(ctx)
 
-
-
-
-
+    
 
 
     @bot.slash_command(name="help", description="Get help")
@@ -1728,13 +1744,14 @@ f"""**!help** - Send this message
 """)
 
             if message.content == ("!sku"):
-                info = await bot.fetch_entitlements()
+                info = bot.entitlements()
                 await botOwner.send(info)
 
             if message.content == ("!members"):
                 member_list = []
                 username_list = []
-                info = await bot.fetch_entitlements()
+                info = bot.entitlements()
+                print (info)
                 # get a list of all instances between "user_id=" and " "
                 import re
                 member_list = re.findall(r'user_id=(\d+)', str(info))
