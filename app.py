@@ -238,7 +238,7 @@ def main():
             log.BOT_PROCESS(f"Converting image {image_link} to gif")
             try:
                 newGif = ub.convert_image_to_gif(image_link)
-                print (newGif)
+                log.info(newGif)
                 await ctx.edit(content = f"Here is your gif! {success_emoji}")
                 await ctx.send(file=discord.File(newGif))
                 log.BOT_REPLY_SUCCESS(f"Converted image {image_link}")
@@ -1751,13 +1751,13 @@ f"""**!help** - Send this message
                 member_list = []
                 username_list = []
                 info = bot.entitlements()
-                print (info)
+                log.info(info)
                 # get a list of all instances between "user_id=" and " "
                 import re
                 member_list = re.findall(r'user_id=(\d+)', str(info))
-                print (member_list)
+                log.info(member_list)
                 for member in member_list:
-                    print (member)
+                    log.info(member)
                     user = bot.get_user(int(member))
                     username_list.append(user)
                 await botOwner.send(username_list)
