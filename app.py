@@ -393,7 +393,7 @@ def main():
                 return
             
             if (video_quality != ("360" or "240" or "144")) and not await check_if_user_has_premium(ctx.author):
-                await ctx.respond(f"Sorry, but only 360p, 240p and 144p are available for non-premium users! Please upgrade to Utility Belt+ to get access to better quality downloads and other features. {error_emoji}", ephemeral=True)
+                await ctx.respond(f"Sorry, but 360p is the max available for non-premium users! Please upgrade to Utility Belt+ to get access to better quality downloads and other features. {error_emoji}", ephemeral=True)
                 log.BOT_REPLY_FAIL(f"Blocked download command from {ctx.author.name}#{ctx.author.discriminator} due to quality of {video_quality}")
                 return
             
